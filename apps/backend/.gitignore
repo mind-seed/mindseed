@@ -1,0 +1,7 @@
+# compiled output
+/dist
+/build
+
+# Tests
+/coverage
+/.nyc_output
