@@ -10,6 +10,9 @@ importers:
 
   apps/backend:
     dependencies:
+      '@mindseed/api-types':
+        specifier: workspace:*
+        version: link:../../packages/api-types
       '@nestjs/common':
         specifier: ^11.0.1
         version: 11.1.16(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -175,7 +178,11 @@ importers:
         specifier: ^7.3.1
         version: 7.3.1(@types/node@24.11.0)(terser@5.46.0)
 
-  packages/api-types: {}
+  packages/api-types:
+    dependencies:
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
 
 packages:
 
