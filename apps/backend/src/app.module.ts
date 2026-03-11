@@ -3,13 +3,14 @@ import { ConfigModule, ConfigType } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
-import { databaseConfig } from "./config/config";
+import { databaseConfig, redisConfig } from "./config";
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig],
+      load: [databaseConfig, redisConfig],
     }),
     TypeOrmModule.forRootAsync({
       inject: [databaseConfig.KEY],
@@ -24,6 +25,7 @@ import { databaseConfig } from "./config/config";
         synchronize: process.env.NODE_ENV !== "production",
       }),
     }),
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
