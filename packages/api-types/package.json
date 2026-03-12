@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "exports": {
-    ".": {
-      "types": "./index.d.ts"
-    }
+    ".": "./src/index.ts"
   },
-  "types": "./index.d.ts"
+  "dependencies": {
+    "zod": "^4.3.6"
+  }
 }
