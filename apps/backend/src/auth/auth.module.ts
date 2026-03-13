@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigType } from "@nestjs/config";
 import { AuthService } from "./auth.service";
+import { AuthController } from "./auth.controller";
 import { EmailRateLimitService } from "./email-rate-limit/email-rate-limit.service";
 import { EmailRateLimitStore } from "./email-rate-limit/email-rate-limit.store";
 import { VerificationCodeService } from "./verification-code/verification-code.service";
@@ -27,6 +28,7 @@ import { jwtConfig } from "src/config";
       }),
     }),
   ],
+  controllers: [AuthController],
   providers: [
     AuthService,
     EmailRateLimitService,

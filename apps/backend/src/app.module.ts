@@ -5,6 +5,9 @@ import { databaseConfig, jwtConfig, redisConfig } from "./config";
 import { RedisModule } from "./redis/redis.module";
 import { MailModule } from "./mail/mail.module";
 import { UserModule } from "./user/user.module";
+import { AuthModule } from "./auth/auth.module";
+import { User } from "./user/user.entity";
+import { UserProfile } from "./user/user-profile.entity";
 
 @Module({
   imports: [
@@ -21,12 +24,14 @@ import { UserModule } from "./user/user.module";
         username: db.username,
         password: db.password,
         database: db.database,
-        entities: [],
+        entities: [User, UserProfile],
         synchronize: process.env.NODE_ENV !== "production",
       }),
     }),
     RedisModule,
     MailModule,
+
+    AuthModule,
     UserModule,
   ],
 })
