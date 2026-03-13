@@ -27,7 +27,5 @@ import { RedisModule } from './redis/redis.module';
     }),
     RedisModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
