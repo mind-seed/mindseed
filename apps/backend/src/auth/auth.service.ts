@@ -1,4 +1,5 @@
 import { Injectable } from "@nestjs/common";
+import * as bcrypt from "bcrypt";
 import { EmailRateLimitService } from "./email-rate-limit/email-rate-limit.service";
 import { VerificationCodeService } from "./verification-code/verification-code.service";
 import { MailService } from "src/mail/mail.service";
@@ -34,7 +35,6 @@ export class AuthService {
 
   /**
    * email로 인증 코드를 발송하며, 해당 인증 코드를 저장한다.
-   * @param email SV
    */
   async sendVerificationMail(email: string): Promise<void> {
     if (await this.emailRateLimitService.isLimited(email)) {
@@ -64,8 +64,6 @@ export class AuthService {
 
   /**
    * email과 code를 이용해 인증 코드를 검증하고, 성공 시 회원가입 token을 발급한다.
-   * @param email SV
-   * @param code SV
    * @returns 회원가입 token
    */
   async verifyMail(email: string, code: string): Promise<string> {
@@ -82,13 +80,13 @@ export class AuthService {
 
   /**
    * 회원가입 token인 signUpToken에 대하여 회원가입을 진행한다.
-   * @param signUpToken
-   * @param password SV
    * @returns access token 및 refresh token
    */
   async completeSignup(
     signUpToken: string,
     password: string,
+    nickname: string,
+    age: number,
   ): Promise<SignUpResult> {
     let email: string;
 
@@ -107,7 +105,11 @@ export class AuthService {
       throw new EmailAlreadyExistsError();
     }
 
-    const user = await this.userService.create(email, password);
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const user = await this.userService.create(email, hashedPassword, {
+      nickname,
+      age,
+    });
     const accessToken = this.accessTokenService.sign(user.id);
     const refreshToken = await this.refreshTokenService.issue(user.id);
 

@@ -3,6 +3,11 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User, UserRole } from "./user.entity";
 
+export type CreateUserProfile = {
+  nickname: string;
+  age: number;
+};
+
 @Injectable()
 export class UserService {
   constructor(
@@ -13,11 +18,16 @@ export class UserService {
     return this.userRepository.findOneBy({ email });
   }
 
-  async create(email: string, hashedPassword: string): Promise<User> {
+  async create(
+    email: string,
+    hashedPassword: string,
+    profile: CreateUserProfile,
+  ): Promise<User> {
     const user = this.userRepository.create({
       email,
       password: hashedPassword,
       role: UserRole.USER,
+      profile,
     });
     return this.userRepository.save(user);
   }

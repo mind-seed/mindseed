@@ -280,10 +280,17 @@ describe("AuthService", () => {
       // Given: 올바른 회원가입 토큰
       const email = "test@example.com";
       const password = "password";
+      const nickname = "John Doe";
+      const age = 20;
       const signUpToken = signUpTokenService.sign(email);
 
       // When: 회원가입 시도
-      const result = await authService.completeSignup(signUpToken, password);
+      const result = await authService.completeSignup(
+        signUpToken,
+        password,
+        nickname,
+        age,
+      );
 
       // Then: 유저 저장, 올바른 JWT 반환
       const user = await userRepository.findOneBy({ email });
@@ -298,10 +305,17 @@ describe("AuthService", () => {
       // Given: 올바르지 않은 회원가입 토큰인 경우
       const email = "test@example.com";
       const password = "password";
+      const nickname = "John Doe";
+      const age = 20;
       const invalidSignUpToken = "invaild-random-token";
 
       // When: 회원가입 시도
-      const result = authService.completeSignup(invalidSignUpToken, password);
+      const result = authService.completeSignup(
+        invalidSignUpToken,
+        password,
+        nickname,
+        age,
+      );
 
       // Then: throws handled error, 유저 저장하지 않음
       await expect(result).rejects.toThrow(AuthServiceError);
@@ -313,12 +327,19 @@ describe("AuthService", () => {
       // Given: 올바른 회원가입 토큰, 중복된 이메일로 사용자가 존재하는 경우
       const email = "test@example.com";
       const password = "password";
+      const nickname = "John Doe";
+      const age = 20;
       const existingUser = createTestUserWithEmail(email);
       await userRepository.save<User>(existingUser);
       const signUpToken = signUpTokenService.sign(email);
 
       // When: 회원가입 시도
-      const result = authService.completeSignup(signUpToken, password);
+      const result = authService.completeSignup(
+        signUpToken,
+        password,
+        nickname,
+        age,
+      );
 
       // Then: throws handled error
       await expect(result).rejects.toThrow(AuthServiceError);
