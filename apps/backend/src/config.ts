@@ -13,3 +13,7 @@ export const redisConfig = registerAs("redis", () => ({
   port: Number(process.env.REDIS_PORT ?? "6379"),
   password: process.env.REDIS_PASSWORD,
 }));
+
+export const jwtConfig = registerAs("jwt", () => ({
+  secret: process.env.JWT_SECRET,
+}));

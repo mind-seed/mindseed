@@ -1,16 +1,16 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigType } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
-import { databaseConfig, redisConfig } from "./config";
-import { RedisModule } from './redis/redis.module';
+import { databaseConfig, jwtConfig, redisConfig } from "./config";
+import { RedisModule } from "./redis/redis.module";
+import { MailModule } from "./mail/mail.module";
+import { UserModule } from "./user/user.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, redisConfig],
+      load: [databaseConfig, redisConfig, jwtConfig],
     }),
     TypeOrmModule.forRootAsync({
       inject: [databaseConfig.KEY],
@@ -26,6 +26,8 @@ import { RedisModule } from './redis/redis.module';
       }),
     }),
     RedisModule,
+    MailModule,
+    UserModule,
   ],
 })
 export class AppModule {}
