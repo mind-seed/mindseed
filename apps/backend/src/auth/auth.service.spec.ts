@@ -11,6 +11,7 @@ import {
   InvalidCredentialsError,
   InvalidRefreshTokenError,
   InvalidSignUpTokenError,
+  InvalidVerificationCodeError,
   VerificationCooldownError,
 } from "./auth.service";
 import { VerificationCodeService } from "./verification-code/verification-code.service";
@@ -245,7 +246,7 @@ describe("AuthService", () => {
 
   describe("verifyMail", () => {
     it("success: JWT 반환, 인증 코드 삭제", async () => {
-      // Given: 검증을 시도하는 인증 코드가 존재하는 경우
+      // Given: 검증을 시도하는 인증 코드 및 이메일이 존재하는 경우
       const email = "test@example.com";
       const code = "123456";
       await verificationCodeStore.save(email, hashVerificationCode(code), 30);
@@ -256,6 +257,43 @@ describe("AuthService", () => {
       // Then: 올바른 JWT 반환, 인증 코드 삭제됨
       expect(signUpTokenService.decode(token).email).toBe(email);
       expect(await verificationCodeStore.find(email)).toBeNull();
+    });
+
+    it("올바르지 않은 이메일 처리", async () => {
+      // Given: 검증을 시도하는 인증 코드는 존재하지만, 이메일은 존재하지 않는 경우
+      const email = "test@example.com";
+      const storedEmail = "another@example.com";
+      const code = "123456";
+      await verificationCodeStore.save(
+        storedEmail,
+        hashVerificationCode(code),
+        30,
+      );
+
+      // When: 저장된 인증 코드로 검증 시도
+      const result = authService.verifyMail(email, code);
+
+      // Then: throws handled error, 인증 코드 삭제 안됨
+      await expect(result).rejects.toThrow(InvalidVerificationCodeError);
+      expect(await verificationCodeStore.find(storedEmail)).not.toBeNull();
+    });
+
+    it("올바르지 않은 인증 코드 처리", async () => {
+      // Given: 검증을 시도하는 인증 코드는 존재하지 않지만, 이메일은 존재하는 경우
+      const email = "test@example.com";
+      const code = "123456";
+      await verificationCodeStore.save(
+        email,
+        hashVerificationCode("654321"),
+        30,
+      );
+
+      // When: 저장된 인증 코드로 검증 시도
+      const result = authService.verifyMail(email, code);
+
+      // Then: throws handled error, 인증 코드 삭제 안됨
+      await expect(result).rejects.toThrow(InvalidVerificationCodeError);
+      expect(await verificationCodeStore.find(email)).not.toBeNull();
     });
 
     it("JWT 생성 실패 처리", async () => {

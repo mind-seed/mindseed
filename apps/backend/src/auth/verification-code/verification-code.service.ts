@@ -33,7 +33,7 @@ export class VerificationCodeService {
   }
 
   /**
-   * email에 대한 code의 일치 여부를 반환한다.
+   * email에 대한 code의 존재 및 일치 여부를 반환한다.
    */
   async validate(email: string, code: string): Promise<boolean> {
     // SHA-256은 deterministic 하므로, 바로 비교해도 된다.
