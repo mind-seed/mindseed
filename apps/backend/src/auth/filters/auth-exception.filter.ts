@@ -12,6 +12,8 @@ import {
   EmailAlreadyExistsError,
   InvalidVerificationCodeError,
   InvalidSignUpTokenError,
+  InvalidCredentialsError,
+  InvalidRefreshTokenError,
 } from "src/auth/auth.service";
 
 // 2026-03-13: 이후에 다른 service에서도 공통된 로직으로 filter 작성 시
@@ -39,18 +41,38 @@ const AUTH_ERROR_MAP = new Map<
   ],
   [
     EmailAlreadyExistsError,
-    { statusCode: HttpStatus.CONFLICT, errorCode: "EMAIL_ALREADY_EXISTS" },
+    {
+      statusCode: HttpStatus.CONFLICT,
+      errorCode: "EMAIL_ALREADY_EXISTS",
+    },
   ],
   [
     InvalidVerificationCodeError,
     {
-      statusCode: HttpStatus.UNPROCESSABLE_ENTITY,
+      statusCode: HttpStatus.BAD_REQUEST,
       errorCode: "INVALID_VERIFICATION_CODE",
     },
   ],
   [
     InvalidSignUpTokenError,
-    { statusCode: HttpStatus.UNAUTHORIZED, errorCode: "INVALID_SIGN_UP_TOKEN" },
+    {
+      statusCode: HttpStatus.UNAUTHORIZED,
+      errorCode: "INVALID_SIGN_UP_TOKEN",
+    },
+  ],
+  [
+    InvalidCredentialsError,
+    {
+      statusCode: HttpStatus.BAD_REQUEST,
+      errorCode: "INVALID_CREDENTIALS",
+    },
+  ],
+  [
+    InvalidRefreshTokenError,
+    {
+      statusCode: HttpStatus.BAD_REQUEST,
+      errorCode: "INVALID_REFRESH_TOKEN",
+    },
   ],
 ]);
 

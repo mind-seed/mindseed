@@ -147,7 +147,8 @@ export class AuthService {
    * @returns access token 및 refresh token
    */
   async refreshTokens(refreshToken: string): Promise<TokenPair> {
-    const userId = await this.refreshTokenService.findUserIdByToken(refreshToken);
+    const userId =
+      await this.refreshTokenService.findUserIdByToken(refreshToken);
     if (!userId) {
       throw new InvalidRefreshTokenError();
     }
