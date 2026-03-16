@@ -1,0 +1,28 @@
+name: Discord PR Notification
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Notification
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          DISCORD_MESSAGE: ${{ vars.DISCORD_MESSAGE }}
+        run: |
+          MESSAGE="${DISCORD_MESSAGE}"
+
+          # Expand supported placeholders
+          MESSAGE="${MESSAGE//\{pr_title\}/${{ github.event.pull_request.title }}}"
+          MESSAGE="${MESSAGE//\{pr_url\}/${{ github.event.pull_request.html_url }}}"
+          MESSAGE="${MESSAGE//\{pr_author\}/${{ github.event.pull_request.user.login }}}"
+          MESSAGE="${MESSAGE//\{base_branch\}/${{ github.event.pull_request.base.ref }}}"
+          MESSAGE="${MESSAGE//\{head_branch\}/${{ github.event.pull_request.head.ref }}}"
+
+          curl -s -o /dev/null -w "%{http_code}" \
+            -H "Content-Type: application/json" \
+            -d "{\"content\": $(echo "$MESSAGE" | jq -Rs .)}" \
+            "$DISCORD_WEBHOOK_URL" | grep -q "^2" || exit 1
