@@ -1,5 +1,5 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { JwtModule } from "@nestjs/jwt";
+import { JwtModule, JwtService } from "@nestjs/jwt";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import PGMem, { DataType } from "pg-mem";
@@ -26,7 +26,10 @@ import { REDIS_CLIENT } from "../redis/redis.module";
 import { User, UserRole } from "../user/user.entity";
 import { UserProfile } from "../user/user-profile.entity";
 import { SignUpTokenService } from "./sign-up-token/sign-up-token.service";
-import { AccessTokenService } from "./access-token/access-token.service";
+import {
+  AccessTokenPayload,
+  AccessTokenService,
+} from "./access-token/access-token.service";
 import { RefreshTokenService } from "./refresh-token/refresh-token.service";
 import { RefreshToken } from "./refresh-token/refresh-token.entity";
 import { EntityClassOrSchema } from "@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type";
@@ -79,7 +82,7 @@ describe("AuthService", () => {
 
   let authService: AuthService;
 
-  let accessTokenService: AccessTokenService;
+  let jwtService: JwtService;
   let signUpTokenService: SignUpTokenService;
   let verificationCodeStore: VerificationCodeStore;
   let emailRateLimitService: EmailRateLimitService;
@@ -132,7 +135,7 @@ describe("AuthService", () => {
 
     authService = module.get(AuthService);
 
-    accessTokenService = module.get(AccessTokenService);
+    jwtService = module.get(JwtService);
     verificationCodeStore = module.get(VerificationCodeStore);
     emailRateLimitService = module.get(EmailRateLimitService);
     signUpTokenService = module.get(SignUpTokenService);
@@ -352,7 +355,9 @@ describe("AuthService", () => {
       expect(user).not.toBeNull();
 
       const { accessToken, refreshToken } = result;
-      expect(accessTokenService.verify(accessToken).sub).toBe(user!.id);
+      expect(jwtService.verify<AccessTokenPayload>(accessToken).sub).toBe(
+        user!.id,
+      );
       expect(
         (
           await refreshTokenRepository.findOneBy({
@@ -421,9 +426,9 @@ describe("AuthService", () => {
 
       // Then: 토큰 저장, 유저 및 토큰 반환
       expect(result.user.email).toBe(email);
-      expect(accessTokenService.verify(result.tokens.accessToken).sub).toBe(
-        result.user.id,
-      );
+      expect(
+        jwtService.verify<AccessTokenPayload>(result.tokens.accessToken).sub,
+      ).toBe(result.user.id);
       const storedToken = await refreshTokenRepository.findOneBy({
         user: { id: result.user.id },
       });
@@ -485,7 +490,9 @@ describe("AuthService", () => {
           })
         )?.user.id,
       ).toBe(user.id);
-      expect(accessTokenService.verify(result.accessToken).sub).toBe(user.id);
+      expect(
+        jwtService.verify<AccessTokenPayload>(result.accessToken).sub,
+      ).toBe(user.id);
     });
 
     it("존재하지 않는 refresh token 처리", async () => {
