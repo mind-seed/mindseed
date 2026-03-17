@@ -1,4 +1,3 @@
-import { ErrorResponseDto } from "@mindseed/api-types";
 import {
   ExceptionFilter,
   Catch,
@@ -18,13 +17,13 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       return res.status(statusCode).json({
         success: false,
         statusCode,
-      } satisfies ErrorResponseDto<any>);
+      });
     }
 
     console.error(exception);
     res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-    } satisfies ErrorResponseDto<any>);
+    });
   }
 }
