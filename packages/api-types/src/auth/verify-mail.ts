@@ -4,22 +4,22 @@
 
 import z from "zod";
 import { verificationCodeSchema } from "./common";
-import type { ErrorResponseDto, SuccessResponseDto } from "../shared";
+import { responseDtoSchema } from "../shared";
 
 export const VerifyMailRequestDtoSchema = z.object({
   email: z.email(),
   code: verificationCodeSchema,
 });
 
-export type VerifyMailRequestDto = z.infer<typeof VerifyMailRequestDtoSchema>;
+export type VerifyMailRequestDto = z.output<typeof VerifyMailRequestDtoSchema>;
 
-export type VerifyMailSuccessResponseDto = SuccessResponseDto<{
-  signUpToken: string;
-}>;
+export const VerifyMailResponseDtoSchema = responseDtoSchema(
+  z.object({
+    signUpToken: z.string(),
+  }),
+  z.enum(["INVALID_VERIFICATION_CODE"])
+);
 
-export type VerifyMailErrorCode = "INVALID_VERIFICATION_CODE";
-
-export type VerifyMailErrorResponseDto = ErrorResponseDto<VerifyMailErrorCode>;
-
-export type VerifyMailResponseDto = VerifyMailSuccessResponseDto | VerifyMailErrorResponseDto;
-
+export type VerifyMailResponseDto = z.output<typeof VerifyMailResponseDtoSchema>;
+export type VerifyMailSuccessResponseDto = Extract<VerifyMailResponseDto, { success: true }>;
+export type VerifyMailErrorResponseDto = Extract<VerifyMailResponseDto, { success: false }>;

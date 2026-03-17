@@ -1,20 +1,19 @@
-import type { ErrorResponseDto, SuccessResponseDto } from "../shared";
-
 /*
  POST /auth/refresh-tokens
  Authorization: Bearer <refresh token>
  */
 
-export type RefreshTokensSuccessResponseDto = SuccessResponseDto<{
-  accessToken: string;
-  refreshToken: string;
-}>;
+import z from "zod";
+import { responseDtoSchema } from "../shared";
 
-export type RefreshTokensErrorCode = "INVALID_REFRESH_TOKEN";
+export const RefreshTokensResponseDtoSchema = responseDtoSchema(
+  z.object({
+    accessToken: z.string(),
+    refreshToken: z.string(),
+  }),
+  z.enum(["INVALID_REFRESH_TOKEN"])
+);
 
-export type RefreshTokensErrorResponseDto =
-  ErrorResponseDto<RefreshTokensErrorCode>;
-
-export type RefreshTokensResponseDto =
-  | RefreshTokensSuccessResponseDto
-  | RefreshTokensErrorResponseDto;
+export type RefreshTokensResponseDto = z.output<typeof RefreshTokensResponseDtoSchema>;
+export type RefreshTokensSuccessResponseDto = Extract<RefreshTokensResponseDto, { success: true }>;
+export type RefreshTokensErrorResponseDto = Extract<RefreshTokensResponseDto, { success: false }>;
