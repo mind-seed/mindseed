@@ -9,6 +9,7 @@ import {
   SendMailRequestDtoSchema,
   VerifyMailRequestDtoSchema,
   CompleteSignupRequestDtoSchema,
+  LoginRequestDtoSchema,
 } from "@mindseed/api-types";
 import type {
   SendMailRequestDto,
@@ -17,6 +18,9 @@ import type {
   VerifyMailSuccessResponseDto,
   CompleteSignupRequestDto,
   CompleteSignupSuccessResponseDto,
+  LoginRequestDto,
+  LoginSuccessResponseDto,
+  RefreshTokensSuccessResponseDto,
 } from "@mindseed/api-types";
 import { AuthService } from "./auth.service";
 import { ZodBody } from "src/common/pipes/zod-body.decorator";
@@ -60,5 +64,40 @@ export class AuthController {
       body.age,
     );
     return { success: true, data: result };
+  }
+
+  @Post("/login")
+  @HttpCode(HttpStatus.OK)
+  async login(
+    @ZodBody(LoginRequestDtoSchema) body: LoginRequestDto,
+  ): Promise<LoginSuccessResponseDto> {
+    const { user, tokens } = await this.authService.login(
+      body.email,
+      body.password,
+    );
+    return {
+      success: true,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          createdAt: user.createdAt.toISOString(),
+          profile: { nickname: user.profile.nickname, age: user.profile.age },
+        },
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+      },
+    };
+  }
+
+  @Post("/refresh-tokens")
+  @HttpCode(HttpStatus.OK)
+  async refreshTokens(
+    @Headers("authorization") authorization: string,
+  ): Promise<RefreshTokensSuccessResponseDto> {
+    const refreshToken = authorization?.replace(/^Bearer\s+/i, "");
+    const tokens = await this.authService.refreshTokens(refreshToken);
+    return { success: true, data: tokens };
   }
 }

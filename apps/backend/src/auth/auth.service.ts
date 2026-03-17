@@ -1,5 +1,4 @@
 import { Injectable } from "@nestjs/common";
-import * as bcrypt from "bcrypt";
 import { EmailRateLimitService } from "./email-rate-limit/email-rate-limit.service";
 import { VerificationCodeService } from "./verification-code/verification-code.service";
 import { MailService } from "src/mail/mail.service";
@@ -8,10 +7,17 @@ import { SignUpTokenService } from "./sign-up-token/sign-up-token.service";
 import { AccessTokenService } from "./access-token/access-token.service";
 import { RefreshTokenService } from "./refresh-token/refresh-token.service";
 import { JsonWebTokenError } from "@nestjs/jwt";
+import { User } from "src/user/user.entity";
+import { bcryptHash, bcryptCompare } from "./bcrypt.helper";
 
-export type SignUpResult = {
+export type TokenPair = {
   accessToken: string;
   refreshToken: string;
+};
+
+export type LoginResult = {
+  user: User;
+  tokens: TokenPair;
 };
 
 export class AuthServiceError extends Error {}
@@ -20,6 +26,8 @@ export class VerificationCooldownError extends AuthServiceError {}
 export class EmailAlreadyExistsError extends AuthServiceError {}
 export class InvalidVerificationCodeError extends AuthServiceError {}
 export class InvalidSignUpTokenError extends AuthServiceError {}
+export class InvalidCredentialsError extends AuthServiceError {}
+export class InvalidRefreshTokenError extends AuthServiceError {}
 
 @Injectable()
 export class AuthService {
@@ -87,7 +95,7 @@ export class AuthService {
     password: string,
     nickname: string,
     age: number,
-  ): Promise<SignUpResult> {
+  ): Promise<TokenPair> {
     let email: string;
 
     try {
@@ -105,7 +113,7 @@ export class AuthService {
       throw new EmailAlreadyExistsError();
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcryptHash(password);
     const user = await this.userService.create(email, hashedPassword, {
       nickname,
       age,
@@ -114,5 +122,40 @@ export class AuthService {
     const refreshToken = await this.refreshTokenService.issue(user.id);
 
     return { accessToken, refreshToken };
+  }
+
+  /**
+   * email과 password를 이용해 로그인을 시도한다.
+   * @returns access token 및 refresh token과 user
+   */
+  async login(email: string, password: string): Promise<LoginResult> {
+    const user = await this.userService.findByEmail(email);
+    if (!user) throw new InvalidCredentialsError();
+
+    if (!(await bcryptCompare(password, user.password))) {
+      throw new InvalidCredentialsError();
+    }
+
+    const accessToken = this.accessTokenService.sign(user.id);
+    const refreshToken = await this.refreshTokenService.issue(user.id);
+
+    return { user, tokens: { accessToken, refreshToken } };
+  }
+
+  /**
+   * refreshToken을 이용하여 새로운 access token 및 refresh token을 발급한다.
+   * @returns access token 및 refresh token
+   */
+  async refreshTokens(refreshToken: string): Promise<TokenPair> {
+    const userId =
+      await this.refreshTokenService.findUserIdByToken(refreshToken);
+    if (!userId) {
+      throw new InvalidRefreshTokenError();
+    }
+
+    const accessToken = this.accessTokenService.sign(userId);
+    const newRefreshToken = await this.refreshTokenService.rotate(userId);
+
+    return { accessToken, refreshToken: newRefreshToken };
   }
 }

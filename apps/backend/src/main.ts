@@ -6,7 +6,7 @@ import { AuthExceptionFilter } from "./auth/filters/auth-exception.filter";
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
-  app.useGlobalFilters(new AuthExceptionFilter(), new GlobalExceptionFilter());
+  app.useGlobalFilters(new GlobalExceptionFilter(), new AuthExceptionFilter());
   await app.listen(process.env.PORT ?? 8000);
 }
 

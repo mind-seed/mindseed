@@ -10,7 +10,8 @@ import { VerificationCodeStore } from "./verification-code/verification-code.sto
 import { SignUpTokenService } from "./sign-up-token/sign-up-token.service";
 import { AccessTokenService } from "./access-token/access-token.service";
 import { RefreshTokenService } from "./refresh-token/refresh-token.service";
-import { RefreshTokenStore } from "./refresh-token/refresh-token.store";
+import { RefreshToken } from "./refresh-token/refresh-token.entity";
+import { TypeOrmModule } from "@nestjs/typeorm";
 import { RedisModule } from "src/redis/redis.module";
 import { UserModule } from "src/user/user.module";
 import { MailModule } from "src/mail/mail.module";
@@ -18,6 +19,7 @@ import { jwtConfig } from "src/config";
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([RefreshToken]),
     RedisModule,
     UserModule,
     MailModule,
@@ -38,7 +40,6 @@ import { jwtConfig } from "src/config";
     SignUpTokenService,
     AccessTokenService,
     RefreshTokenService,
-    RefreshTokenStore,
   ],
 })
 export class AuthModule {}
