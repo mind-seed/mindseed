@@ -463,6 +463,51 @@ describe("AuthService", () => {
     });
   });
 
+  describe("getUserFromAccessToken", () => {
+    it("success: user 반환", async () => {
+      // Given: 존재하는 유저에 대한 올바른 access token
+      const email = "test@example.com";
+      const password = "password";
+      const user = await userRepository.save(
+        await createTestUser(email, password),
+      );
+      const accessToken = jwtService.sign<AccessTokenPayload>({
+        sub: user.id,
+      });
+
+      // When: user 조회 시도
+      const result = await authService.getUserFromAccessToken(accessToken);
+
+      // Then: 올바른 user 반환
+      expect(result?.id).toBe(user.id);
+    });
+
+    it("올바르지 않은 access token 처리", async () => {
+      // Given: 올바르지 않은 access token
+      const invalidToken = "invalid-token";
+
+      // When: user 조회 시도
+      const result = await authService.getUserFromAccessToken(invalidToken);
+
+      // Then: null 반환
+      expect(result).toBeNull();
+    });
+
+    it("존재하지 않는 user 처리", async () => {
+      // Given: 존재하지 않는 유저에 대한 올바른 access token
+      const nonExistentUserId = 99999;
+      const accessToken = jwtService.sign<AccessTokenPayload>({
+        sub: nonExistentUserId,
+      });
+
+      // When: user 조회 시도
+      const result = await authService.getUserFromAccessToken(accessToken);
+
+      // Then: null 반환
+      expect(result).toBeNull();
+    });
+  });
+
   describe("refreshTokens", () => {
     it("success: 토큰 재발급 및 저장", async () => {
       // Given: 존재하는 유저에 대한 올바른 refresh token
