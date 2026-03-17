@@ -10,6 +10,11 @@ import {
   VerifyMailRequestDtoSchema,
   CompleteSignupRequestDtoSchema,
   LoginRequestDtoSchema,
+  SendMailResponseDtoSchema,
+  VerifyMailResponseDtoSchema,
+  CompleteSignupResponseDtoSchema,
+  LoginResponseDtoSchema,
+  RefreshTokensResponseDtoSchema,
 } from "@mindseed/api-types";
 import type {
   SendMailRequestDto,
@@ -24,6 +29,7 @@ import type {
 } from "@mindseed/api-types";
 import { AuthService } from "./auth.service";
 import { ZodBody } from "src/common/pipes/zod-body.decorator";
+import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 
 @Controller("/auth")
 export class AuthController {
@@ -31,6 +37,7 @@ export class AuthController {
 
   @Post("/send-mail")
   @HttpCode(HttpStatus.OK)
+  @ZodEncodeResponse(SendMailResponseDtoSchema)
   async sendMail(
     @ZodBody(SendMailRequestDtoSchema) body: SendMailRequestDto,
   ): Promise<SendMailSuccessResponseDto> {
@@ -40,6 +47,7 @@ export class AuthController {
 
   @Post("/verify-mail")
   @HttpCode(HttpStatus.OK)
+  @ZodEncodeResponse(VerifyMailResponseDtoSchema)
   async verifyMail(
     @ZodBody(VerifyMailRequestDtoSchema) body: VerifyMailRequestDto,
   ): Promise<VerifyMailSuccessResponseDto> {
@@ -52,6 +60,7 @@ export class AuthController {
 
   @Post("/complete-signup")
   @HttpCode(HttpStatus.CREATED)
+  @ZodEncodeResponse(CompleteSignupResponseDtoSchema)
   async completeSignup(
     @Headers("authorization") authorization: string,
     @ZodBody(CompleteSignupRequestDtoSchema) body: CompleteSignupRequestDto,
@@ -68,6 +77,7 @@ export class AuthController {
 
   @Post("/login")
   @HttpCode(HttpStatus.OK)
+  @ZodEncodeResponse(LoginResponseDtoSchema)
   async login(
     @ZodBody(LoginRequestDtoSchema) body: LoginRequestDto,
   ): Promise<LoginSuccessResponseDto> {
@@ -82,7 +92,7 @@ export class AuthController {
           id: user.id,
           email: user.email,
           role: user.role,
-          createdAt: user.createdAt.toISOString(),
+          createdAt: user.createdAt,
           profile: { nickname: user.profile.nickname, age: user.profile.age },
         },
         accessToken: tokens.accessToken,
@@ -93,6 +103,7 @@ export class AuthController {
 
   @Post("/refresh-tokens")
   @HttpCode(HttpStatus.OK)
+  @ZodEncodeResponse(RefreshTokensResponseDtoSchema)
   async refreshTokens(
     @Headers("authorization") authorization: string,
   ): Promise<RefreshTokensSuccessResponseDto> {

@@ -1,10 +1,28 @@
-export type SuccessResponseDto<T> = {
-  success: true;
-  data: T;
-};
+import * as z from "zod";
 
-export type ErrorResponseDto<E> = {
-  success: false;
-  statusCode: number;
-  errorCode?: E;
-};
+export const successResponseDtoSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.object({
+    success: z.literal(true),
+    data: dataSchema,
+  });
+
+export const errorResponseDtoSchema = <E extends z.ZodTypeAny>(errorCodeSchema: E) =>
+  z.object({
+    success: z.literal(false),
+    statusCode: z.int(),
+    errorCode: errorCodeSchema.optional(),
+  });
+
+export const responseDtoSchema = <T extends z.ZodTypeAny, E extends z.ZodTypeAny>(
+  dataSchema: T,
+  errorCodeSchema: E
+) =>
+  z.discriminatedUnion("success", [
+    successResponseDtoSchema(dataSchema),
+    errorResponseDtoSchema(errorCodeSchema),
+  ]);
+
+export const dateTimeCodec = z.codec(z.iso.datetime(), z.date(), {
+  decode: (str) => new Date(str),
+  encode: (date) => date.toISOString(),
+});

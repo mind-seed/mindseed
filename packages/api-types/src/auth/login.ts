@@ -1,5 +1,5 @@
 import z from "zod";
-import type { ErrorResponseDto, SuccessResponseDto } from "../shared";
+import { responseDtoSchema, dateTimeCodec } from "../shared";
 
 /*
  POST /auth/login
@@ -10,29 +10,34 @@ export const LoginRequestDtoSchema = z.object({
   password: z.string(),
 });
 
-export type LoginRequestDto = z.infer<typeof LoginRequestDtoSchema>;
+export type LoginRequestDto = z.output<typeof LoginRequestDtoSchema>;
 
-export type UserProfileDto = {
-  nickname: string;
-  age: number;
-};
+export const UserProfileDtoSchema = z.object({
+  nickname: z.string(),
+  age: z.int(),
+});
 
-export type UserDto = {
-  id: number;
-  email: string;
-  role: "USER" | "ADMIN";
-  createdAt: string;
-  profile: UserProfileDto;
-};
+export type UserProfileDto = z.output<typeof UserProfileDtoSchema>;
 
-export type LoginSuccessResponseDto = SuccessResponseDto<{
-  user: UserDto;
-  accessToken: string;
-  refreshToken: string;
-}>;
+export const UserDtoSchema = z.object({
+  id: z.int(),
+  email: z.email(),
+  role: z.enum(["USER", "ADMIN"]),
+  createdAt: dateTimeCodec,
+  profile: UserProfileDtoSchema,
+});
 
-export type LoginErrorCode = "INVALID_CREDENTIALS";
+export type UserDto = z.output<typeof UserDtoSchema>;
 
-export type LoginErrorResponseDto = ErrorResponseDto<LoginErrorCode>;
+export const LoginResponseDtoSchema = responseDtoSchema(
+  z.object({
+    user: UserDtoSchema,
+    accessToken: z.string(),
+    refreshToken: z.string(),
+  }),
+  z.enum(["INVALID_CREDENTIALS"])
+);
 
-export type LoginResponseDto = LoginSuccessResponseDto | LoginErrorResponseDto;
+export type LoginResponseDto = z.output<typeof LoginResponseDtoSchema>;
+export type LoginSuccessResponseDto = Extract<LoginResponseDto, { success: true }>;
+export type LoginErrorResponseDto = Extract<LoginResponseDto, { success: false }>;
