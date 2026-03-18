@@ -29,6 +29,10 @@ export class InvalidSignUpTokenError extends AuthServiceError {}
 export class InvalidCredentialsError extends AuthServiceError {}
 export class InvalidRefreshTokenError extends AuthServiceError {}
 
+/**
+ * AuthController와 1:1로 대응되는, auth 관련 orchestration logic을
+ * 담당한다.
+ */
 @Injectable()
 export class AuthService {
   constructor(
