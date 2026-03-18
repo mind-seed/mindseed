@@ -1,5 +1,12 @@
-import { applyDecorators, SetMetadata, UseGuards } from "@nestjs/common";
-import { UserRole } from "src/user/user.entity";
+import {
+  applyDecorators,
+  createParamDecorator,
+  ExecutionContext,
+  SetMetadata,
+  UseGuards,
+} from "@nestjs/common";
+import { Request } from "express";
+import { User, UserRole } from "src/user/user.entity";
 import { RoleGuard, ROLE_KEY } from "../guards/role.guard";
 import {
   AuthGuard,
@@ -28,3 +35,13 @@ export const Role = (role: UserRole) =>
 export const AdminOnly = () => Role(UserRole.ADMIN);
 
 export const UserOnly = () => Role(UserRole.USER);
+
+export const CurrentUser = createParamDecorator(
+  (_data: unknown, ctx: ExecutionContext): User => {
+    const req = ctx.switchToHttp().getRequest<Request>();
+    if (!req.user) {
+      throw new Error("CurrentUser decorator requires @Authenticated()");
+    }
+    return req.user;
+  },
+);
