@@ -143,20 +143,6 @@ export class AuthService {
   }
 
   /**
-   * accessToken으로부터 user 조회를 시도한다.
-   * @returns 해당 user
-   */
-  async getUserFromAccessToken(accessToken: string): Promise<User | null> {
-    const userId = this.accessTokenService.extractUserId(accessToken);
-
-    if (!userId) {
-      return null;
-    }
-
-    return this.userService.findById(userId);
-  }
-
-  /**
    * refreshToken을 이용하여 새로운 access token 및 refresh token을 발급한다.
    * @returns access token 및 refresh token
    */

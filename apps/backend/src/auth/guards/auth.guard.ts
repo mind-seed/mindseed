@@ -6,7 +6,8 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { Request } from "express";
-import { AuthService } from "../auth.service";
+import { AccessTokenService } from "../access-token/access-token.service";
+import { UserService } from "src/user/user.service";
 import { Reflector } from "@nestjs/core";
 
 export enum AuthGuardMode {
@@ -21,7 +22,8 @@ export const UseAuthGuardMode = (mode: AuthGuardMode) =>
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
-    private readonly authService: AuthService,
+    private readonly accessTokenService: AccessTokenService,
+    private readonly userService: UserService,
     private readonly reflector: Reflector,
   ) {}
 
@@ -35,7 +37,11 @@ export class AuthGuard implements CanActivate {
     const token = req.headers.authorization?.split(" ")[1];
 
     if (token) {
-      req.user = await this.authService.getUserFromAccessToken(token);
+      const userId = this.accessTokenService.extractUserId(token);
+
+      if (userId) {
+        req.user = await this.userService.findById(userId);
+      }
     }
 
     const userExists = !!req.user;

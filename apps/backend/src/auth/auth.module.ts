@@ -43,6 +43,6 @@ import { jwtConfig } from "src/config";
     RefreshTokenService,
     AuthGuard,
   ],
-  exports: [AuthGuard],
+  exports: [AuthGuard, AccessTokenService],
 })
 export class AuthModule {}
