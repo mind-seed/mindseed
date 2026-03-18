@@ -3,7 +3,7 @@ import { JwtService } from "@nestjs/jwt";
 
 export type AccessTokenPayload = {
   sub: number;
-}
+};
 
 /**
  * user id에 대한 access token 발급 및 검증

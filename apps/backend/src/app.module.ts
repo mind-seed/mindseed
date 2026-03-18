@@ -10,7 +10,6 @@ import { User } from "./user/user.entity";
 import { UserProfile } from "./user/user-profile.entity";
 import { RefreshToken } from "./auth/refresh-token/refresh-token.entity";
 import { ScheduleModule } from "@nestjs/schedule";
-
 @Module({
   imports: [
     ConfigModule.forRoot({
