@@ -28,6 +28,10 @@ export class UserService {
     });
   }
 
+  /*
+   * USER role로 사용자를 생성한다.
+   * @returns 생성된 사용자
+   */
   async create(
     email: string,
     hashedPassword: string,

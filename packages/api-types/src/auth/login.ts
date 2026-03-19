@@ -19,12 +19,13 @@ export const UserProfileDtoSchema = z.object({
 
 export type UserProfileDto = z.output<typeof UserProfileDtoSchema>;
 
+// invariant: profile은 role === "ADMIN" 일 때만 null이다.
 export const UserDtoSchema = z.object({
   id: z.int(),
   email: z.email(),
   role: z.enum(["USER", "ADMIN"]),
   createdAt: dateTimeCodec,
-  profile: UserProfileDtoSchema,
+  profile: UserProfileDtoSchema.nullable(),
 });
 
 export type UserDto = z.output<typeof UserDtoSchema>;

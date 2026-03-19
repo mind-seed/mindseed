@@ -97,7 +97,10 @@ export class AuthController {
           email: user.email,
           role: user.role,
           createdAt: user.createdAt,
-          profile: { nickname: user.profile.nickname, age: user.profile.age },
+          profile: {
+            nickname: user.userProfile.nickname,
+            age: user.userProfile.age,
+          },
         },
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
