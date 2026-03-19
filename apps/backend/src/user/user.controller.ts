@@ -24,9 +24,9 @@ export class UserController {
         email: user.email,
         role: user.role,
         createdAt: user.createdAt,
-        profile: {
-          nickname: user.userProfile.nickname,
-          age: user.userProfile.age,
+        profile: user.profile && {
+          nickname: user.profile.nickname,
+          age: user.profile.age,
         },
       },
     };
