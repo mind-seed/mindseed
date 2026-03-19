@@ -2,7 +2,6 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
@@ -31,6 +30,5 @@ export class User {
   createdAt: Date;
 
   @OneToOne(() => UserProfile, (profile) => profile.user, { cascade: true })
-  @JoinColumn()
   profile: UserProfile;
 }
