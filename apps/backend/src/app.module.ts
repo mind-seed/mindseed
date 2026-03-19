@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigType } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { databaseConfig, jwtConfig, redisConfig } from "./config";
+import { databaseConfig, jwtConfig, mailConfig, redisConfig } from "./config";
 import { RedisModule } from "./redis/redis.module";
 import { MailModule } from "./mail/mail.module";
 import { UserModule } from "./user/user.module";
@@ -15,7 +15,7 @@ import { ScheduleModule } from "@nestjs/schedule";
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, redisConfig, jwtConfig],
+      load: [databaseConfig, redisConfig, jwtConfig, mailConfig],
     }),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
