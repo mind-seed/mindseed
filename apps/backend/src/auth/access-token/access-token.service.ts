@@ -1,12 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 
-interface AccessTokenPayload {
+export type AccessTokenPayload = {
   sub: number;
-}
+};
 
 /**
- * access token JWT 발급/검증을 위한 wrapper class
+ * user id에 대한 access token 발급 및 검증
  */
 @Injectable()
 export class AccessTokenService {
@@ -17,7 +17,13 @@ export class AccessTokenService {
     return this.jwtService.sign(payload);
   }
 
-  verify(token: string): AccessTokenPayload {
-    return this.jwtService.verify<AccessTokenPayload>(token);
+  extractUserId(token: string): number | null {
+    try {
+      const payload = this.jwtService.verify<AccessTokenPayload>(token);
+      return payload.sub;
+    } catch {
+      // assumption: 여기서 caught된 error는 jwt verification failure에 의한 것
+      return null;
+    }
   }
 }

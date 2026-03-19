@@ -21,6 +21,13 @@ export class UserService {
     });
   }
 
+  async findById(id: number): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { id },
+      relations: { profile: true },
+    });
+  }
+
   async create(
     email: string,
     hashedPassword: string,

@@ -1,4 +1,5 @@
 import { Module } from "@nestjs/common";
+import { AuthGuard } from "./guards/auth.guard";
 import { JwtModule } from "@nestjs/jwt";
 import { ConfigType } from "@nestjs/config";
 import { AuthService } from "./auth.service";
@@ -40,6 +41,8 @@ import { jwtConfig } from "src/config";
     SignUpTokenService,
     AccessTokenService,
     RefreshTokenService,
+    AuthGuard,
   ],
+  exports: [AuthGuard, AccessTokenService],
 })
 export class AuthModule {}

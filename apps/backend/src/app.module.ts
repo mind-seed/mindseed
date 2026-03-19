@@ -10,6 +10,7 @@ import { User } from "./user/user.entity";
 import { UserProfile } from "./user/user-profile.entity";
 import { RefreshToken } from "./auth/refresh-token/refresh-token.entity";
 import { ScheduleModule } from "@nestjs/schedule";
+import { UserController } from "./user/user.controller";
 
 @Module({
   imports: [
@@ -33,9 +34,11 @@ import { ScheduleModule } from "@nestjs/schedule";
     }),
     RedisModule,
     MailModule,
-
     AuthModule,
     UserModule,
   ],
+  // 2026-03-18: AuthGuard -- UserService circular dependency 문제를 해결하기
+  // 위해 다음과 같이 배치하였습니다.
+  controllers: [UserController],
 })
 export class AppModule {}
