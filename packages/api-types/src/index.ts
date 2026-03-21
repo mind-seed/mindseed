@@ -8,3 +8,6 @@ export * from "./auth/send-mail";
 export * from "./auth/verify-mail";
 
 export * from "./users/current";
+
+export * from "./attachments/begin";
+export * from "./attachments/confirm";
