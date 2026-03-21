@@ -1,5 +1,6 @@
 /*
  GET /users/current
+ Auth: any authenticated user
  */
 
 import z from "zod";
