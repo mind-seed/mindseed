@@ -1,4 +1,10 @@
 {
   "name": "mindseed",
-  "private": true
+  "private": true,
+  "scripts": {
+    "format:check": "prettier \"**/src/**/*.ts\""
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2"
+  }
 }
