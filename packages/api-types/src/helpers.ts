@@ -22,7 +22,3 @@ export const responseDtoSchema = <T extends z.ZodTypeAny, E extends z.ZodTypeAny
     errorResponseDtoSchema(errorCodeSchema),
   ]);
 
-export const dateTimeCodec = z.codec(z.iso.datetime(), z.date(), {
-  decode: (str) => new Date(str),
-  encode: (date) => date.toISOString(),
-});

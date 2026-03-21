@@ -4,7 +4,7 @@
 
 import z from "zod";
 import { verificationCodeSchema } from "./common";
-import { responseDtoSchema } from "../shared";
+import { responseDtoSchema } from "../helpers";
 
 export const VerifyMailRequestDtoSchema = z.object({
   email: z.email(),

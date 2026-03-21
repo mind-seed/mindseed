@@ -3,7 +3,7 @@
  */
 
 import z from "zod";
-import { responseDtoSchema } from "../shared";
+import { responseDtoSchema } from "../helpers";
 
 export const SendMailRequestDtoSchema = z.object({
   email: z.email(),

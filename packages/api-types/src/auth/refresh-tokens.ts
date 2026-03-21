@@ -4,7 +4,7 @@
  */
 
 import z from "zod";
-import { responseDtoSchema } from "../shared";
+import { responseDtoSchema } from "../helpers";
 
 export const RefreshTokensResponseDtoSchema = responseDtoSchema(
   z.object({

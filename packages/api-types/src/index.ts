@@ -1,4 +1,4 @@
-export * from "./shared";
+export * from "./helpers";
 
 export * from "./auth/common";
 export * from "./auth/complete-signup";

@@ -5,7 +5,7 @@
 
 import z from "zod";
 import { ageSchema, nicknameSchema, passwordSchema } from "./common";
-import { responseDtoSchema } from "../shared";
+import { responseDtoSchema } from "../helpers";
 
 export const CompleteSignupRequestDtoSchema = z.object({
   password: passwordSchema,
