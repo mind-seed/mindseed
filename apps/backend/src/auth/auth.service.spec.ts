@@ -5,8 +5,8 @@ import { DataSource, Repository } from "typeorm";
 import PGMem from "pg-mem";
 import { initializePgMem } from "src/test/pg-mem.helper";
 import IORedisMock from "ioredis-mock";
+import { AuthService } from "./auth.service";
 import {
-  AuthService,
   EmailAlreadyExistsError,
   EmailRateLimitedError,
   InvalidCredentialsError,
@@ -14,7 +14,7 @@ import {
   InvalidSignUpTokenError,
   InvalidVerificationCodeError,
   VerificationCooldownError,
-} from "./auth.service";
+} from "./auth.errors";
 import { VerificationCodeService } from "./verification-code/verification-code.service";
 import { VerificationCodeStore } from "./verification-code/verification-code.store";
 import { hashVerificationCode } from "./verification-code/hash-verification-code.helper";

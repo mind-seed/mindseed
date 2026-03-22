@@ -3,12 +3,12 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import PGMem from "pg-mem";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { AttachmentService } from "./attachment.service";
 import {
   AttachmentAlreadyConfirmedError,
   AttachmentNotFoundError,
   AttachmentNotUploadedError,
-  AttachmentService,
-} from "./attachment.service";
+} from "./attachment.errors";
 import { Attachment } from "./attachment.entity";
 import { Post } from "../post/post.entity";
 import { User } from "../user/user.entity";

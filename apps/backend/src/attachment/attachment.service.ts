@@ -1,4 +1,4 @@
-import { Injectable, HttpStatus } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import type { ConfigType } from "@nestjs/config";
@@ -14,24 +14,21 @@ import { randomUUID } from "crypto";
 import { Attachment } from "./attachment.entity";
 import { S3_CLIENT } from "src/s3-storage/s3-storage.module";
 import { s3Config } from "src/config";
-import { ServiceError } from "src/common/errors/service.error";
+import {
+  AttachmentAlreadyConfirmedError,
+  AttachmentNotFoundError,
+  AttachmentNotUploadedError,
+} from "./attachment.errors";
 
 export type BeginAttachmentUploadResult = {
   attachmentId: number;
   presignedUrl: string;
 };
 
-export class AttachmentServiceError extends ServiceError {}
-export class AttachmentNotFoundError extends AttachmentServiceError {
-  constructor() { super(HttpStatus.NOT_FOUND, "ATTACHMENT_NOT_FOUND"); }
-}
-export class AttachmentAlreadyConfirmedError extends AttachmentServiceError {
-  constructor() { super(HttpStatus.CONFLICT, "ATTACHMENT_ALREADY_CONFIRMED"); }
-}
-export class AttachmentNotUploadedError extends AttachmentServiceError {
-  constructor() { super(HttpStatus.BAD_REQUEST, "ATTACHMENT_NOT_UPLOADED"); }
-}
-
+/**
+ * AuthController와 1:1로 대응되는, attachment 관련 orchestration logic을
+ * 담당한다.
+ */
 @Injectable()
 export class AttachmentService {
   constructor(
