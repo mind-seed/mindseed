@@ -18,6 +18,13 @@ export const jwtConfig = registerAs("jwt", () => ({
   secret: process.env.JWT_SECRET,
 }));
 
+export const s3Config = registerAs("s3", () => ({
+  region: process.env.AWS_REGION,
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  bucket: process.env.AWS_S3_BUCKET,
+}));
+
 export const mailConfig = registerAs("mail", () => ({
   host: process.env.MAIL_HOST,
   port: Number(process.env.MAIL_PORT ?? "587"),

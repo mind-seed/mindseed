@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule, ConfigType } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { databaseConfig, jwtConfig, mailConfig, redisConfig } from "./config";
+import { databaseConfig, jwtConfig, mailConfig, redisConfig, s3Config } from "./config";
 import { RedisModule } from "./redis/redis.module";
 import { MailModule } from "./mail/mail.module";
 import { UserModule } from "./user/user.module";
@@ -11,12 +11,13 @@ import { UserProfile } from "./user/user-profile.entity";
 import { RefreshToken } from "./auth/refresh-token/refresh-token.entity";
 import { ScheduleModule } from "@nestjs/schedule";
 import { UserController } from "./user/user.controller";
+import { S3StorageModule } from './s3-storage/s3-storage.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, redisConfig, jwtConfig, mailConfig],
+      load: [databaseConfig, redisConfig, jwtConfig, mailConfig, s3Config],
     }),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
@@ -34,6 +35,7 @@ import { UserController } from "./user/user.controller";
     }),
     RedisModule,
     MailModule,
+    S3StorageModule,
     AuthModule,
     UserModule,
   ],
