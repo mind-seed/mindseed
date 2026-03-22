@@ -8,6 +8,9 @@ const CODE_LENGTH = 6;
 
 export class VerificationCodeServiceError extends Error {}
 
+/**
+ * email에 대한 verification code를 발급 및 관리한다.
+ */
 @Injectable()
 export class VerificationCodeService {
   constructor(private readonly verificationCodeStore: VerificationCodeStore) {}

@@ -6,7 +6,10 @@ import { ServiceExceptionFilter } from "./common/filters/service-exception.filte
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
-  app.useGlobalFilters(new GlobalExceptionFilter(), new ServiceExceptionFilter());
+  app.useGlobalFilters(
+    new GlobalExceptionFilter(),
+    new ServiceExceptionFilter(),
+  );
   await app.listen(process.env.PORT ?? 8000);
 }
 
