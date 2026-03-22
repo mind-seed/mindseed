@@ -13,6 +13,7 @@ export const S3_CLIENT = Symbol("S3_CLIENT");
       useFactory: (config: ConfigType<typeof s3Config>) =>
         new S3Client({
           region: config.region,
+          endpoint: config.endpoint,
           credentials: {
             accessKeyId: config.accessKeyId!,
             secretAccessKey: config.secretAccessKey!,
