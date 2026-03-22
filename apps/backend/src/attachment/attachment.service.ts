@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, HttpStatus } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import type { ConfigType } from "@nestjs/config";
@@ -14,15 +14,23 @@ import { randomUUID } from "crypto";
 import { Attachment } from "./attachment.entity";
 import { S3_CLIENT } from "src/s3-storage/s3-storage.module";
 import { s3Config } from "src/config";
+import { ServiceError } from "src/common/errors/service.error";
 
 export type BeginAttachmentUploadResult = {
   attachmentId: number;
   presignedUrl: string;
 };
 
-export class AttachmentServiceError extends Error {}
-export class InvalidAttachmentError extends AttachmentServiceError {}
-export class AttachmentNotUploadedError extends AttachmentServiceError {}
+export class AttachmentServiceError extends ServiceError {}
+export class AttachmentNotFoundError extends AttachmentServiceError {
+  constructor() { super(HttpStatus.NOT_FOUND, "ATTACHMENT_NOT_FOUND"); }
+}
+export class AttachmentAlreadyConfirmedError extends AttachmentServiceError {
+  constructor() { super(HttpStatus.CONFLICT, "ATTACHMENT_ALREADY_CONFIRMED"); }
+}
+export class AttachmentNotUploadedError extends AttachmentServiceError {
+  constructor() { super(HttpStatus.BAD_REQUEST, "ATTACHMENT_NOT_UPLOADED"); }
+}
 
 @Injectable()
 export class AttachmentService {
@@ -58,8 +66,11 @@ export class AttachmentService {
       id: attachmentId,
     });
 
-    if (!attachment || attachment.confirmed) {
-      throw new InvalidAttachmentError();
+    if (!attachment) {
+      throw new AttachmentNotFoundError();
+    }
+    if (attachment.confirmed) {
+      throw new AttachmentAlreadyConfirmedError();
     }
 
     try {

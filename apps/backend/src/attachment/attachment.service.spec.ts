@@ -4,9 +4,10 @@ import { DataSource, Repository } from "typeorm";
 import PGMem from "pg-mem";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import {
+  AttachmentAlreadyConfirmedError,
+  AttachmentNotFoundError,
   AttachmentNotUploadedError,
   AttachmentService,
-  InvalidAttachmentError,
 } from "./attachment.service";
 import { Attachment } from "./attachment.entity";
 import { Post } from "../post/post.entity";
@@ -151,7 +152,7 @@ describe("AttachmentService", () => {
       );
 
       // Then: throws handled error
-      await expect(result).rejects.toThrow(InvalidAttachmentError);
+      await expect(result).rejects.toThrow(AttachmentNotFoundError);
     });
 
     it("confirmed인 attachment 처리", async () => {
@@ -167,7 +168,7 @@ describe("AttachmentService", () => {
       const result = attachmentService.confirmAttachmentUpload(attachment.id);
 
       // Then: throws handled error
-      await expect(result).rejects.toThrow(InvalidAttachmentError);
+      await expect(result).rejects.toThrow(AttachmentAlreadyConfirmedError);
     });
 
     it("업로드되지 않은 attachment 처리", async () => {

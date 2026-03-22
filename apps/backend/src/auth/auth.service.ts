@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, HttpStatus } from "@nestjs/common";
 import { EmailRateLimitService } from "./email-rate-limit/email-rate-limit.service";
 import { VerificationCodeService } from "./verification-code/verification-code.service";
 import { MailService } from "src/mail/mail.service";
@@ -9,6 +9,7 @@ import { RefreshTokenService } from "./refresh-token/refresh-token.service";
 import { JsonWebTokenError } from "@nestjs/jwt";
 import { User } from "src/user/user.entity";
 import { bcryptHash, bcryptCompare } from "./bcrypt.helper";
+import { ServiceError } from "src/common/errors/service.error";
 
 export type TokenPair = {
   accessToken: string;
@@ -20,14 +21,28 @@ export type LoginResult = {
   tokens: TokenPair;
 };
 
-export class AuthServiceError extends Error {}
-export class EmailRateLimitedError extends AuthServiceError {}
-export class VerificationCooldownError extends AuthServiceError {}
-export class EmailAlreadyExistsError extends AuthServiceError {}
-export class InvalidVerificationCodeError extends AuthServiceError {}
-export class InvalidSignUpTokenError extends AuthServiceError {}
-export class InvalidCredentialsError extends AuthServiceError {}
-export class InvalidRefreshTokenError extends AuthServiceError {}
+export class AuthServiceError extends ServiceError {}
+export class EmailRateLimitedError extends AuthServiceError {
+  constructor() { super(HttpStatus.TOO_MANY_REQUESTS, "EMAIL_RATE_LIMITED"); }
+}
+export class VerificationCooldownError extends AuthServiceError {
+  constructor() { super(HttpStatus.TOO_MANY_REQUESTS, "VERIFICATION_COOLDOWN"); }
+}
+export class EmailAlreadyExistsError extends AuthServiceError {
+  constructor() { super(HttpStatus.CONFLICT, "EMAIL_ALREADY_EXISTS"); }
+}
+export class InvalidVerificationCodeError extends AuthServiceError {
+  constructor() { super(HttpStatus.BAD_REQUEST, "INVALID_VERIFICATION_CODE"); }
+}
+export class InvalidSignUpTokenError extends AuthServiceError {
+  constructor() { super(HttpStatus.UNAUTHORIZED, "INVALID_SIGN_UP_TOKEN"); }
+}
+export class InvalidCredentialsError extends AuthServiceError {
+  constructor() { super(HttpStatus.BAD_REQUEST, "INVALID_CREDENTIALS"); }
+}
+export class InvalidRefreshTokenError extends AuthServiceError {
+  constructor() { super(HttpStatus.BAD_REQUEST, "INVALID_REFRESH_TOKEN"); }
+}
 
 /**
  * AuthController와 1:1로 대응되는, auth 관련 orchestration logic을
