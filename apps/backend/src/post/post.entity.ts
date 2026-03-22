@@ -1,0 +1,44 @@
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from "typeorm";
+import { User } from "../user/user.entity";
+import { Attachment } from "../attachment/attachment.entity";
+
+export enum PostCategory {
+  DUMMY1 = "DUMMY1",
+  DUMMY2 = "DUMMY2",
+  DUMMY3 = "DUMMY3",
+}
+
+@Entity()
+export class Post {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ type: "text" })
+  content: string;
+
+  @Column({ type: "enum", enum: PostCategory })
+  category: PostCategory;
+
+  @Column()
+  nickname: string;
+
+  @ManyToOne(() => User)
+  author: User;
+
+  @CreateDateColumn({ type: "timestamptz" })
+  createdAt: Date;
+
+  @UpdateDateColumn({ type: "timestamptz" })
+  updatedAt: Date;
+
+  @OneToMany(() => Attachment, (attachment) => attachment.post)
+  attachments: Attachment[];
+}
