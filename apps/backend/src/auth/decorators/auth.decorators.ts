@@ -29,7 +29,8 @@ export const UnAuthenticated = () =>
 export const Role = (role: UserRole) =>
   applyDecorators(
     SetMetadata(ROLE_KEY, role),
-    UseGuards(Authenticated, RoleGuard),
+    UseAuthGuardMode(AuthGuardMode.AUTHENTICATED),
+    UseGuards(AuthGuard, RoleGuard),
   );
 
 export const AdminOnly = () => Role(UserRole.ADMIN);
