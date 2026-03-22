@@ -2,7 +2,8 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { JwtModule, JwtService } from "@nestjs/jwt";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
-import PGMem, { DataType } from "pg-mem";
+import PGMem from "pg-mem";
+import { initializePgMem } from "src/test/pg-mem.helper";
 import IORedisMock from "ioredis-mock";
 import {
   AuthService,
@@ -32,11 +33,10 @@ import {
 } from "./access-token/access-token.service";
 import { RefreshTokenService } from "./refresh-token/refresh-token.service";
 import { RefreshToken } from "./refresh-token/refresh-token.entity";
-import { EntityClassOrSchema } from "@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type";
 import { bcryptHash } from "./bcrypt.helper";
 
 // dependent 한 order
-const entities: EntityClassOrSchema[] = [RefreshToken, UserProfile, User];
+const entities = [RefreshToken, UserProfile, User];
 
 async function createTestUser(email: string, password: string): Promise<User> {
   const testUserProfile = new UserProfile();
@@ -50,31 +50,6 @@ async function createTestUser(email: string, password: string): Promise<User> {
   testUser.profile = testUserProfile;
 
   return testUser;
-}
-
-async function initializePgMem() {
-  const db = PGMem.newDb();
-
-  db.public.registerFunction({
-    name: "version",
-    returns: DataType.text,
-    implementation: () => "PostgreSQL 16.0",
-  });
-
-  db.public.registerFunction({
-    name: "current_database",
-    implementation: () => "test-database",
-  });
-
-  const dataSource = (await db.adapters.createTypeormDataSource({
-    type: "postgres",
-    entities,
-    synchronize: true,
-  })) as DataSource;
-
-  await dataSource.initialize();
-
-  return { db, dataSource };
 }
 
 describe("AuthService", () => {
@@ -92,12 +67,12 @@ describe("AuthService", () => {
   let refreshTokenService: RefreshTokenService;
   let redis: InstanceType<typeof IORedisMock>;
   let dataSource: DataSource;
-  let dbBackUp: PGMem.IBackup;
+  let dbBackup: PGMem.IBackup;
 
   beforeAll(async () => {
-    const pgMemResult = await initializePgMem();
-    dataSource = pgMemResult.dataSource;
-    const db = pgMemResult.db;
+    const { dataSource: ds, backup } = await initializePgMem(entities);
+    dataSource = ds;
+    dbBackup = backup;
 
     redis = new IORedisMock();
     mailService = new FakeMailService();
@@ -131,8 +106,6 @@ describe("AuthService", () => {
       ],
     }).compile();
 
-    dbBackUp = db.backup();
-
     authService = module.get(AuthService);
 
     jwtService = module.get(JwtService);
@@ -146,7 +119,7 @@ describe("AuthService", () => {
 
   beforeEach(async () => {
     await redis.flushall();
-    dbBackUp.restore();
+    dbBackup.restore();
 
     mailService.sent = [];
     mailService.shouldFail = false;
