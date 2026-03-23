@@ -17,3 +17,12 @@ export const redisConfig = registerAs("redis", () => ({
 export const jwtConfig = registerAs("jwt", () => ({
   secret: process.env.JWT_SECRET,
 }));
+
+export const mailConfig = registerAs("mail", () => ({
+  host: process.env.MAIL_HOST,
+  port: Number(process.env.MAIL_PORT ?? "587"),
+  user: process.env.MAIL_USER,
+  password: process.env.MAIL_PASSWORD,
+  from: process.env.MAIL_FROM,
+  driver: process.env.MAIL_DRIVER,
+}));

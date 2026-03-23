@@ -1,9 +1,10 @@
-import z from "zod";
-import { responseDtoSchema, dateTimeCodec } from "../shared";
-
 /*
  POST /auth/login
  */
+
+import z from "zod";
+import { responseDtoSchema } from "../helpers";
+import { UserDtoSchema } from "../common/user-dto";
 
 export const LoginRequestDtoSchema = z.object({
   email: z.email(),
@@ -11,23 +12,6 @@ export const LoginRequestDtoSchema = z.object({
 });
 
 export type LoginRequestDto = z.output<typeof LoginRequestDtoSchema>;
-
-export const UserProfileDtoSchema = z.object({
-  nickname: z.string(),
-  age: z.int(),
-});
-
-export type UserProfileDto = z.output<typeof UserProfileDtoSchema>;
-
-export const UserDtoSchema = z.object({
-  id: z.int(),
-  email: z.email(),
-  role: z.enum(["USER", "ADMIN"]),
-  createdAt: dateTimeCodec,
-  profile: UserProfileDtoSchema,
-});
-
-export type UserDto = z.output<typeof UserDtoSchema>;
 
 export const LoginResponseDtoSchema = responseDtoSchema(
   z.object({

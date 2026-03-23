@@ -21,6 +21,17 @@ export class UserService {
     });
   }
 
+  async findById(id: number): Promise<User | null> {
+    return this.userRepository.findOne({
+      where: { id },
+      relations: { profile: true },
+    });
+  }
+
+  /*
+   * USER role로 사용자를 생성한다.
+   * @returns 생성된 사용자
+   */
   async create(
     email: string,
     hashedPassword: string,

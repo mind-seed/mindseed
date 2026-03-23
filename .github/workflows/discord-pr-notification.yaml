@@ -3,24 +3,46 @@ name: Discord PR Notification
 on:
   pull_request:
     types: [opened]
+  issue_comment:
+    types: [created]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event.issue.pull_request != null && contains(github.event.comment.body, '/notify-discord'))
     steps:
+      - name: Fetch PR data (comment trigger)
+        if: github.event_name == 'issue_comment'
+        id: pr
+        run: |
+          PR=$(curl -s -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            "${{ github.event.issue.pull_request.url }}")
+          echo "title=$(echo "$PR" | jq -r '.title')" >> $GITHUB_OUTPUT
+          echo "html_url=$(echo "$PR" | jq -r '.html_url')" >> $GITHUB_OUTPUT
+          echo "author=$(echo "$PR" | jq -r '.user.login')" >> $GITHUB_OUTPUT
+          echo "base=$(echo "$PR" | jq -r '.base.ref')" >> $GITHUB_OUTPUT
+          echo "head=$(echo "$PR" | jq -r '.head.ref')" >> $GITHUB_OUTPUT
+
       - name: Send Discord Notification
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
           DISCORD_MESSAGE: ${{ vars.DISCORD_MESSAGE }}
+          PR_TITLE: ${{ github.event_name == 'issue_comment' && steps.pr.outputs.title || github.event.pull_request.title }}
+          PR_URL: ${{ github.event_name == 'issue_comment' && steps.pr.outputs.html_url || github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event_name == 'issue_comment' && steps.pr.outputs.author || github.event.pull_request.user.login }}
+          BASE_BRANCH: ${{ github.event_name == 'issue_comment' && steps.pr.outputs.base || github.event.pull_request.base.ref }}
+          HEAD_BRANCH: ${{ github.event_name == 'issue_comment' && steps.pr.outputs.head || github.event.pull_request.head.ref }}
         run: |
           MESSAGE="${DISCORD_MESSAGE}"
 
           # Expand supported placeholders
-          MESSAGE="${MESSAGE//\{pr_title\}/${{ github.event.pull_request.title }}}"
-          MESSAGE="${MESSAGE//\{pr_url\}/${{ github.event.pull_request.html_url }}}"
-          MESSAGE="${MESSAGE//\{pr_author\}/${{ github.event.pull_request.user.login }}}"
-          MESSAGE="${MESSAGE//\{base_branch\}/${{ github.event.pull_request.base.ref }}}"
-          MESSAGE="${MESSAGE//\{head_branch\}/${{ github.event.pull_request.head.ref }}}"
+          MESSAGE="${MESSAGE//\{pr_title\}/${PR_TITLE}}"
+          MESSAGE="${MESSAGE//\{pr_url\}/${PR_URL}}"
+          MESSAGE="${MESSAGE//\{pr_author\}/${PR_AUTHOR}}"
+          MESSAGE="${MESSAGE//\{base_branch\}/${BASE_BRANCH}}"
+          MESSAGE="${MESSAGE//\{head_branch\}/${HEAD_BRANCH}}"
 
           curl -s -o /dev/null -w "%{http_code}" \
             -H "Content-Type: application/json" \

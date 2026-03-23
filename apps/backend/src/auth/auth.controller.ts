@@ -30,6 +30,7 @@ import type {
 import { AuthService } from "./auth.service";
 import { ZodBody } from "src/common/pipes/zod-body.decorator";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
+import { UnAuthenticated } from "./decorators/auth.decorators";
 
 @Controller("/auth")
 export class AuthController {
@@ -37,6 +38,7 @@ export class AuthController {
 
   @Post("/send-mail")
   @HttpCode(HttpStatus.OK)
+  @UnAuthenticated()
   @ZodEncodeResponse(SendMailResponseDtoSchema)
   async sendMail(
     @ZodBody(SendMailRequestDtoSchema) body: SendMailRequestDto,
@@ -47,6 +49,7 @@ export class AuthController {
 
   @Post("/verify-mail")
   @HttpCode(HttpStatus.OK)
+  @UnAuthenticated()
   @ZodEncodeResponse(VerifyMailResponseDtoSchema)
   async verifyMail(
     @ZodBody(VerifyMailRequestDtoSchema) body: VerifyMailRequestDto,
@@ -77,6 +80,7 @@ export class AuthController {
 
   @Post("/login")
   @HttpCode(HttpStatus.OK)
+  @UnAuthenticated()
   @ZodEncodeResponse(LoginResponseDtoSchema)
   async login(
     @ZodBody(LoginRequestDtoSchema) body: LoginRequestDto,
@@ -93,7 +97,10 @@ export class AuthController {
           email: user.email,
           role: user.role,
           createdAt: user.createdAt,
-          profile: { nickname: user.profile.nickname, age: user.profile.age },
+          profile: {
+            nickname: user.userProfile.nickname,
+            age: user.userProfile.age,
+          },
         },
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
