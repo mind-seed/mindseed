@@ -9,6 +9,15 @@ import { RefreshTokenService } from "./refresh-token/refresh-token.service";
 import { JsonWebTokenError } from "@nestjs/jwt";
 import { User } from "src/user/user.entity";
 import { bcryptHash, bcryptCompare } from "./bcrypt.helper";
+import {
+  EmailAlreadyExistsError,
+  EmailRateLimitedError,
+  InvalidCredentialsError,
+  InvalidRefreshTokenError,
+  InvalidSignUpTokenError,
+  InvalidVerificationCodeError,
+  VerificationCooldownError,
+} from "./auth.errors";
 
 export type TokenPair = {
   accessToken: string;
@@ -19,15 +28,6 @@ export type LoginResult = {
   user: User;
   tokens: TokenPair;
 };
-
-export class AuthServiceError extends Error {}
-export class EmailRateLimitedError extends AuthServiceError {}
-export class VerificationCooldownError extends AuthServiceError {}
-export class EmailAlreadyExistsError extends AuthServiceError {}
-export class InvalidVerificationCodeError extends AuthServiceError {}
-export class InvalidSignUpTokenError extends AuthServiceError {}
-export class InvalidCredentialsError extends AuthServiceError {}
-export class InvalidRefreshTokenError extends AuthServiceError {}
 
 /**
  * AuthController와 1:1로 대응되는, auth 관련 orchestration logic을

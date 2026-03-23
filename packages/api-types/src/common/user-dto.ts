@@ -7,7 +7,7 @@ export const UserDtoSchema = z.object({
   email: z.email(),
   role: z.enum(["USER", "ADMIN"]),
   createdAt: dateTimeCodec,
-  profile: UserProfileDtoSchema,
+  profile: z.nullable(UserProfileDtoSchema),
 });
 
 export type UserDto = z.output<typeof UserDtoSchema>;
