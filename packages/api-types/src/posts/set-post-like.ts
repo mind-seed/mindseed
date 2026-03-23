@@ -11,13 +11,23 @@ export const SetPostLikeRequestDtoSchema = z.object({
   liked: z.boolean(),
 });
 
-export type SetPostLikeRequestDto = z.output<typeof SetPostLikeRequestDtoSchema>;
+export type SetPostLikeRequestDto = z.output<
+  typeof SetPostLikeRequestDtoSchema
+>;
 
 export const SetPostLikeResponseDtoSchema = responseDtoSchema(
   z.null(),
-  z.enum([PostNotFoundErrorCode])
+  z.enum([PostNotFoundErrorCode]),
 );
 
-export type SetPostLikeResponseDto = z.output<typeof SetPostLikeResponseDtoSchema>;
-export type SetPostLikeSuccessResponseDto = Extract<SetPostLikeResponseDto, { success: true }>;
-export type SetPostLikeErrorResponseDto = Extract<SetPostLikeResponseDto, { success: false }>;
+export type SetPostLikeResponseDto = z.output<
+  typeof SetPostLikeResponseDtoSchema
+>;
+export type SetPostLikeSuccessResponseDto = Extract<
+  SetPostLikeResponseDto,
+  { success: true }
+>;
+export type SetPostLikeErrorResponseDto = Extract<
+  SetPostLikeResponseDto,
+  { success: false }
+>;

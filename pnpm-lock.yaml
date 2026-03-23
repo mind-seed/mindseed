@@ -6,7 +6,11 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      prettier:
+        specifier: ^3.4.2
+        version: 3.8.1
 
   apps/backend:
     dependencies:

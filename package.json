@@ -1,4 +1,12 @@
 {
   "name": "mindseed",
-  "private": true
+  "private": true,
+  "scripts": {
+    "postinstall": "git config core.hooksPath .git-hooks",
+    "format:check": "prettier --check --log-level=warn \"**/src/**/*.ts\"",
+    "format:write": "prettier --write \"**/src/**/*.ts\""
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2"
+  }
 }

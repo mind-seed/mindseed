@@ -17,9 +17,17 @@ export const VerifyMailResponseDtoSchema = responseDtoSchema(
   z.object({
     signUpToken: z.string(),
   }),
-  z.enum(["INVALID_VERIFICATION_CODE"])
+  z.enum(["INVALID_VERIFICATION_CODE"]),
 );
 
-export type VerifyMailResponseDto = z.output<typeof VerifyMailResponseDtoSchema>;
-export type VerifyMailSuccessResponseDto = Extract<VerifyMailResponseDto, { success: true }>;
-export type VerifyMailErrorResponseDto = Extract<VerifyMailResponseDto, { success: false }>;
+export type VerifyMailResponseDto = z.output<
+  typeof VerifyMailResponseDtoSchema
+>;
+export type VerifyMailSuccessResponseDto = Extract<
+  VerifyMailResponseDto,
+  { success: true }
+>;
+export type VerifyMailErrorResponseDto = Extract<
+  VerifyMailResponseDto,
+  { success: false }
+>;
