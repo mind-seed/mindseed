@@ -8,8 +8,8 @@ import { responseDtoSchema } from "../helpers";
 import { PostCategorySchema, PostDtoSchema } from "./common";
 
 export const ListPostsQueryDtoSchema = z.object({
-  cursor: z.int().optional(),
-  limit: z.int().default(10),
+  cursor: z.string().optional(),
+  limit: z.int().min(1).default(10),
   category: PostCategorySchema.optional(),
   orderBy: z.enum(["createdAt"]).default("createdAt"),
 });
@@ -21,7 +21,7 @@ export const ListPostsResponseDtoSchema = responseDtoSchema(
     posts: z.array(PostDtoSchema),
     nextCursor: z.int().nullable(),
   }),
-  z.enum([])
+  z.enum(["INVALID_CURSOR"])
 );
 
 export type ListPostsResponseDto = z.output<typeof ListPostsResponseDtoSchema>;
