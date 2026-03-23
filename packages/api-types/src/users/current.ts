@@ -1,10 +1,11 @@
-import z from "zod";
-import { responseDtoSchema } from "../shared";
-import { UserDtoSchema } from "../auth/login";
-
 /*
  GET /users/current
+ Auth: any authenticated user
  */
+
+import z from "zod";
+import { responseDtoSchema } from "../helpers";
+import { UserDtoSchema } from "../common/user-dto";
 
 export const GetCurrentUserResponseDtoSchema = responseDtoSchema(
   UserDtoSchema,
