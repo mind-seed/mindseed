@@ -11,9 +11,17 @@ export const RefreshTokensResponseDtoSchema = responseDtoSchema(
     accessToken: z.string(),
     refreshToken: z.string(),
   }),
-  z.enum(["INVALID_REFRESH_TOKEN"])
+  z.enum(["INVALID_REFRESH_TOKEN"]),
 );
 
-export type RefreshTokensResponseDto = z.output<typeof RefreshTokensResponseDtoSchema>;
-export type RefreshTokensSuccessResponseDto = Extract<RefreshTokensResponseDto, { success: true }>;
-export type RefreshTokensErrorResponseDto = Extract<RefreshTokensResponseDto, { success: false }>;
+export type RefreshTokensResponseDto = z.output<
+  typeof RefreshTokensResponseDtoSchema
+>;
+export type RefreshTokensSuccessResponseDto = Extract<
+  RefreshTokensResponseDto,
+  { success: true }
+>;
+export type RefreshTokensErrorResponseDto = Extract<
+  RefreshTokensResponseDto,
+  { success: false }
+>;
