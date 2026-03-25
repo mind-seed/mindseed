@@ -20,7 +20,7 @@ export type ListPostsQueryDto = z.output<typeof ListPostsQueryDtoSchema>;
 export const ListPostsResponseDtoSchema = responseDtoSchema(
   z.object({
     posts: z.array(PostDtoSchema),
-    nextCursor: z.int().nullable(),
+    nextCursor: z.string().nullable(),
   }),
   z.enum(["INVALID_CURSOR"])
 );
