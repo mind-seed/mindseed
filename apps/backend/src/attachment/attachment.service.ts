@@ -19,6 +19,7 @@ import {
   AttachmentNotFoundError,
   AttachmentNotUploadedError,
 } from "./attachment.errors";
+import { createAttachmentS3Key } from "./attachment-s3-key.helper";
 
 export type BeginAttachmentUploadResult = {
   attachmentId: number;
@@ -40,7 +41,7 @@ export class AttachmentService {
   ) {}
 
   async beginAttachmentUpload(): Promise<BeginAttachmentUploadResult> {
-    const s3Key = `attachments/${randomUUID()}`;
+    const s3Key = createAttachmentS3Key(randomUUID());
     const attachment = await this.attachmentRepository.save(
       this.attachmentRepository.create({ confirmed: false, s3Key }),
     );
