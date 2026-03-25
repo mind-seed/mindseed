@@ -1,5 +1,5 @@
 import z from "zod";
-import { dateTimeCodec } from "../common/date-time-codec";
+import { dateSerializerCodec } from "../common/codecs";
 
 export const PostContentSchema = z.string().min(1).max(200);
 
@@ -29,8 +29,8 @@ export const PostDtoSchema = z.object({
   likeCount: z.int(),
   isOwner: z.boolean(),
   isLiked: z.boolean(),
-  createdAt: dateTimeCodec,
-  updatedAt: dateTimeCodec,
+  createdAt: dateSerializerCodec,
+  updatedAt: dateSerializerCodec,
 });
 
 export type PostDto = z.output<typeof PostDtoSchema>;
