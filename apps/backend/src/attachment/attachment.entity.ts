@@ -1,7 +1,13 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import { Post } from "../post/post.entity";
 
-@Entity()
+@Entity({ name: "attachment" })
 export class Attachment {
   @PrimaryGeneratedColumn()
   id: number;
@@ -9,12 +15,16 @@ export class Attachment {
   @Column({ default: false })
   confirmed: boolean;
 
-  @Column()
+  @Column({ name: "s3_key" })
   s3Key: string;
 
   @Column({ type: "int", nullable: true })
   index: number | null;
 
-  @ManyToOne(() => Post, (post) => post.attachments, { nullable: true })
+  @ManyToOne(() => Post, (post) => post.attachments, {
+    nullable: true,
+    onDelete: "CASCADE",
+  })
+  @JoinColumn({ name: "post_id" })
   post: Post | null;
 }

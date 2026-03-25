@@ -21,7 +21,7 @@ export enum UserRole {
  * invariant (1): .profile이 non-null이라면, .role === USER이며,
  * 그 반대도 마찬가지이다.
  */
-@Entity()
+@Entity({ name: "user" })
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -35,7 +35,7 @@ export class User {
   @Column({ type: "enum", enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
-  @CreateDateColumn({ type: "timestamptz" })
+  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
   createdAt: Date;
 
   @OneToOne(() => UserProfile, (profile) => profile.user, { cascade: true })

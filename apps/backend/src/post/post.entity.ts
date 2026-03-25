@@ -2,6 +2,7 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
@@ -16,7 +17,7 @@ export enum PostCategory {
   DUMMY3 = "DUMMY3",
 }
 
-@Entity()
+@Entity({ name: "post" })
 export class Post {
   @PrimaryGeneratedColumn()
   id: number;
@@ -31,12 +32,13 @@ export class Post {
   nickname: string;
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: "author_id" })
   author: User;
 
-  @CreateDateColumn({ type: "timestamptz" })
+  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
   createdAt: Date;
 
-  @UpdateDateColumn({ type: "timestamptz" })
+  @UpdateDateColumn({ type: "timestamptz", name: "updated_at" })
   updatedAt: Date;
 
   @OneToMany(() => Attachment, (attachment) => attachment.post)

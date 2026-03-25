@@ -1,7 +1,13 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from "typeorm";
 import { User } from "src/user/user.entity";
 
-@Entity()
+@Entity({ name: "refresh_token" })
 export class RefreshToken {
   @PrimaryGeneratedColumn()
   id: number;
@@ -9,9 +15,10 @@ export class RefreshToken {
   @Column()
   token: string;
 
-  @Column({ type: "timestamptz" })
+  @Column({ type: "timestamptz", name: "expires_at" })
   expiresAt: Date;
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "user_id" })
   user: User;
 }
