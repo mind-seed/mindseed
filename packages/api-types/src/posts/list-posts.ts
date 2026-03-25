@@ -12,6 +12,7 @@ export const ListPostsQueryDtoSchema = z.object({
   limit: z.int().min(1).default(10),
   category: PostCategorySchema.optional(),
   orderBy: z.enum(["createdAt"]).default("createdAt"),
+  orderDirection: z.enum(["asc", "desc"]).default("asc"),
 });
 
 export type ListPostsQueryDto = z.output<typeof ListPostsQueryDtoSchema>;
