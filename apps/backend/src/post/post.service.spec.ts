@@ -112,7 +112,7 @@ describe("PostService", () => {
         },
         {
           provide: getDataSourceToken(),
-          useValue: dataSource
+          useValue: dataSource,
         },
         { provide: S3_CLIENT, useValue: mockS3Client },
         { provide: s3Config.KEY, useValue: mockS3Config },
@@ -520,17 +520,24 @@ describe("PostService", () => {
       // When: liked를 true로 지정하여 요청
       await postService.setPostLike(user.id, post.id, true);
 
-      // Then: post like entity 생성
-      const like = await postLikeRepository.findOne({
-        where: { post: { id: post.id }, user: { id: user.id } },
+      // Then: post like entity 생성, likeCount 업데이트
+      const like = await postLikeRepository.findOneBy({
+        post: { id: post.id },
+        user: { id: user.id },
       });
       expect(like).not.toBeNull();
+      const updatedPost = await postRepository.findOneBy({
+        id: post.id,
+      });
+      expect(updatedPost!.likeCount).toBe(1);
     });
 
     it("success: liked true -> true, post like entity 유지", async () => {
       // Given: 글이 존재하는 경우, liked: true
       const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
+      const post = await saveTestPost(postRepository, user.id, {
+        likeCount: 1,
+      });
       await postLikeRepository.save(
         postLikeRepository.create({
           user: { id: user.id },
@@ -541,17 +548,21 @@ describe("PostService", () => {
       // When: liked를 true로 지정하여 요청
       await postService.setPostLike(user.id, post.id, true);
 
-      // Then: post like entity 유지
+      // Then: post like entity 유지, likeCount 유지
       const like = await postLikeRepository.findOne({
         where: { post: { id: post.id }, user: { id: user.id } },
       });
       expect(like).not.toBeNull();
+      const updatedPost = await postRepository.findOneBy({ id: post.id });
+      expect(updatedPost!.likeCount).toBe(1);
     });
 
     it("success: liked true -> false, post like entity 삭제", async () => {
       // Given: 글이 존재하는 경우, liked: true
       const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
+      const post = await saveTestPost(postRepository, user.id, {
+        likeCount: 1,
+      });
       await postLikeRepository.save(
         postLikeRepository.create({
           user: { id: user.id },
@@ -562,11 +573,13 @@ describe("PostService", () => {
       // When: liked를 false로 지정하여 요청
       await postService.setPostLike(user.id, post.id, false);
 
-      // Then: post like entity 삭제
+      // Then: post like entity 삭제, likeCount 업데이트
       const like = await postLikeRepository.findOne({
         where: { post: { id: post.id }, user: { id: user.id } },
       });
       expect(like).toBeNull();
+      const updatedPost = await postRepository.findOneBy({ id: post.id });
+      expect(updatedPost!.likeCount).toBe(0);
     });
 
     it("success: liked false -> false, post like entity 없음 유지", async () => {
@@ -577,11 +590,13 @@ describe("PostService", () => {
       // When: liked를 false로 지정하여 요청
       await postService.setPostLike(user.id, post.id, false);
 
-      // Then: post like entity 삭제
+      // Then: post like entity 없음 유지, likeCount 유지
       const like = await postLikeRepository.findOne({
         where: { post: { id: post.id }, user: { id: user.id } },
       });
       expect(like).toBeNull();
+      const updatedPost = await postRepository.findOneBy({ id: post.id });
+      expect(updatedPost!.likeCount).toBe(0);
     });
 
     it("존재하지 않는 글 처리", async () => {
