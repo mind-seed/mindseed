@@ -8,7 +8,7 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { S3_CLIENT } from "./s3-storage.module";
+import { S3_CLIENT } from "./s3-client.di-token";
 import { s3Config } from "src/config";
 import { S3StorageService } from "./s3-storage.service";
 

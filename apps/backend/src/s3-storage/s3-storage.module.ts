@@ -4,8 +4,7 @@ import { S3Client } from "@aws-sdk/client-s3";
 import { s3Config } from "src/config";
 import { S3StorageService } from "./s3-storage.service";
 import { S3ClientStorageService } from "./s3-client-storage.service";
-
-export const S3_CLIENT = Symbol("S3_CLIENT");
+import { S3_CLIENT } from "./s3-client.di-token";
 
 @Module({
   providers: [
