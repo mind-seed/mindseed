@@ -7,7 +7,7 @@ import {
 } from "typeorm";
 import { User } from "./user.entity";
 
-@Entity()
+@Entity({ name: "user_profile" })
 export class UserProfile {
   @PrimaryGeneratedColumn()
   id: number;
@@ -19,6 +19,6 @@ export class UserProfile {
   age: number;
 
   @OneToOne(() => User, (user) => user.profile, { onDelete: "CASCADE" })
-  @JoinColumn()
+  @JoinColumn({ name: "user_id" })
   user: User;
 }

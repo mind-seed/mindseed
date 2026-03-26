@@ -1,22 +1,20 @@
 import {
-  Column,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { User } from "src/user/user.entity";
+import { Post } from "./post.entity";
+import { User } from "../user/user.entity";
 
-@Entity({ name: "refresh_token" })
-export class RefreshToken {
+@Entity({ name: "post_like" })
+export class PostLike {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  token: string;
-
-  @Column({ type: "timestamptz", name: "expires_at" })
-  expiresAt: Date;
+  @ManyToOne(() => Post, { onDelete: "CASCADE" })
+  @JoinColumn({ name: "post_id" })
+  post: Post;
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })

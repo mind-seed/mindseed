@@ -94,7 +94,7 @@ describe("AttachmentService", () => {
       // Given: DB 저장이 실패하는 경우
 
       // assumption: entities는 repository.save() 로만 저장됨
-      // 2026-03-22 위 엄밀히는 가정은 implementation details에 대한 leak
+      // 2026-03-22 위 가정은 엄밀히는 implementation details에 대한 leak
       // 이지만, tradeoff이라고 생각
       jest
         .spyOn(attachmentRepository, "save")
