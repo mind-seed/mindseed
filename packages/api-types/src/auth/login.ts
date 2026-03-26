@@ -19,9 +19,15 @@ export const LoginResponseDtoSchema = responseDtoSchema(
     accessToken: z.string(),
     refreshToken: z.string(),
   }),
-  z.enum(["INVALID_CREDENTIALS"])
+  z.enum(["INVALID_CREDENTIALS"]),
 );
 
 export type LoginResponseDto = z.output<typeof LoginResponseDtoSchema>;
-export type LoginSuccessResponseDto = Extract<LoginResponseDto, { success: true }>;
-export type LoginErrorResponseDto = Extract<LoginResponseDto, { success: false }>;
+export type LoginSuccessResponseDto = Extract<
+  LoginResponseDto,
+  { success: true }
+>;
+export type LoginErrorResponseDto = Extract<
+  LoginResponseDto,
+  { success: false }
+>;

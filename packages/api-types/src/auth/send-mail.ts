@@ -14,9 +14,19 @@ export type SendMailRequestDto = z.output<typeof SendMailRequestDtoSchema>;
 
 export const SendMailResponseDtoSchema = responseDtoSchema(
   z.null(),
-  z.enum([EmailAlreadyExistsErrorCode, "EMAIL_RATE_LIMITED", "VERIFICATION_COOLDOWN"])
+  z.enum([
+    EmailAlreadyExistsErrorCode,
+    "EMAIL_RATE_LIMITED",
+    "VERIFICATION_COOLDOWN",
+  ]),
 );
 
 export type SendMailResponseDto = z.output<typeof SendMailResponseDtoSchema>;
-export type SendMailSuccessResponseDto = Extract<SendMailResponseDto, { success: true }>;
-export type SendMailErrorResponseDto = Extract<SendMailResponseDto, { success: false }>;
+export type SendMailSuccessResponseDto = Extract<
+  SendMailResponseDto,
+  { success: true }
+>;
+export type SendMailErrorResponseDto = Extract<
+  SendMailResponseDto,
+  { success: false }
+>;

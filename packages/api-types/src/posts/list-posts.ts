@@ -26,5 +26,11 @@ export const ListPostsResponseDtoSchema = responseDtoSchema(
 );
 
 export type ListPostsResponseDto = z.output<typeof ListPostsResponseDtoSchema>;
-export type ListPostsSuccessResponseDto = Extract<ListPostsResponseDto, { success: true }>;
-export type ListPostsErrorResponseDto = Extract<ListPostsResponseDto, { success: false }>;
+export type ListPostsSuccessResponseDto = Extract<
+  ListPostsResponseDto,
+  { success: true }
+>;
+export type ListPostsErrorResponseDto = Extract<
+  ListPostsResponseDto,
+  { success: false }
+>;
