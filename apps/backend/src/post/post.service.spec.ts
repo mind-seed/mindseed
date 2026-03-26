@@ -16,19 +16,11 @@ import { PostLike } from "./post-like.entity";
 import { Attachment } from "../attachment/attachment.entity";
 import { User, UserRole } from "../user/user.entity";
 import { UserProfile } from "../user/user-profile.entity";
-import { S3_CLIENT } from "src/s3-storage/s3-storage.module";
-import { s3Config } from "src/config";
+import { S3StorageService } from "src/s3-storage/s3-storage.service";
+import { FakeS3StorageService } from "src/s3-storage/s3-storage.service.fake";
 import { initializePgMem } from "src/test/pg-mem.helper";
-import { DeleteObjectsCommand } from "@aws-sdk/client-s3";
 
 const entities = [UserProfile, User, Post, PostLike, Attachment];
-
-const mockS3Config = {
-  region: "us-east-1",
-  accessKeyId: "test-key",
-  secretAccessKey: "test-secret",
-  bucket: "test-bucket",
-};
 
 let userCounter = 0;
 
@@ -84,7 +76,7 @@ describe("PostService", () => {
   let postLikeRepository: Repository<PostLike>;
   let attachmentRepository: Repository<Attachment>;
   let userRepository: Repository<User>;
-  let mockS3Client: { send: jest.Mock };
+  let fakeS3: FakeS3StorageService;
   let dataSource: DataSource;
   let dbBackup: PGMem.IBackup;
 
@@ -93,7 +85,7 @@ describe("PostService", () => {
     dataSource = ds;
     dbBackup = backup;
 
-    mockS3Client = { send: jest.fn() };
+    fakeS3 = new FakeS3StorageService();
 
     module = await Test.createTestingModule({
       providers: [
@@ -114,8 +106,7 @@ describe("PostService", () => {
           provide: getDataSourceToken(),
           useValue: dataSource,
         },
-        { provide: S3_CLIENT, useValue: mockS3Client },
-        { provide: s3Config.KEY, useValue: mockS3Config },
+        { provide: S3StorageService, useValue: fakeS3 },
       ],
     }).compile();
 
@@ -128,7 +119,7 @@ describe("PostService", () => {
 
   beforeEach(() => {
     dbBackup.restore();
-    mockS3Client.send.mockReset();
+    fakeS3.reset();
     jest.restoreAllMocks();
   });
 
@@ -372,11 +363,10 @@ describe("PostService", () => {
       const oldAttachment = await saveTestAttachment(attachmentRepository, {
         post,
       });
+      fakeS3.put(oldAttachment.s3Key);
 
       // Given: new attachments가 confirmed이며 associated 되지 않은 경우
       const newAttachment = await saveTestAttachment(attachmentRepository);
-      // assumption: send() 호출 시 해당 반환값은 사용되지 않음
-      mockS3Client.send.mockResolvedValue({});
 
       // When: 글 업데이트 시도
       await postService.updatePost({
@@ -387,7 +377,7 @@ describe("PostService", () => {
         attachmentIds: [newAttachment.id],
       });
 
-      // Then: 글 및 new attachments 업데이트됨, old attachments 삭제
+      // Then: 글 및 new attachments 업데이트됨
       const updatedPost = await postRepository.findOne({
         where: { id: post.id },
         relations: ["attachments"],
@@ -399,12 +389,12 @@ describe("PostService", () => {
       expect(updatedPost!.attachments.map((a) => a.id)).toEqual(
         expect.arrayContaining([newAttachment.id]),
       );
+
+      // Then: old attachments 삭제
       expect(
         await attachmentRepository.findOneBy({ id: oldAttachment.id }),
       ).toBeNull();
-      expect(mockS3Client.send).toHaveBeenCalledWith(
-        expect.any(DeleteObjectsCommand),
-      );
+      expect(await fakeS3.exists(oldAttachment.s3Key)).toBe(false);
     });
 
     it("존재하지 않는 글 처리", async () => {
@@ -619,7 +609,7 @@ describe("PostService", () => {
       const attachment = await saveTestAttachment(attachmentRepository, {
         post,
       });
-      mockS3Client.send.mockResolvedValue({});
+      fakeS3.put(attachment.s3Key);
 
       // When: 글 삭제 시도
       await postService.deletePost(user.id, post.id);
@@ -629,9 +619,7 @@ describe("PostService", () => {
       expect(
         await attachmentRepository.findOneBy({ id: attachment.id }),
       ).toBeNull();
-      expect(mockS3Client.send).toHaveBeenCalledWith(
-        expect.any(DeleteObjectsCommand),
-      );
+      expect(await fakeS3.exists(attachment.s3Key)).toBe(false);
     });
 
     it("존재하지 않는 글 처리", async () => {

@@ -1,13 +1,10 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, In, IsNull, Repository } from "typeorm";
-import type { ConfigType } from "@nestjs/config";
-import { DeleteObjectsCommand, S3Client } from "@aws-sdk/client-s3";
 import { Post, PostCategory } from "./post.entity";
 import { PostLike } from "./post-like.entity";
 import { Attachment } from "../attachment/attachment.entity";
-import { S3_CLIENT } from "src/s3-storage/s3-storage.module";
-import { s3Config } from "src/config";
+import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import {
   AttachmentAlreadyAssociatedError,
   AttachmentNotFoundError,
@@ -95,9 +92,7 @@ export class PostService {
     private readonly attachmentRepository: Repository<Attachment>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
-    @Inject(S3_CLIENT) private readonly s3Client: S3Client,
-    @Inject(s3Config.KEY)
-    private readonly s3cfg: ConfigType<typeof s3Config>,
+    private readonly s3StorageService: S3StorageService,
   ) {}
 
   /*
@@ -255,7 +250,9 @@ export class PostService {
       });
     });
 
-    await this.deleteAttachmentsInS3(post.attachments);
+    await this.s3StorageService.deleteMany(
+      post.attachments.map((a) => a.s3Key),
+    );
   }
 
   /**
@@ -328,7 +325,9 @@ export class PostService {
       id: postId,
     });
 
-    await this.deleteAttachmentsInS3(post.attachments);
+    await this.s3StorageService.deleteMany(
+      post.attachments.map((a) => a.s3Key),
+    );
   }
 
   /**
@@ -357,21 +356,5 @@ export class PostService {
     if (validAttachmentsCount < attachmentIds.length) {
       throw new AttachmentAlreadyAssociatedError();
     }
-  }
-
-  /**
-   * attachments를 S3 상에서 삭제한다.
-   */
-  private async deleteAttachmentsInS3(attachments: Attachment[]) {
-    await this.s3Client.send(
-      new DeleteObjectsCommand({
-        Bucket: this.s3cfg.bucket,
-        Delete: {
-          Objects: attachments.map((attachment) => ({
-            Key: attachment.s3Key,
-          })),
-        },
-      }),
-    );
   }
 }
