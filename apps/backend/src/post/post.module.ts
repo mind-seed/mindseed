@@ -3,7 +3,8 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { Post } from "./post.entity";
 import { PostLike } from "./post-like.entity";
 import { Attachment } from "../attachment/attachment.entity";
-import { PostService } from "./post.service";
+import { PostQueryService } from "./post-query.service";
+import { PostMutationService } from "./post-mutation.service";
 import { PostController } from "./post.controller";
 import { S3StorageModule } from "src/s3-storage/s3-storage.module";
 import { AuthModule } from "src/auth/auth.module";
@@ -17,6 +18,6 @@ import { UserModule } from "src/user/user.module";
     UserModule,
   ],
   controllers: [PostController],
-  providers: [PostService],
+  providers: [PostQueryService, PostMutationService],
 })
 export class PostModule {}
