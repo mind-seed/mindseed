@@ -15,7 +15,6 @@ import {
   NotPostAuthorError,
   PostNotFoundError,
 } from "./post.errors";
-import { createAttachmentS3Key } from "src/attachment/attachment-s3-key.helper";
 
 export type CreatePostOptions = {
   userId: number;
@@ -369,7 +368,7 @@ export class PostService {
         Bucket: this.s3cfg.bucket,
         Delete: {
           Objects: attachments.map((attachment) => ({
-            Key: createAttachmentS3Key(attachment.s3Key),
+            Key: attachment.s3Key,
           })),
         },
       }),
