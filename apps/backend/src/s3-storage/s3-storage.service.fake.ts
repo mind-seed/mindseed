@@ -15,6 +15,10 @@ export class FakeS3StorageService extends S3StorageService {
     return this.getPresignedUrlForKey(key);
   }
 
+  getPublicUrl(key: string): string {
+    return `https://fake-s3/${key}`;
+  }
+
   async exists(key: string): Promise<boolean> {
     return this.objects.has(key);
   }
@@ -40,6 +44,6 @@ export class FakeS3StorageService extends S3StorageService {
   }
 
   private getPresignedUrlForKey(key: string): string {
-    return `https://fake-s3/${key}`;
+    return `https://fake-s3-presigned/${key}`;
   }
 }

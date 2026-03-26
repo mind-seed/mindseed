@@ -10,6 +10,8 @@ import { Attachment } from "../attachment/attachment.entity";
 import { User, UserRole } from "../user/user.entity";
 import { UserProfile } from "../user/user-profile.entity";
 import { initializePgMem } from "src/test/pg-mem.helper";
+import { S3StorageService } from "src/s3-storage/s3-storage.service";
+import { FakeS3StorageService } from "src/s3-storage/s3-storage.service.fake";
 
 const entities = [UserProfile, User, Post, PostLike, Attachment];
 
@@ -45,11 +47,26 @@ async function saveTestPost(
   );
 }
 
+async function saveTestPosts(
+  repository: Repository<Post>,
+  userId: number,
+  overridesList: Partial<Post>[],
+): Promise<number[]> {
+  const ids: number[] = [];
+  for (const overrides of overridesList) {
+    ids.push((await saveTestPost(repository, userId, overrides)).id);
+  }
+  return ids;
+}
+
 describe("PostQueryService", () => {
   let module: TestingModule;
   let postQueryService: PostQueryService;
   let postRepository: Repository<Post>;
+  let postLikeRepository: Repository<PostLike>;
+  let attachmentRepository: Repository<Attachment>;
   let userRepository: Repository<User>;
+  let fakeS3: FakeS3StorageService;
   let dataSource: DataSource;
   let dbBackup: PGMem.IBackup;
 
@@ -58,6 +75,8 @@ describe("PostQueryService", () => {
     dataSource = ds;
     dbBackup = backup;
 
+    fakeS3 = new FakeS3StorageService();
+
     module = await Test.createTestingModule({
       providers: [
         PostQueryService,
@@ -65,16 +84,28 @@ describe("PostQueryService", () => {
           provide: getRepositoryToken(Post),
           useValue: dataSource.getRepository(Post),
         },
+        {
+          provide: getRepositoryToken(PostLike),
+          useValue: dataSource.getRepository(PostLike),
+        },
+        {
+          provide: getRepositoryToken(Attachment),
+          useValue: dataSource.getRepository(Attachment),
+        },
+        { provide: S3StorageService, useValue: fakeS3 },
       ],
     }).compile();
 
     postQueryService = module.get(PostQueryService);
     postRepository = dataSource.getRepository(Post);
+    postLikeRepository = dataSource.getRepository(PostLike);
+    attachmentRepository = dataSource.getRepository(Attachment);
     userRepository = dataSource.getRepository(User);
   });
 
   beforeEach(() => {
     dbBackup.restore();
+    fakeS3.reset();
     jest.restoreAllMocks();
   });
 
@@ -84,110 +115,201 @@ describe("PostQueryService", () => {
   });
 
   describe("listPosts", () => {
-    // 2026-03-23: success 처리를 parameter의 조합별로 더 테스트하는 것이 더
-    // 엄밀하지만, 현재는 그럴 필요가 없다고 판단하여 success 케이스 하나만
-    // 처리합니다.
-    it("success: 각 parameter 처리", async () => {
-      // Given: posts
-      const user = await saveTestUser(userRepository);
-      const p1 = await saveTestPost(postRepository, user.id, {
-        category: PostCategory.DUMMY1,
-      });
-      const p2 = await saveTestPost(postRepository, user.id, {
-        category: PostCategory.DUMMY1,
-      });
-      const p3 = await saveTestPost(postRepository, user.id, {
-        category: PostCategory.DUMMY1,
-      });
-      await saveTestPost(postRepository, user.id, {
-        category: PostCategory.DUMMY2,
+    describe("pagination", () => {
+      // 2026-03-23: success 처리를 parameter의 조합별로 더 테스트하는 것이 더
+      // 엄밀하지만, 현재는 그럴 필요가 없다고 판단하여 success 케이스 하나만
+      // 처리합니다.
+      it("success: 각 parameter 처리", async () => {
+        // Given: posts
+        const user = await saveTestUser(userRepository);
+        const ids = await saveTestPosts(postRepository, user.id, [
+          { category: PostCategory.DUMMY1 },
+          { category: PostCategory.DUMMY1 },
+          { category: PostCategory.DUMMY1 },
+          { category: PostCategory.DUMMY2 },
+        ]);
+
+        // When: 글 조회 시도
+        const result = await postQueryService.listPosts(user.id, {
+          limit: 2,
+          category: PostCategory.DUMMY1,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+
+        // Then: 올바른 결과 반환
+        expect(result.entries.map((p) => p.post.id)).toEqual([ids[0], ids[1]]);
+        expect(result.nextCursor).toBeDefined();
+
+        // When: nextCursor로 글 조회 시도
+        const result2 = await postQueryService.listPosts(user.id, {
+          cursor: result.nextCursor,
+          limit: 2,
+          category: PostCategory.DUMMY1,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+
+        // Then: 올바른 결과 반환
+        expect(result2.entries.map((p) => p.post.id)).toEqual([ids[2]]);
+        expect(result2.nextCursor).toBeUndefined();
       });
 
-      // When: 글 조회 시도
-      const result = await postQueryService.listPosts({
-        limit: 2,
-        category: PostCategory.DUMMY1,
-        orderBy: "createdAt",
-        orderDirection: "asc",
+      it("success: cursor에 해당하는 글이 삭제된 경우 올바르게 처리", async () => {
+        // Given: cursor에 해당하는 글이 삭제된 경우
+        const user = await saveTestUser(userRepository);
+        const ids = await saveTestPosts(postRepository, user.id, [{}, {}, {}]);
+
+        const firstPage = await postQueryService.listPosts(user.id, {
+          limit: 1,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+        await postRepository.delete(ids[0]);
+
+        // When: 글 조회 시도
+        const result = await postQueryService.listPosts(user.id, {
+          cursor: firstPage.nextCursor,
+          limit: 2,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+
+        // Then: 삭제된 글 다음부터 올바르게 반환
+        expect(result.entries.map((p) => p.post.id)).toEqual([ids[1], ids[2]]);
       });
 
-      // Then: 올바른 결과 반환
-      expect(result.posts.map((p) => p.id)).toEqual([p1.id, p2.id]);
-      expect(result.nextCursor).toBeDefined();
+      it("category 및 orderBy와 벗어난 cursor 처리", async () => {
+        // Given: cursor가 category 및 orderBy를 다르게 하여 조회했을 때의
+        // 결과물인 경우
+        const user = await saveTestUser(userRepository);
+        await saveTestPosts(postRepository, user.id, [
+          { category: PostCategory.DUMMY1 },
+          { category: PostCategory.DUMMY1 },
+        ]);
+        const firstPage = await postQueryService.listPosts(user.id, {
+          limit: 1,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+          category: PostCategory.DUMMY1,
+        });
 
-      // When: nextCursor로 글 조회 시도
-      const result2 = await postQueryService.listPosts({
-        cursor: result.nextCursor,
-        limit: 2,
-        category: PostCategory.DUMMY1,
-        orderBy: "createdAt",
-        orderDirection: "asc",
+        // When: 글 조회 시도
+        const result = postQueryService.listPosts(user.id, {
+          cursor: firstPage.nextCursor,
+          limit: 1,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+          category: PostCategory.DUMMY2,
+        });
+
+        // Then: throws handled error
+        await expect(result).rejects.toThrow(InvalidCursorError);
       });
-
-      // Then: 올바른 결과 반환
-      expect(result2.posts.map((p) => p.id)).toEqual([p3.id]);
-      expect(result2.nextCursor).toBeUndefined();
     });
 
-    it("success: cursor에 해당하는 글이 삭제된 경우 올바르게 처리", async () => {
-      // Given: cursor에 해당하는 글이 삭제된 경우
-      const user = await saveTestUser(userRepository);
-      const p1 = await saveTestPost(postRepository, user.id);
-      const p2 = await saveTestPost(postRepository, user.id);
-      const p3 = await saveTestPost(postRepository, user.id);
+    describe("relation fields", () => {
+      it("success: user가 owner -> isOwner true", async () => {
+        // Given: 사용자 및 글 (테스트를 위해 단일로만 저장)
+        const user = await saveTestUser(userRepository);
+        await saveTestPost(postRepository, user.id);
 
-      const firstPage = await postQueryService.listPosts({
-        limit: 1,
-        orderBy: "createdAt",
-        orderDirection: "asc",
-      });
-      await postRepository.delete(p1.id);
+        // When: 글 목록 조회 시도
+        const result = await postQueryService.listPosts(user.id, {
+          limit: 1,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
 
-      // When: 글 조회 시도
-      const result = await postQueryService.listPosts({
-        cursor: firstPage.nextCursor,
-        limit: 2,
-        orderBy: "createdAt",
-        orderDirection: "asc",
+        // Then: isOwner === true
+        expect(result.entries[0].withUser.isOwner).toBe(true);
       });
 
-      // Then: 삭제된 글 다음부터 올바르게 반환
-      expect(result.posts.map((p) => p.id)).toEqual([p2.id, p3.id]);
+      it("success: user가 owner 아님 -> isOwner false", async () => {
+        // Given: 글 작성자와 다른 사용자
+        const author = await saveTestUser(userRepository);
+        const viewer = await saveTestUser(userRepository);
+        await saveTestPost(postRepository, author.id);
+
+        // When: viewer로 글 목록 조회 시도
+        const result = await postQueryService.listPosts(viewer.id, {
+          limit: 1,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+
+        // Then: isOwner === false
+        expect(result.entries[0].withUser.isOwner).toBe(false);
+      });
+
+      it("success: user가 like한 글 -> isLiked true", async () => {
+        // Given: user가 like한 글
+        const user = await saveTestUser(userRepository);
+        const post = await saveTestPost(postRepository, user.id);
+        await postLikeRepository.save(
+          postLikeRepository.create({
+            user: { id: user.id },
+            post: { id: post.id },
+          }),
+        );
+
+        // When: 글 목록 조회 시도
+        const result = await postQueryService.listPosts(user.id, {
+          limit: 1,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+
+        // Then: isLiked === true
+        expect(result.entries[0].withUser.isLiked).toBe(true);
+      });
+
+      it("success: user가 like 하지 않은 글 -> isLiked false", async () => {
+        // Given: user가 like하지 않은 글
+        const user = await saveTestUser(userRepository);
+        await saveTestPost(postRepository, user.id);
+
+        // When: 글 목록 조회 시도
+        const result = await postQueryService.listPosts(user.id, {
+          limit: 1,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+
+        // Then: isLiked === false
+        expect(result.entries[0].withUser.isLiked).toBe(false);
+      });
     });
 
-    it("category 및 orderBy와 벗어난 cursor 처리", async () => {
-      // Given: cursor가 category 및 orderBy를 다르게 하여 조회했을 때의
-      // 결과물인 경우
+    it("success: 올바른 attachments URL 맵 반환", async () => {
+      // Given: attachment가 있는 글
       const user = await saveTestUser(userRepository);
-      await saveTestPost(postRepository, user.id, {
-        category: PostCategory.DUMMY1,
-      });
-      await saveTestPost(postRepository, user.id, {
-        category: PostCategory.DUMMY1,
-      });
-      const firstPage = await postQueryService.listPosts({
+      const post = await saveTestPost(postRepository, user.id);
+      const attachment = await attachmentRepository.save(
+        attachmentRepository.create({
+          confirmed: true,
+          s3Key: "attachments/test-key",
+          index: 0,
+          post,
+        }),
+      );
+
+      // When: 글 목록 조회 시도
+      const result = await postQueryService.listPosts(user.id, {
         limit: 1,
         orderBy: "createdAt",
         orderDirection: "asc",
-        category: PostCategory.DUMMY1,
       });
 
-      // When: 글 조회 시도
-      const result = postQueryService.listPosts({
-        cursor: firstPage.nextCursor,
-        limit: 1,
-        orderBy: "createdAt",
-        orderDirection: "asc",
-        category: PostCategory.DUMMY2,
-      });
-
-      // Then: throws handled error
-      await expect(result).rejects.toThrow(InvalidCursorError);
+      // Then: attachment URL 맵 올바르게 반환
+      expect(result.attachmentToUrl[attachment.id]).toBe(
+        fakeS3.getPublicUrl(attachment.s3Key),
+      );
     });
   });
 
   describe("getPost", () => {
-    it("success: 올바른 글 반환", async () => {
+    it("success: 올바른 fields 반환", async () => {
       // Given: 글이 존재하는 경우
       const user = await saveTestUser(userRepository);
       const post = await postRepository.save(
@@ -200,21 +322,102 @@ describe("PostQueryService", () => {
       );
 
       // When: 글 조회 시도
-      const result = await postQueryService.getPost(post.id);
+      const result = await postQueryService.getPost(user.id, post.id);
 
       // Then: 올바른 글 반환
-      expect(result).toMatchObject({
+      expect(result.entry.post).toMatchObject({
         id: post.id,
         content: "hello world",
         category: PostCategory.DUMMY1,
       });
     });
 
-    it("존재하지 않는 글 처리", async () => {
-      // Given: 글이 존재하지 않는 경우
+    describe("relation fields", () => {
+      it("success: user가 owner -> isOwner true", async () => {
+        // Given: 글 작성자
+        const user = await saveTestUser(userRepository);
+        const post = await saveTestPost(postRepository, user.id);
+
+        // When: 글 조회 시도
+        const result = await postQueryService.getPost(user.id, post.id);
+
+        // Then: isOwner === true
+        expect(result.entry.withUser.isOwner).toBe(true);
+      });
+
+      it("success: user가 owner 아님 -> isOwner false", async () => {
+        // Given: 글 작성자와 다른 사용자
+        const author = await saveTestUser(userRepository);
+        const viewer = await saveTestUser(userRepository);
+        const post = await saveTestPost(postRepository, author.id);
+
+        // When: viewer로 글 조회 시도
+        const result = await postQueryService.getPost(viewer.id, post.id);
+
+        // Then: isOwner === false
+        expect(result.entry.withUser.isOwner).toBe(false);
+      });
+
+      it("success: user가 like한 글 -> isLiked true", async () => {
+        // Given: user가 like한 글
+        const user = await saveTestUser(userRepository);
+        const post = await saveTestPost(postRepository, user.id);
+        await postLikeRepository.save(
+          postLikeRepository.create({
+            user: { id: user.id },
+            post: { id: post.id },
+          }),
+        );
+
+        // When: 글 조회 시도
+        const result = await postQueryService.getPost(user.id, post.id);
+
+        // Then: isLiked === true
+        expect(result.entry.withUser.isLiked).toBe(true);
+      });
+
+      it("success: user가 like 하지 않은 글 -> isLiked false", async () => {
+        // Given: user가 like하지 않은 글
+        const user = await saveTestUser(userRepository);
+        const post = await saveTestPost(postRepository, user.id);
+
+        // When: 글 조회 시도
+        const result = await postQueryService.getPost(user.id, post.id);
+
+        // Then: isLiked === false
+        expect(result.entry.withUser.isLiked).toBe(false);
+      });
+    });
+
+    it("success: 올바른 attachments URL 맵 반환", async () => {
+      // Given: attachment가 있는 글
+      const user = await saveTestUser(userRepository);
+      const post = await saveTestPost(postRepository, user.id);
+      const attachment = await attachmentRepository.save(
+        attachmentRepository.create({
+          confirmed: true,
+          s3Key: "attachments/test-key",
+          index: 0,
+          post,
+        }),
+      );
 
       // When: 글 조회 시도
-      const result = postQueryService.getPost(0);
+      const result = await postQueryService.getPost(user.id, post.id);
+
+      // Then: attachment URL 맵 올바르게 반환
+      expect(result.attachmentToUrl[attachment.id]).toBe(
+        fakeS3.getPublicUrl(attachment.s3Key),
+      );
+    });
+
+    it("존재하지 않는 글 처리", async () => {
+      // Given: 글이 존재하지 않는 경우
+      const user = await saveTestUser(userRepository);
+      const nonExistentId = 0;
+
+      // When: 글 조회 시도
+      const result = postQueryService.getPost(user.id, nonExistentId);
 
       // Then: throws handled error
       await expect(result).rejects.toThrow(PostNotFoundError);

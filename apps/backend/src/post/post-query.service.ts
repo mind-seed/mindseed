@@ -1,12 +1,29 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { In, Repository } from "typeorm";
 import { Post, PostCategory } from "./post.entity";
+import { PostLike } from "./post-like.entity";
+import { Attachment } from "../attachment/attachment.entity";
+import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import { InvalidCursorError, PostNotFoundError } from "./post.errors";
+
+/* shared types */
+
+export type PostWithRelations = {
+  post: Post;
+  withUser: {
+    isOwner: boolean;
+    isLiked: boolean;
+  };
+};
+
+export type AttachmentToUrlMap = Record<number, string>;
 
 export type ListPostsOrderBy = "createdAt";
 
-export type ListPostsOptions = {
+/* listPosts */
+
+export type ListPostsPaginationOptions = {
   cursor?: string;
   limit: number;
   category?: PostCategory;
@@ -15,8 +32,16 @@ export type ListPostsOptions = {
 };
 
 export type ListPostsResult = {
-  posts: Post[];
+  entries: PostWithRelations[];
   nextCursor?: string;
+  attachmentToUrl: AttachmentToUrlMap;
+};
+
+/* getPost */
+
+export type GetPostResult = {
+  entry: PostWithRelations;
+  attachmentToUrl: AttachmentToUrlMap;
 };
 
 type CursorPayload = {
@@ -32,7 +57,11 @@ function encodeCursor(payload: CursorPayload): string {
 }
 
 function decodeCursor(cursor: string): CursorPayload {
-  return JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
+  try {
+    return JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
+  } catch {
+    throw new InvalidCursorError();
+  }
 }
 
 // 2026-03-25 code smell....
@@ -48,7 +77,7 @@ const orderByMap: Record<
   createdAt: {
     path: "post.createdAt",
     column: 'extract(epoch FROM "post"."created_at")::int',
-    cast: "extract(epoch FROM :cursorValue)::int",
+    cast: "extract(epoch FROM :cursorValue::timestamp)::int",
     getValue: (post) => post.createdAt.toISOString(),
   },
 };
@@ -61,19 +90,26 @@ export class PostQueryService {
   constructor(
     @InjectRepository(Post)
     private readonly postRepository: Repository<Post>,
+    @InjectRepository(PostLike)
+    private readonly postLikeRepository: Repository<PostLike>,
+    @InjectRepository(Attachment)
+    private readonly s3StorageService: S3StorageService,
   ) {}
 
   /*
    * pagination option을 적용하여 글 목록을 조회한다.
-   * @returns 글 목록, attachment URL, cursor
+   * @returns 해당 글, userId에 대응하는 user와의 관계, attachment들의 url 맵
    */
-  async listPosts({
-    limit,
-    orderBy,
-    orderDirection,
-    category,
-    cursor,
-  }: ListPostsOptions): Promise<ListPostsResult> {
+  async listPosts(
+    userId: number,
+    {
+      limit,
+      orderBy,
+      orderDirection,
+      category,
+      cursor,
+    }: ListPostsPaginationOptions,
+  ): Promise<ListPostsResult> {
     const decodedCursor = cursor && decodeCursor(cursor);
 
     if (
@@ -89,7 +125,10 @@ export class PostQueryService {
     const cursorOp = orderDirection === "asc" ? ">" : "<";
     const orderEntry = orderByMap[orderBy];
 
-    const qb = this.postRepository.createQueryBuilder("post");
+    const qb = this.postRepository
+      .createQueryBuilder("post")
+      .leftJoinAndSelect("post.author", "author")
+      .leftJoinAndSelect("post.attachments", "attachment");
 
     if (category) {
       qb.where("post.category = :category", { category });
@@ -115,9 +154,33 @@ export class PostQueryService {
       .limit(limit)
       .getMany();
 
+    const postIds = posts.map((p) => p.id);
+    const likedPostIds = new Set(
+      postIds.length > 0
+        ? (
+            await this.postLikeRepository.find({
+              where: {
+                user: { id: userId },
+                post: { id: In(postIds) },
+              },
+              relations: { post: true },
+            })
+          ).map((l) => l.post.id)
+        : [],
+    );
+
+    const attachments = posts.flatMap((p) => p.attachments);
+    const attachmentToUrl = this.buildAttachmentToUrl(attachments);
+
     const lastPost = posts.at(-1)!;
     return {
-      posts,
+      entries: posts.map((post) => ({
+        post,
+        withUser: {
+          isOwner: post.author.id === userId,
+          isLiked: likedPostIds.has(post.id),
+        },
+      })),
       nextCursor:
         posts.length === limit
           ? encodeCursor({
@@ -128,18 +191,48 @@ export class PostQueryService {
               cursorValue: orderEntry.getValue(lastPost),
             })
           : undefined,
+      attachmentToUrl,
     };
   }
 
   /**
    * postId에 대응하는 글 하나를 조회한다.
-   * @returns 해당 글, attachment URL
+   * @returns 해당 글, userId에 대응하는 user와의 관계, attachment들의 url 맵
    */
-  async getPost(postId: number): Promise<Post> {
-    const post = await this.postRepository.findOneBy({ id: postId });
+  async getPost(userId: number, postId: number): Promise<GetPostResult> {
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+      relations: { author: true, attachments: true },
+    });
     if (!post) {
       throw new PostNotFoundError();
     }
-    return post;
+
+    const isLiked = await this.postLikeRepository.existsBy({
+      user: { id: userId },
+      post: { id: postId },
+    });
+
+    const attachmentToUrl = this.buildAttachmentToUrl(post.attachments);
+
+    return {
+      entry: {
+        post,
+        withUser: {
+          isOwner: post.author.id === userId,
+          isLiked,
+        },
+      },
+      attachmentToUrl,
+    };
+  }
+
+  private buildAttachmentToUrl(attachments: Attachment[]): AttachmentToUrlMap {
+    return Object.fromEntries(
+      attachments.map((a) => [
+        a.id,
+        this.s3StorageService.getPublicUrl(a.s3Key),
+      ]),
+    );
   }
 }

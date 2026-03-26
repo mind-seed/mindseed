@@ -32,6 +32,10 @@ export class S3ClientStorageService extends S3StorageService {
     );
   }
 
+  getPublicUrl(key: string): string {
+    return `https://${this.s3cfg.endpoint}/${this.s3cfg.bucket}/${key}`;
+  }
+
   async exists(key: string): Promise<boolean> {
     try {
       await this.s3Client.send(
