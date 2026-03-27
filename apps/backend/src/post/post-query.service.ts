@@ -56,6 +56,7 @@ function encodeCursor(payload: CursorPayload): string {
   return Buffer.from(JSON.stringify(payload)).toString("base64url");
 }
 
+// FIXME: structural validation for cursor value
 function decodeCursor(cursor: string): CursorPayload {
   try {
     return JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
@@ -150,7 +151,7 @@ export class PostQueryService {
     const posts = await qb
       .orderBy(orderEntry.path, sqlDirection)
       .addOrderBy("post.id", sqlDirection)
-      .limit(limit)
+      .take(limit)
       .getMany();
 
     const postIds = posts.map((p) => p.id);
