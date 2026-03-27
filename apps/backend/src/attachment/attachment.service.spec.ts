@@ -2,7 +2,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import PGMem from "pg-mem";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { AttachmentService } from "./attachment.service";
 import {
   AttachmentAlreadyConfirmedError,
@@ -13,27 +12,17 @@ import { Attachment } from "./attachment.entity";
 import { Post } from "../post/post.entity";
 import { User } from "../user/user.entity";
 import { UserProfile } from "../user/user-profile.entity";
-import { S3_CLIENT } from "src/s3-storage/s3-storage.module";
-import { s3Config } from "src/config";
 import { initializePgMem } from "src/test/pg-mem.helper";
-import { NotFound } from "@aws-sdk/client-s3";
-
-jest.mock("@aws-sdk/s3-request-presigner");
+import { S3StorageService } from "src/s3-storage/s3-storage.service";
+import { FakeS3StorageService } from "src/s3-storage/s3-storage.service.fake";
 
 const entities = [UserProfile, User, Post, Attachment];
-
-const mockS3Config = {
-  region: "us-east-1",
-  accessKeyId: "test-key",
-  secretAccessKey: "test-secret",
-  bucket: "test-bucket",
-};
 
 describe("AttachmentService", () => {
   let module: TestingModule;
   let attachmentService: AttachmentService;
   let attachmentRepository: Repository<Attachment>;
-  let mockS3Client: { send: jest.Mock };
+  let fakeS3: FakeS3StorageService;
   let dataSource: DataSource;
   let dbBackup: PGMem.IBackup;
 
@@ -42,7 +31,7 @@ describe("AttachmentService", () => {
     dataSource = ds;
     dbBackup = backup;
 
-    mockS3Client = { send: jest.fn() };
+    fakeS3 = new FakeS3StorageService();
 
     module = await Test.createTestingModule({
       providers: [
@@ -51,8 +40,7 @@ describe("AttachmentService", () => {
           provide: getRepositoryToken(Attachment),
           useValue: dataSource.getRepository(Attachment),
         },
-        { provide: S3_CLIENT, useValue: mockS3Client },
-        { provide: s3Config.KEY, useValue: mockS3Config },
+        { provide: S3StorageService, useValue: fakeS3 },
       ],
     }).compile();
 
@@ -62,8 +50,7 @@ describe("AttachmentService", () => {
 
   beforeEach(() => {
     dbBackup.restore();
-    mockS3Client.send.mockReset();
-    jest.mocked(getSignedUrl).mockReset();
+    fakeS3.reset();
     jest.restoreAllMocks();
   });
 
@@ -74,10 +61,6 @@ describe("AttachmentService", () => {
 
   describe("beginAttachmentUpload", () => {
     it("success: attachment 저장, presigned URL 반환", async () => {
-      // Given
-      const fakePresignedUrl = "https://s3.example.com/presigned";
-      jest.mocked(getSignedUrl).mockResolvedValue(fakePresignedUrl);
-
       // When
       const result = await attachmentService.beginAttachmentUpload();
 
@@ -87,7 +70,9 @@ describe("AttachmentService", () => {
       });
       expect(saved).not.toBeNull();
       expect(saved!.confirmed).toBe(false);
-      expect(result.presignedUrl).toBe(fakePresignedUrl);
+      expect(
+        fakeS3.isPresignedUrlValid(saved!.s3Key, result.presignedUrl),
+      ).toBe(true);
     });
 
     it("attachment 저장 실패 처리", async () => {
@@ -105,12 +90,11 @@ describe("AttachmentService", () => {
 
       // Then: throws, presigned URL 생성하지 않음
       await expect(result).rejects.toThrow();
-      expect(jest.mocked(getSignedUrl)).not.toHaveBeenCalled();
     });
 
     it("presigned URL 생성 실패 처리", async () => {
       // Given: presigned URL 생성이 실패하는 경우
-      jest.mocked(getSignedUrl).mockRejectedValueOnce(new Error("S3 failure"));
+      fakeS3.shouldFailOnPresigning = true;
 
       // When
       const result = attachmentService.beginAttachmentUpload();
@@ -130,7 +114,7 @@ describe("AttachmentService", () => {
           s3Key: "attachments/1",
         }),
       );
-      mockS3Client.send.mockResolvedValue({});
+      fakeS3.put(attachment.s3Key);
 
       // When
       await attachmentService.confirmAttachmentUpload(attachment.id);
@@ -179,8 +163,6 @@ describe("AttachmentService", () => {
           s3Key: "attachments/1",
         }),
       );
-
-      mockS3Client.send.mockRejectedValue(Object.create(NotFound.prototype));
 
       // When
       const result = attachmentService.confirmAttachmentUpload(attachment.id);

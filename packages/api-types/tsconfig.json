@@ -7,7 +7,8 @@
     "verbatimModuleSyntax": true,
     "declaration": true,
     "declarationMap": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": "./"
   },
   "include": ["src"]
 }

@@ -22,6 +22,7 @@ import { AttachmentModule } from "./attachment/attachment.module";
 import { PostModule } from "./post/post.module";
 import { Post } from "./post/post.entity";
 import { Attachment } from "./attachment/attachment.entity";
+import { PostLike } from "./post/post-like.entity";
 
 @Module({
   imports: [
@@ -39,7 +40,7 @@ import { Attachment } from "./attachment/attachment.entity";
         username: db.username,
         password: db.password,
         database: db.database,
-        entities: [User, UserProfile, RefreshToken, Post, Attachment],
+        entities: [User, UserProfile, RefreshToken, Post, PostLike, Attachment],
         synchronize: process.env.NODE_ENV !== "production",
       }),
     }),

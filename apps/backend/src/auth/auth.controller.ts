@@ -28,7 +28,7 @@ import type {
   RefreshTokensSuccessResponseDto,
 } from "@mindseed/api-types";
 import { AuthService } from "./auth.service";
-import { ZodBody } from "src/common/pipes/zod-body.decorator";
+import { ZodBody } from "src/common/pipes/zod-validation.decorator";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 import { UnAuthenticated } from "./decorators/auth.decorators";
 

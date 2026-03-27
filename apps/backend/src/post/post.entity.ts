@@ -43,4 +43,7 @@ export class Post {
 
   @OneToMany(() => Attachment, (attachment) => attachment.post)
   attachments: Attachment[];
+
+  @Column({ name: "like_count", default: 0 })
+  likeCount: number;
 }

@@ -10,7 +10,7 @@ import type {
   ConfirmAttachmentUploadSuccessResponseDto,
 } from "@mindseed/api-types";
 import { AttachmentService } from "./attachment.service";
-import { ZodBody } from "src/common/pipes/zod-body.decorator";
+import { ZodBody } from "src/common/pipes/zod-validation.decorator";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 import { UserOnly } from "src/auth/decorators/auth.decorators";
 

@@ -6,10 +6,11 @@
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
 import { PostCategorySchema, PostDtoSchema } from "./common";
+import { numberSerializerCodec } from "src/common/codecs";
 
 export const ListPostsQueryDtoSchema = z.object({
   cursor: z.string().optional(),
-  limit: z.int().min(1).default(10),
+  limit: numberSerializerCodec.pipe(z.int().min(1)).default(10),
   category: PostCategorySchema.optional(),
   orderBy: z.enum(["createdAt"]).default("createdAt"),
   orderDirection: z.enum(["asc", "desc"]).default("asc"),
@@ -20,9 +21,9 @@ export type ListPostsQueryDto = z.output<typeof ListPostsQueryDtoSchema>;
 export const ListPostsResponseDtoSchema = responseDtoSchema(
   z.object({
     posts: z.array(PostDtoSchema),
-    nextCursor: z.int().nullable(),
+    nextCursor: z.string().nullable(),
   }),
-  z.enum(["INVALID_CURSOR"])
+  z.enum(["INVALID_CURSOR"]),
 );
 
 export type ListPostsResponseDto = z.output<typeof ListPostsResponseDtoSchema>;
