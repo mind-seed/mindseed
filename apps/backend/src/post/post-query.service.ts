@@ -92,7 +92,6 @@ export class PostQueryService {
     private readonly postRepository: Repository<Post>,
     @InjectRepository(PostLike)
     private readonly postLikeRepository: Repository<PostLike>,
-    @InjectRepository(Attachment)
     private readonly s3StorageService: S3StorageService,
   ) {}
 
