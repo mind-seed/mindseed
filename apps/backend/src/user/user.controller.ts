@@ -8,7 +8,7 @@ import {
   CurrentUser,
 } from "src/auth/decorators/auth.decorators";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
-import { User } from "./user.entity";
+import { User } from "./entities/user.entity";
 
 @Controller("/users")
 export class UserController {

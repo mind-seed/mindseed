@@ -5,7 +5,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { Post } from "../post/post.entity";
+import { Post } from "src/post/entities/post.entity";
 
 @Entity({ name: "attachment" })
 export class Attachment {

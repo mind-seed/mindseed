@@ -6,7 +6,7 @@ import {
   UseGuards,
 } from "@nestjs/common";
 import { Request } from "express";
-import { User, UserRole } from "src/user/user.entity";
+import { User, UserRole } from "src/user/entities/user.entity";
 import { RoleGuard, ROLE_KEY } from "../guards/role.guard";
 import {
   AuthGuard,

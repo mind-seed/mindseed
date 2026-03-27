@@ -8,8 +8,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import { User } from "../user/user.entity";
-import { Attachment } from "../attachment/attachment.entity";
+import { User } from "src/user/entities/user.entity";
+import { Attachment } from "src/attachment/entities/attachment.entity";
 
 export enum PostCategory {
   DUMMY1 = "DUMMY1",

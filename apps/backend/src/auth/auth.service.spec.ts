@@ -24,8 +24,8 @@ import { FakeMailService } from "../mail/mail.service.fake";
 import { EmailRateLimitService } from "./email-rate-limit/email-rate-limit.service";
 import { EmailRateLimitStore } from "./email-rate-limit/email-rate-limit.store";
 import { REDIS_CLIENT } from "../redis/redis.module";
-import { User, UserRole } from "../user/user.entity";
-import { UserProfile } from "../user/user-profile.entity";
+import { User, UserRole } from "../user/entities/user.entity";
+import { UserProfile } from "../user/entities/user-profile.entity";
 import { SignUpTokenService } from "./sign-up-token/sign-up-token.service";
 import {
   AccessTokenPayload,

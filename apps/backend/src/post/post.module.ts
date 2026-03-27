@@ -1,8 +1,8 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { Post } from "./post.entity";
-import { PostLike } from "./post-like.entity";
-import { Attachment } from "../attachment/attachment.entity";
+import { Post } from "./entities/post.entity";
+import { PostLike } from "./entities/post-like.entity";
+import { Attachment } from "../attachment/entities/attachment.entity";
 import { PostQueryService } from "./post-query.service";
 import { PostMutationService } from "./post-mutation.service";
 import { PostController } from "./post.controller";

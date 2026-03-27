@@ -7,6 +7,9 @@ import { RefreshToken } from "./refresh-token.entity";
 
 const TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 
+/**
+ * user id와 refresh token 사이의 연관 로직을 담당한다.
+ */
 @Injectable()
 export class RefreshTokenService {
   constructor(
