@@ -133,11 +133,11 @@ export class PostMutationService {
     postId: number,
     liked: boolean,
   ): Promise<void> {
-    const existingPost = await this.postRepository.findOneBy({
+    const postExists = await this.postRepository.existsBy({
       id: postId,
     });
 
-    if (!existingPost) {
+    if (!postExists) {
       throw new PostNotFoundError();
     }
 
@@ -151,8 +151,7 @@ export class PostMutationService {
       const postRepository = manager.getRepository(Post);
 
       if (liked && !postLikeExists) {
-        existingPost.likeCount++;
-        await postRepository.save(existingPost);
+        await postRepository.increment({ id: postId }, "likeCount", 1);
 
         await postLikeRepository.save(
           this.postLikeRepository.create({
@@ -163,8 +162,7 @@ export class PostMutationService {
       }
 
       if (!liked && postLikeExists) {
-        existingPost.likeCount--;
-        await postRepository.save(existingPost);
+        await postRepository.decrement({ id: postId }, "likeCount", 1);
 
         await postLikeRepository.delete({
           user: { id: userId },
