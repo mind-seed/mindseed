@@ -7,7 +7,7 @@ import { SignUpTokenService } from "./sign-up-token/sign-up-token.service";
 import { AccessTokenService } from "./access-token/access-token.service";
 import { RefreshTokenService } from "./refresh-token/refresh-token.service";
 import { JsonWebTokenError } from "@nestjs/jwt";
-import { User } from "src/user/user.entity";
+import { User } from "src/user/entities/user.entity";
 import { bcryptHash, bcryptCompare } from "./bcrypt.helper";
 import {
   EmailAlreadyExistsError,

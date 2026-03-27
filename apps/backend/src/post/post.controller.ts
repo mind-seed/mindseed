@@ -32,7 +32,7 @@ import type {
   UpdatePostRequestDto,
   UpdatePostSuccessResponseDto,
 } from "@mindseed/api-types";
-import { PostCategory } from "./post.entity";
+import { PostCategory } from "./entities/post.entity";
 import { PostQueryService } from "./post-query.service";
 import { PostMutationService } from "./post-mutation.service";
 import {
@@ -42,7 +42,7 @@ import {
 } from "src/common/pipes/zod-validation.decorator";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 import { CurrentUser, UserOnly } from "src/auth/decorators/auth.decorators";
-import { User } from "src/user/user.entity";
+import { User } from "src/user/entities/user.entity";
 
 type ApiCategory = "dummy1" | "dummy2" | "dummy3";
 

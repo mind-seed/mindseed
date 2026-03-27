@@ -12,17 +12,17 @@ import { RedisModule } from "./redis/redis.module";
 import { MailModule } from "./mail/mail.module";
 import { UserModule } from "./user/user.module";
 import { AuthModule } from "./auth/auth.module";
-import { User } from "./user/user.entity";
-import { UserProfile } from "./user/user-profile.entity";
+import { User } from "./user/entities/user.entity";
+import { UserProfile } from "./user/entities/user-profile.entity";
 import { RefreshToken } from "./auth/refresh-token/refresh-token.entity";
 import { ScheduleModule } from "@nestjs/schedule";
 import { UserController } from "./user/user.controller";
 import { S3StorageModule } from "./s3-storage/s3-storage.module";
 import { AttachmentModule } from "./attachment/attachment.module";
 import { PostModule } from "./post/post.module";
-import { Post } from "./post/post.entity";
-import { Attachment } from "./attachment/attachment.entity";
-import { PostLike } from "./post/post-like.entity";
+import { Post } from "./post/entities/post.entity";
+import { Attachment } from "./attachment/entities/attachment.entity";
+import { PostLike } from "./post/entities/post-like.entity";
 
 @Module({
   imports: [

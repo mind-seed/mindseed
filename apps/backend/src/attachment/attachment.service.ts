@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { randomUUID } from "crypto";
-import { Attachment } from "./attachment.entity";
+import { Attachment } from "./entities/attachment.entity";
 import { createAttachmentS3Key } from "./attachment-s3-key.helper";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import {

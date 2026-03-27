@@ -8,10 +8,10 @@ import {
   AttachmentNotFoundError,
   AttachmentNotUploadedError,
 } from "./attachment.errors";
-import { Attachment } from "./attachment.entity";
-import { Post } from "../post/post.entity";
-import { User } from "../user/user.entity";
-import { UserProfile } from "../user/user-profile.entity";
+import { Attachment } from "./entities/attachment.entity";
+import { Post } from "../post/entities/post.entity";
+import { User } from "../user/entities/user.entity";
+import { UserProfile } from "../user/entities/user-profile.entity";
 import { initializePgMem } from "src/test/pg-mem.helper";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import { FakeS3StorageService } from "src/s3-storage/s3-storage.service.fake";

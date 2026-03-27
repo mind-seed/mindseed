@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, In, IsNull, Repository } from "typeorm";
-import { Post, PostCategory } from "./post.entity";
-import { PostLike } from "./post-like.entity";
-import { Attachment } from "../attachment/attachment.entity";
+import { Post, PostCategory } from "./entities/post.entity";
+import { PostLike } from "./entities/post-like.entity";
+import { Attachment } from "../attachment/entities/attachment.entity";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import {
   AttachmentAlreadyAssociatedError,

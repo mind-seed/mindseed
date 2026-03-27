@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { Attachment } from "./attachment.entity";
+import { Attachment } from "./entities/attachment.entity";
 import { AttachmentService } from "./attachment.service";
 import { AttachmentController } from "./attachment.controller";
 import { S3StorageModule } from "src/s3-storage/s3-storage.module";

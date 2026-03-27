@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { Request } from "express";
-import { UserRole } from "src/user/user.entity";
+import { UserRole } from "src/user/entities/user.entity";
 
 export const ROLE_KEY = "role";
 
