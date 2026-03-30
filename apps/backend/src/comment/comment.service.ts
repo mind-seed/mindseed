@@ -1,5 +1,10 @@
 import { Injectable } from "@nestjs/common";
-import { PostComment } from "./entities/post-comment.entity";
+import { InjectRepository } from "@nestjs/typeorm";
+import { IsNull, Repository } from "typeorm";
+import { PostComment, DeletionType } from "./entities/post-comment.entity";
+import { Post } from "src/post/entities/post.entity";
+import { CommentNotFoundError, NotCommentAuthorError } from "./comment.errors";
+import { PostNotFoundError } from "src/post/post.errors";
 
 export type CreateCommentOptions = {
   postId: number;
@@ -19,21 +24,90 @@ export type UpdateCommentOptions = {
  */
 @Injectable()
 export class CommentService {
+  constructor(
+    @InjectRepository(PostComment)
+    private readonly commentRepository: Repository<PostComment>,
+    @InjectRepository(Post)
+    private readonly postRepository: Repository<Post>,
+  ) {}
+
   /**
    * options 기반으로 새 댓글을 생성한다.
    * @returns 생성된 댓글
    */
-  async createComment(options: CreateCommentOptions): Promise<PostComment> {
-    throw new Error("Not implemented");
+  async createComment({
+    postId,
+    userId,
+    nickname,
+    content,
+  }: CreateCommentOptions): Promise<PostComment> {
+    const postExists = await this.postRepository.existsBy({ id: postId });
+
+    if (!postExists) {
+      throw new PostNotFoundError();
+    }
+
+    return this.commentRepository.save(
+      this.commentRepository.create({
+        post: { id: postId },
+        author: { id: userId },
+        nickname,
+        content,
+        deletedAt: null,
+        deletedBy: null,
+        deletionType: null,
+      }),
+    );
   }
 
   /**
    * options.commentId가 가리키는 댓글을 수정한다.
    */
-  async updateComment(options: UpdateCommentOptions): Promise<void> {}
+  async updateComment({
+    commentId,
+    userId,
+    content,
+  }: UpdateCommentOptions): Promise<void> {
+    const comment = await this.commentRepository.findOne({
+      where: { id: commentId, deletedAt: IsNull() },
+      relations: { author: true },
+    });
+
+    if (!comment) {
+      throw new CommentNotFoundError();
+    }
+
+    if (comment.author.id !== userId) {
+      throw new NotCommentAuthorError();
+    }
+
+    await this.commentRepository.update({ id: commentId }, { content });
+  }
 
   /**
    * options.commentId가 가리키는 댓글을 삭제한다.
    */
-  async deleteComment(commentId: number, userId: number): Promise<void> {}
+  async deleteComment(commentId: number, userId: number): Promise<void> {
+    const comment = await this.commentRepository.findOne({
+      where: { id: commentId, deletedAt: IsNull() },
+      relations: { author: true },
+    });
+
+    if (!comment) {
+      throw new CommentNotFoundError();
+    }
+
+    if (comment.author.id !== userId) {
+      throw new NotCommentAuthorError();
+    }
+
+    await this.commentRepository.update(
+      { id: commentId },
+      {
+        deletedAt: new Date(),
+        deletedBy: { id: userId },
+        deletionType: DeletionType.AUTHOR,
+      },
+    );
+  }
 }
