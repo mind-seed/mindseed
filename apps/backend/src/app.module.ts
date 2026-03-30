@@ -23,6 +23,8 @@ import { PostModule } from "./post/post.module";
 import { Post } from "./post/entities/post.entity";
 import { Attachment } from "./attachment/entities/attachment.entity";
 import { PostLike } from "./post/entities/post-like.entity";
+import { CommentModule } from "./comment/comment.module";
+import { PostComment } from "./comment/entities/post-comment.entity";
 
 @Module({
   imports: [
@@ -40,7 +42,15 @@ import { PostLike } from "./post/entities/post-like.entity";
         username: db.username,
         password: db.password,
         database: db.database,
-        entities: [User, UserProfile, RefreshToken, Post, PostLike, Attachment],
+        entities: [
+          Attachment,
+          User,
+          UserProfile,
+          RefreshToken,
+          Post,
+          PostComment,
+          PostLike,
+        ],
         synchronize: process.env.NODE_ENV !== "production",
       }),
     }),
@@ -51,6 +61,7 @@ import { PostLike } from "./post/entities/post-like.entity";
     UserModule,
     AttachmentModule,
     PostModule,
+    CommentModule,
   ],
   // 2026-03-18: AuthGuard -- UserService circular dependency 문제를 해결하기
   // 위해 다음과 같이 배치하였습니다.
