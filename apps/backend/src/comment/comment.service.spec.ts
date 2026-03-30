@@ -167,6 +167,7 @@ describe("CommentService", () => {
 
       // When: 댓글 업데이트 시도
       await commentService.updateComment({
+        postId: post.id,
         commentId: comment.id,
         userId: user.id,
         content: newContent,
@@ -181,15 +182,59 @@ describe("CommentService", () => {
       });
     });
 
-    it("DB에 존재하지 않는 댓글 처리", async () => {
-      // Given: 댓글이 존재하지 않는 경우
+    it("존재하지 않는 글 처리", async () => {
+      // Given: 글이 존재하지 않는 경우
       const user = await saveTestUser(userRepository);
+      const nonExistentPostId = 0;
+      const newContent = "new content";
+
+      // When: 댓글 업데이트 시도
+      const result = commentService.updateComment({
+        postId: nonExistentPostId,
+        commentId: 0,
+        userId: user.id,
+        content: newContent,
+      });
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("DB에 존재하지 않는 댓글 처리", async () => {
+      // Given: 글은 존재하지만 댓글이 존재하지 않는 경우
+      const user = await saveTestUser(userRepository);
+      const post = await saveTestPost(postRepository, user.id);
       const nonExistentCommentId = 0;
       const newContent = "new content";
 
       // When: 댓글 업데이트 시도
       const result = commentService.updateComment({
+        postId: post.id,
         commentId: nonExistentCommentId,
+        userId: user.id,
+        content: newContent,
+      });
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(CommentNotFoundError);
+    });
+
+    it("해당 글의 댓글이 아닌 경우 처리", async () => {
+      // Given: 댓글이 존재하지만, 해당 글의 댓글이 아닌 경우
+      const user = await saveTestUser(userRepository);
+      const post = await saveTestPost(postRepository, user.id);
+      const otherPost = await saveTestPost(postRepository, user.id);
+      const comment = await saveTestComment(
+        commentRepository,
+        otherPost.id,
+        user.id,
+      );
+      const newContent = "new content";
+
+      // When: 댓글 업데이트 시도
+      const result = commentService.updateComment({
+        postId: post.id,
+        commentId: comment.id,
         userId: user.id,
         content: newContent,
       });
@@ -216,6 +261,7 @@ describe("CommentService", () => {
 
       // When: 댓글 업데이트 시도
       const result = commentService.updateComment({
+        postId: post.id,
         commentId: comment.id,
         userId: user.id,
         content: newContent,
@@ -239,6 +285,7 @@ describe("CommentService", () => {
 
       // When: 댓글 업데이트 시도
       const result = commentService.updateComment({
+        postId: post.id,
         commentId: comment.id,
         userId: user.id,
         content: newContent,
@@ -261,7 +308,7 @@ describe("CommentService", () => {
       );
 
       // When: 댓글 삭제 시도
-      await commentService.deleteComment(comment.id, user.id);
+      await commentService.deleteComment(post.id, comment.id, user.id);
 
       // Then: 댓글 삭제 column 업데이트
       const deletedComment = await commentRepository.findOne({
@@ -274,16 +321,52 @@ describe("CommentService", () => {
       expect(deletedComment!.deletionType).toBe(DeletionType.AUTHOR);
     });
 
-    it("DB에 존재하지 않는 댓글 처리", async () => {
-      // Given: 댓글이 존재하지 않는 경우
+    it("존재하지 않는 글 처리", async () => {
+      // Given: 글이 존재하지 않는 경우
       const user = await saveTestUser(userRepository);
+      const nonExistentPostId = 0;
+
+      // When: 댓글 삭제 시도
+      const result = commentService.deleteComment(
+        nonExistentPostId,
+        0,
+        user.id,
+      );
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("DB에 존재하지 않는 댓글 처리", async () => {
+      // Given: 글은 존재하지만 댓글이 존재하지 않는 경우
+      const user = await saveTestUser(userRepository);
+      const post = await saveTestPost(postRepository, user.id);
       const nonExistentCommentId = 0;
 
       // When: 댓글 삭제 시도
       const result = commentService.deleteComment(
+        post.id,
         nonExistentCommentId,
         user.id,
       );
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(CommentNotFoundError);
+    });
+
+    it("해당 글의 댓글이 아닌 경우 처리", async () => {
+      // Given: 댓글이 존재하지만, 해당 글의 댓글이 아닌 경우
+      const user = await saveTestUser(userRepository);
+      const post = await saveTestPost(postRepository, user.id);
+      const otherPost = await saveTestPost(postRepository, user.id);
+      const comment = await saveTestComment(
+        commentRepository,
+        otherPost.id,
+        user.id,
+      );
+
+      // When: 댓글 삭제 시도
+      const result = commentService.deleteComment(post.id, comment.id, user.id);
 
       // Then: throws handled error
       await expect(result).rejects.toThrow(CommentNotFoundError);
@@ -305,7 +388,7 @@ describe("CommentService", () => {
       );
 
       // When: 댓글 삭제 시도
-      const result = commentService.deleteComment(comment.id, user.id);
+      const result = commentService.deleteComment(post.id, comment.id, user.id);
 
       // Then: throws handled error
       await expect(result).rejects.toThrow(CommentNotFoundError);
@@ -323,7 +406,7 @@ describe("CommentService", () => {
       );
 
       // When: 댓글 삭제 시도
-      const result = commentService.deleteComment(comment.id, user.id);
+      const result = commentService.deleteComment(post.id, comment.id, user.id);
 
       // Then: throws handled error
       await expect(result).rejects.toThrow(NotCommentAuthorError);

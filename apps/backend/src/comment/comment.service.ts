@@ -14,6 +14,7 @@ export type CreateCommentOptions = {
 };
 
 export type UpdateCommentOptions = {
+  postId: number;
   commentId: number;
   userId: number;
   content: string;
@@ -64,12 +65,19 @@ export class CommentService {
    * options.commentId가 가리키는 댓글을 수정한다.
    */
   async updateComment({
+    postId,
     commentId,
     userId,
     content,
   }: UpdateCommentOptions): Promise<void> {
+    const postExists = await this.postRepository.existsBy({ id: postId });
+
+    if (!postExists) {
+      throw new PostNotFoundError();
+    }
+
     const comment = await this.commentRepository.findOne({
-      where: { id: commentId, deletedAt: IsNull() },
+      where: { id: commentId, post: { id: postId }, deletedAt: IsNull() },
       relations: { author: true },
     });
 
@@ -87,9 +95,19 @@ export class CommentService {
   /**
    * options.commentId가 가리키는 댓글을 삭제한다.
    */
-  async deleteComment(commentId: number, userId: number): Promise<void> {
+  async deleteComment(
+    postId: number,
+    commentId: number,
+    userId: number,
+  ): Promise<void> {
+    const postExists = await this.postRepository.existsBy({ id: postId });
+
+    if (!postExists) {
+      throw new PostNotFoundError();
+    }
+
     const comment = await this.commentRepository.findOne({
-      where: { id: commentId, deletedAt: IsNull() },
+      where: { id: commentId, post: { id: postId }, deletedAt: IsNull() },
       relations: { author: true },
     });
 
