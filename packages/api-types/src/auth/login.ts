@@ -5,6 +5,7 @@
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
 import { UserDtoSchema } from "../common/user-dto";
+import { AuthErrorCode } from "../common/error-codes";
 
 export const LoginRequestDtoSchema = z.object({
   email: z.email(),
@@ -19,7 +20,7 @@ export const LoginResponseDtoSchema = responseDtoSchema(
     accessToken: z.string(),
     refreshToken: z.string(),
   }),
-  z.enum(["INVALID_CREDENTIALS"]),
+  z.enum([AuthErrorCode.INVALID_CREDENTIALS]),
 );
 
 export type LoginResponseDto = z.output<typeof LoginResponseDtoSchema>;

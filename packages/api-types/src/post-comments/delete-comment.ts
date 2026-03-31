@@ -5,15 +5,14 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { PostNotFoundErrorCode } from "../posts/common";
-import { CommentNotFoundErrorCode, NotCommentAuthorErrorCode } from "./common";
+import { PostErrorCode, CommentErrorCode } from "../common/error-codes";
 
 export const DeleteCommentResponseDtoSchema = responseDtoSchema(
   z.null(),
   z.enum([
-    PostNotFoundErrorCode,
-    CommentNotFoundErrorCode,
-    NotCommentAuthorErrorCode,
+    PostErrorCode.POST_NOT_FOUND,
+    CommentErrorCode.COMMENT_NOT_FOUND,
+    CommentErrorCode.NOT_COMMENT_AUTHOR,
   ]),
 );
 

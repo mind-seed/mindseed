@@ -5,6 +5,7 @@
 import z from "zod";
 import { verificationCodeSchema } from "./common";
 import { responseDtoSchema } from "../helpers";
+import { AuthErrorCode } from "../common/error-codes";
 
 export const VerifyMailRequestDtoSchema = z.object({
   email: z.email(),
@@ -17,7 +18,7 @@ export const VerifyMailResponseDtoSchema = responseDtoSchema(
   z.object({
     signUpToken: z.string(),
   }),
-  z.enum(["INVALID_VERIFICATION_CODE"]),
+  z.enum([AuthErrorCode.INVALID_VERIFICATION_CODE]),
 );
 
 export type VerifyMailResponseDto = z.output<

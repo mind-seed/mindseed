@@ -5,6 +5,7 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
+import { AttachmentErrorCode } from "../common/error-codes";
 
 export const ConfirmAttachmentUploadRequestDtoSchema = z.object({
   attachmentId: z.int(),
@@ -17,9 +18,9 @@ export type ConfirmAttachmentUploadRequestDto = z.output<
 export const ConfirmAttachmentUploadResponseDtoSchema = responseDtoSchema(
   z.null(),
   z.enum([
-    "ATTACHMENT_NOT_FOUND",
-    "ATTACHMENT_ALREADY_CONFIRMED",
-    "ATTACHMENT_NOT_UPLOADED",
+    AttachmentErrorCode.ATTACHMENT_NOT_FOUND,
+    AttachmentErrorCode.ATTACHMENT_ALREADY_CONFIRMED,
+    AttachmentErrorCode.ATTACHMENT_NOT_UPLOADED,
   ]),
 );
 

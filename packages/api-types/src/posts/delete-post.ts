@@ -5,11 +5,11 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { PostNotFoundErrorCode, NotPostAuthorErrorCode } from "./common";
+import { PostErrorCode } from "../common/error-codes";
 
 export const DeletePostResponseDtoSchema = responseDtoSchema(
   z.null(),
-  z.enum([PostNotFoundErrorCode, NotPostAuthorErrorCode]),
+  z.enum([PostErrorCode.POST_NOT_FOUND, PostErrorCode.NOT_POST_AUTHOR]),
 );
 
 export type DeletePostResponseDto = z.output<

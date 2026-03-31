@@ -7,11 +7,10 @@ import z from "zod";
 import { responseDtoSchema } from "../helpers";
 import {
   PostCategorySchema,
-  PostNotFoundErrorCode,
-  NotPostAuthorErrorCode,
   PostContentSchema,
   PostAttachmentsSchema,
 } from "./common";
+import { PostErrorCode, AttachmentErrorCode } from "../common/error-codes";
 
 export const UpdatePostRequestDtoSchema = z.object({
   content: PostContentSchema,
@@ -24,10 +23,10 @@ export type UpdatePostRequestDto = z.output<typeof UpdatePostRequestDtoSchema>;
 export const UpdatePostResponseDtoSchema = responseDtoSchema(
   z.null(),
   z.enum([
-    PostNotFoundErrorCode,
-    NotPostAuthorErrorCode,
-    "ATTACHMENT_NOT_FOUND",
-    "ATTACHMENT_ALREADY_ASSOCIATED",
+    PostErrorCode.POST_NOT_FOUND,
+    PostErrorCode.NOT_POST_AUTHOR,
+    AttachmentErrorCode.ATTACHMENT_NOT_FOUND,
+    AttachmentErrorCode.ATTACHMENT_ALREADY_ASSOCIATED,
   ]),
 );
 
