@@ -5,13 +5,14 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
+import { AuthErrorCode } from "../common/error-codes";
 
 export const RefreshTokensResponseDtoSchema = responseDtoSchema(
   z.object({
     accessToken: z.string(),
     refreshToken: z.string(),
   }),
-  z.enum(["INVALID_REFRESH_TOKEN"]),
+  z.enum([AuthErrorCode.INVALID_REFRESH_TOKEN]),
 );
 
 export type RefreshTokensResponseDto = z.output<

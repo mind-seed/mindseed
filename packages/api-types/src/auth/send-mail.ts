@@ -4,7 +4,7 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { EmailAlreadyExistsErrorCode } from "./common";
+import { AuthErrorCode } from "../common/error-codes";
 
 export const SendMailRequestDtoSchema = z.object({
   email: z.email(),
@@ -15,9 +15,9 @@ export type SendMailRequestDto = z.output<typeof SendMailRequestDtoSchema>;
 export const SendMailResponseDtoSchema = responseDtoSchema(
   z.null(),
   z.enum([
-    EmailAlreadyExistsErrorCode,
-    "EMAIL_RATE_LIMITED",
-    "VERIFICATION_COOLDOWN",
+    AuthErrorCode.EMAIL_ALREADY_EXISTS,
+    AuthErrorCode.EMAIL_RATE_LIMITED,
+    AuthErrorCode.VERIFICATION_COOLDOWN,
   ]),
 );
 

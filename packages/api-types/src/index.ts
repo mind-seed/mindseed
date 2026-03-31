@@ -3,6 +3,7 @@ export * from "./helpers";
 export * from "./common/id-param";
 export * from "./common/user-dto";
 export * from "./common/user-profile-dto";
+export * from "./common/error-codes";
 
 export * from "./auth/common";
 export * from "./auth/complete-signup";

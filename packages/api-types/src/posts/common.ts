@@ -49,8 +49,3 @@ export type CommentDto = z.output<typeof CommentDtoSchema>;
 export const PostWithCommentsSchema = PostDtoSchema.extend({
   comments: z.array(CommentDtoSchema),
 });
-
-// shared error codes
-
-export const PostNotFoundErrorCode = "POST_NOT_FOUND";
-export const NotPostAuthorErrorCode = "NOT_POST_AUTHOR";

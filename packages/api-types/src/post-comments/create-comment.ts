@@ -5,11 +5,9 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import {
-  PostAuthorNicknameSchema,
-  PostNotFoundErrorCode,
-} from "../posts/common";
+import { PostAuthorNicknameSchema } from "../posts/common";
 import { CommentContentSchema } from "./common";
+import { PostErrorCode } from "../common/error-codes";
 
 export const CreateCommentRequestDtoSchema = z.object({
   nickname: PostAuthorNicknameSchema,
@@ -24,7 +22,7 @@ export const CreateCommentResponseDtoSchema = responseDtoSchema(
   z.object({
     id: z.int(),
   }),
-  z.enum([PostNotFoundErrorCode]),
+  z.enum([PostErrorCode.POST_NOT_FOUND]),
 );
 
 export type CreateCommentResponseDto = z.output<

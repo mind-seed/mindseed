@@ -11,6 +11,7 @@ import {
   PostCategorySchema,
   PostContentSchema,
 } from "./common";
+import { AttachmentErrorCode } from "../common/error-codes";
 
 export const CreatePostRequestDtoSchema = z.object({
   content: PostContentSchema,
@@ -25,7 +26,10 @@ export const CreatePostResponseDtoSchema = responseDtoSchema(
   z.object({
     id: z.int(),
   }),
-  z.enum(["ATTACHMENT_NOT_FOUND", "ATTACHMENT_ALREADY_ASSOCIATED"]),
+  z.enum([
+    AttachmentErrorCode.ATTACHMENT_NOT_FOUND,
+    AttachmentErrorCode.ATTACHMENT_ALREADY_ASSOCIATED,
+  ]),
 );
 
 export type CreatePostResponseDto = z.output<

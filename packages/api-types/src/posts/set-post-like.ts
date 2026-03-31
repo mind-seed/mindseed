@@ -5,7 +5,7 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { PostNotFoundErrorCode } from "./common";
+import { PostErrorCode } from "../common/error-codes";
 
 export const SetPostLikeRequestDtoSchema = z.object({
   liked: z.boolean(),
@@ -17,7 +17,7 @@ export type SetPostLikeRequestDto = z.output<
 
 export const SetPostLikeResponseDtoSchema = responseDtoSchema(
   z.null(),
-  z.enum([PostNotFoundErrorCode]),
+  z.enum([PostErrorCode.POST_NOT_FOUND]),
 );
 
 export type SetPostLikeResponseDto = z.output<

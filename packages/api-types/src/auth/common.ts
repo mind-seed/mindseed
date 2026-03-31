@@ -20,7 +20,3 @@ export const nicknameSchema = z
   .regex(/^[가-힣A-z0-9\s]+$/);
 
 export const ageSchema = z.int().min(0);
-
-// shared error codes
-
-export const EmailAlreadyExistsErrorCode = "EMAIL_ALREADY_EXISTS";

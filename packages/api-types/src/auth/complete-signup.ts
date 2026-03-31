@@ -4,13 +4,9 @@
  */
 
 import z from "zod";
-import {
-  ageSchema,
-  EmailAlreadyExistsErrorCode,
-  nicknameSchema,
-  passwordSchema,
-} from "./common";
+import { ageSchema, nicknameSchema, passwordSchema } from "./common";
 import { responseDtoSchema } from "../helpers";
+import { AuthErrorCode } from "../common/error-codes";
 
 export const CompleteSignupRequestDtoSchema = z.object({
   password: passwordSchema,
@@ -27,7 +23,10 @@ export const CompleteSignupResponseDtoSchema = responseDtoSchema(
     accessToken: z.string(),
     refreshToken: z.string(),
   }),
-  z.enum([EmailAlreadyExistsErrorCode, "INVALID_SIGN_UP_TOKEN"]),
+  z.enum([
+    AuthErrorCode.EMAIL_ALREADY_EXISTS,
+    AuthErrorCode.INVALID_SIGN_UP_TOKEN,
+  ]),
 );
 
 export type CompleteSignupResponseDto = z.output<
