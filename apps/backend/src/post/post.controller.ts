@@ -148,6 +148,15 @@ export class PostController {
           id: a.id,
           url: attachmentToUrl[a.id],
         })),
+        comments: entry.post.comments.map((c) => ({
+          id: c.id,
+          content: c.content,
+          author: {
+            nickname: c.nickname,
+          },
+          createdAt: c.createdAt,
+          updatedAt: c.updatedAt,
+        })),
         likeCount: entry.post.likeCount,
         isOwner: entry.withUser.isOwner,
         isLiked: entry.withUser.isLiked,

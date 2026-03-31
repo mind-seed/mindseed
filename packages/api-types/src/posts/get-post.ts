@@ -5,10 +5,10 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { PostDtoSchema, PostNotFoundErrorCode } from "./common";
+import { PostNotFoundErrorCode, PostWithCommentsSchema } from "./common";
 
 export const GetPostResponseDtoSchema = responseDtoSchema(
-  PostDtoSchema,
+  PostWithCommentsSchema,
   z.enum([PostNotFoundErrorCode]),
 );
 

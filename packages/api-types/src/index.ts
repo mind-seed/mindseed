@@ -23,3 +23,8 @@ export * from "./posts/get-post";
 export * from "./posts/update-post";
 export * from "./posts/set-post-like";
 export * from "./posts/delete-post";
+
+export * from "./post-comments/common";
+export * from "./post-comments/create-comment";
+export * from "./post-comments/update-comment";
+export * from "./post-comments/delete-comment";
