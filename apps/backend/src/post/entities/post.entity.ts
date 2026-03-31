@@ -10,6 +10,7 @@ import {
 } from "typeorm";
 import { User } from "src/user/entities/user.entity";
 import { Attachment } from "src/attachment/entities/attachment.entity";
+import { PostComment } from "src/comment/entities/post-comment.entity";
 
 export enum PostCategory {
   DUMMY1 = "DUMMY1",
@@ -43,6 +44,9 @@ export class Post {
 
   @OneToMany(() => Attachment, (attachment) => attachment.post)
   attachments: Attachment[];
+
+  @OneToMany(() => PostComment, (comment) => comment.post)
+  comments: PostComment[];
 
   @Column({ name: "like_count", default: 0 })
   likeCount: number;

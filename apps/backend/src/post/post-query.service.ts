@@ -202,7 +202,7 @@ export class PostQueryService {
   async getPost(userId: number, postId: number): Promise<GetPostResult> {
     const post = await this.postRepository.findOne({
       where: { id: postId },
-      relations: { author: true, attachments: true },
+      relations: { author: true, attachments: true, comments: true },
     });
     if (!post) {
       throw new PostNotFoundError();

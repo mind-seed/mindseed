@@ -1,5 +1,6 @@
 import z from "zod";
 import { dateSerializerCodec } from "../common/codecs";
+import { CommentContentSchema } from "src/post-comments/common";
 
 export const PostContentSchema = z.string().min(1).max(200);
 
@@ -16,7 +17,7 @@ export type AttachmentDto = z.output<typeof AttachmentDtoSchema>;
 
 export const PostAuthorNicknameSchema = z.string().min(2).max(10);
 
-export const PostAuthorDtoSchema = z.object({
+export const AuthorDtoSchema = z.object({
   nickname: PostAuthorNicknameSchema,
 });
 
@@ -24,7 +25,7 @@ export const PostDtoSchema = z.object({
   id: z.int(),
   content: PostContentSchema,
   category: PostCategorySchema,
-  author: PostAuthorDtoSchema,
+  author: AuthorDtoSchema,
   attachments: z.array(AttachmentDtoSchema),
   likeCount: z.int(),
   isOwner: z.boolean(),
@@ -34,6 +35,20 @@ export const PostDtoSchema = z.object({
 });
 
 export type PostDto = z.output<typeof PostDtoSchema>;
+
+export const CommentDtoSchema = z.object({
+  id: z.int(),
+  content: CommentContentSchema,
+  author: AuthorDtoSchema,
+  createdAt: dateSerializerCodec,
+  updatedAt: dateSerializerCodec,
+});
+
+export type CommentDto = z.output<typeof CommentDtoSchema>;
+
+export const PostWithCommentsSchema = PostDtoSchema.extend({
+  comments: z.array(CommentDtoSchema),
+});
 
 // shared error codes
 
