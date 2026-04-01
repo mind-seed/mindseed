@@ -5,7 +5,7 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { UserDtoSchema } from "../common/user-dto";
+import { UserDtoSchema } from "../common/user";
 
 export const GetCurrentUserResponseDtoSchema = responseDtoSchema(
   UserDtoSchema,

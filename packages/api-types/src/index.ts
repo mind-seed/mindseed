@@ -1,11 +1,13 @@
 export * from "./helpers";
 
 export * from "./common/id-param";
-export * from "./common/user-dto";
-export * from "./common/user-profile-dto";
+export * from "./common/auth";
+export * from "./common/user";
+export * from "./common/author";
+export * from "./common/comment";
+export * from "./common/post";
 export * from "./common/error-codes";
 
-export * from "./auth/common";
 export * from "./auth/complete-signup";
 export * from "./auth/login";
 export * from "./auth/refresh-tokens";
@@ -17,7 +19,6 @@ export * from "./users/current";
 export * from "./attachments/begin";
 export * from "./attachments/confirm";
 
-export * from "./posts/common";
 export * from "./posts/create-post";
 export * from "./posts/list-posts";
 export * from "./posts/get-post";
@@ -25,7 +26,6 @@ export * from "./posts/update-post";
 export * from "./posts/set-post-like";
 export * from "./posts/delete-post";
 
-export * from "./post-comments/common";
 export * from "./post-comments/create-comment";
 export * from "./post-comments/update-comment";
 export * from "./post-comments/delete-comment";

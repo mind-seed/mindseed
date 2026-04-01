@@ -5,7 +5,7 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { PostWithCommentsSchema } from "./common";
+import { PostWithCommentsSchema } from "../common/post";
 import { PostErrorCode } from "../common/error-codes";
 
 export const GetPostResponseDtoSchema = responseDtoSchema(

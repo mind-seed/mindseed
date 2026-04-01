@@ -4,7 +4,7 @@
  */
 
 import z from "zod";
-import { AgeSchema, NicknameSchema, PasswordSchema } from "./common";
+import { AgeSchema, NicknameSchema, PasswordSchema } from "../common/user";
 import { responseDtoSchema } from "../helpers";
 import { AuthErrorCode } from "../common/error-codes";
 

@@ -5,7 +5,7 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { CommentContentSchema } from "./common";
+import { CommentContentSchema } from "../common/comment";
 import { PostErrorCode, CommentErrorCode } from "../common/error-codes";
 
 export const UpdateCommentRequestDtoSchema = z.object({

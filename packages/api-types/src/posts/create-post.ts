@@ -6,18 +6,18 @@
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
 import {
-  PostAttachmentsSchema,
-  PostAuthorNicknameSchema,
+  PostAttachmentIdsSchema,
   PostCategorySchema,
   PostContentSchema,
-} from "./common";
+} from "../common/post";
+import { AuthorNicknameSchema } from "../common/author";
 import { AttachmentErrorCode } from "../common/error-codes";
 
 export const CreatePostRequestDtoSchema = z.object({
   content: PostContentSchema,
   category: PostCategorySchema,
-  nickname: PostAuthorNicknameSchema,
-  attachmentIds: PostAttachmentsSchema,
+  nickname: AuthorNicknameSchema,
+  attachmentIds: PostAttachmentIdsSchema,
 });
 
 export type CreatePostRequestDto = z.output<typeof CreatePostRequestDtoSchema>;

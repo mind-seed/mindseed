@@ -4,7 +4,7 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { UserDtoSchema } from "../common/user-dto";
+import { UserDtoSchema } from "../common/user";
 import { AuthErrorCode } from "../common/error-codes";
 
 export const LoginRequestDtoSchema = z.object({

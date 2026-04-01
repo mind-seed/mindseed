@@ -5,8 +5,8 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { PostAuthorNicknameSchema } from "../posts/common";
-import { CommentContentSchema } from "./common";
+import { PostAuthorNicknameSchema } from "../common/author";
+import { CommentContentSchema } from "../common/comment";
 import { PostErrorCode } from "../common/error-codes";
 
 export const CreateCommentRequestDtoSchema = z.object({

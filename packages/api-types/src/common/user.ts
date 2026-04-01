@@ -1,6 +1,5 @@
-import * as z from "zod";
-
-export const VerificationCodeSchema = z.string().regex(/^[0-9]{6}$/);
+import z from "zod";
+import { dateSerializerCodec } from "./codecs";
 
 // 알파벳 소문자, 알파벳 대문자, 숫자, 특수문자로만 이루어짐 및 각 1자 이상
 export const PasswordSchema = z
@@ -20,3 +19,16 @@ export const NicknameSchema = z
   .regex(/^[가-힣A-z0-9\s]+$/);
 
 export const AgeSchema = z.int().min(0);
+
+export const UserProfileDtoSchema = z.object({
+  nickname: NicknameSchema,
+  age: AgeSchema,
+});
+
+export const UserDtoSchema = z.object({
+  id: z.int(),
+  email: z.email(),
+  role: z.enum(["USER", "ADMIN"]),
+  createdAt: dateSerializerCodec,
+  profile: z.nullable(UserProfileDtoSchema),
+});

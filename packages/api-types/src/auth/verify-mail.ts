@@ -3,7 +3,7 @@
  */
 
 import z from "zod";
-import { VerificationCodeSchema } from "./common";
+import { VerificationCodeSchema } from "../common/auth";
 import { responseDtoSchema } from "../helpers";
 import { AuthErrorCode } from "../common/error-codes";
 
