@@ -3,13 +3,13 @@
  */
 
 import z from "zod";
-import { verificationCodeSchema } from "./common";
+import { VerificationCodeSchema } from "../common/auth";
 import { responseDtoSchema } from "../helpers";
 import { AuthErrorCode } from "../common/error-codes";
 
 export const VerifyMailRequestDtoSchema = z.object({
   email: z.email(),
-  code: verificationCodeSchema,
+  code: VerificationCodeSchema,
 });
 
 export type VerifyMailRequestDto = z.output<typeof VerifyMailRequestDtoSchema>;

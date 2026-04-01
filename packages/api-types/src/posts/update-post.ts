@@ -8,14 +8,14 @@ import { responseDtoSchema } from "../helpers";
 import {
   PostCategorySchema,
   PostContentSchema,
-  PostAttachmentsSchema,
-} from "./common";
+  PostAttachmentIdsSchema,
+} from "../common/post";
 import { PostErrorCode, AttachmentErrorCode } from "../common/error-codes";
 
 export const UpdatePostRequestDtoSchema = z.object({
   content: PostContentSchema,
   category: PostCategorySchema,
-  attachmentIds: PostAttachmentsSchema,
+  attachmentIds: PostAttachmentIdsSchema,
 });
 
 export type UpdatePostRequestDto = z.output<typeof UpdatePostRequestDtoSchema>;

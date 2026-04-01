@@ -5,7 +5,7 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { PostCategorySchema, PostDtoSchema } from "./common";
+import { PostCategorySchema, PostDtoSchema } from "../common/post";
 import { numberSerializerCodec } from "src/common/codecs";
 import { PostErrorCode } from "../common/error-codes";
 
@@ -21,7 +21,7 @@ export type ListPostsQueryDto = z.output<typeof ListPostsQueryDtoSchema>;
 
 export const ListPostsResponseDtoSchema = responseDtoSchema(
   z.object({
-    posts: z.array(PostDtoSchema),
+    items: z.array(PostDtoSchema),
     nextCursor: z.string().nullable(),
   }),
   z.enum([PostErrorCode.INVALID_CURSOR]),
