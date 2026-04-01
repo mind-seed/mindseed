@@ -4,14 +4,14 @@
  */
 
 import z from "zod";
-import { ageSchema, nicknameSchema, passwordSchema } from "./common";
+import { AgeSchema, NicknameSchema, PasswordSchema } from "./common";
 import { responseDtoSchema } from "../helpers";
 import { AuthErrorCode } from "../common/error-codes";
 
 export const CompleteSignupRequestDtoSchema = z.object({
-  password: passwordSchema,
-  nickname: nicknameSchema,
-  age: ageSchema,
+  password: PasswordSchema,
+  nickname: NicknameSchema,
+  age: AgeSchema,
 });
 
 export type CompleteSignupRequestDto = z.output<
