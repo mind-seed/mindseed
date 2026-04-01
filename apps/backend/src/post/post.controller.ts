@@ -105,7 +105,7 @@ export class PostController {
     return {
       success: true,
       data: {
-        posts: entries.map(({ post, withUser }) => ({
+        items: entries.map(({ post, withUser }) => ({
           id: post.id,
           content: post.content,
           category: entityToApiCategory[post.category],
