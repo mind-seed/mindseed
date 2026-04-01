@@ -5,12 +5,12 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { PostAuthorNicknameSchema } from "../common/author";
+import { AuthorNicknameSchema } from "../common/author";
 import { CommentContentSchema } from "../common/comment";
 import { PostErrorCode } from "../common/error-codes";
 
 export const CreateCommentRequestDtoSchema = z.object({
-  nickname: PostAuthorNicknameSchema,
+  nickname: AuthorNicknameSchema,
   content: CommentContentSchema,
 });
 
