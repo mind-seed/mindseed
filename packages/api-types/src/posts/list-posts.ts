@@ -14,7 +14,7 @@ import { PostErrorCode } from "../common/error-codes";
 
 export const ListPostsQueryDtoSchema = CursorPaginationQuerySchema([
   "createdAt",
-]).extend({
+] as const).extend({
   category: PostCategorySchema.optional(),
 });
 
