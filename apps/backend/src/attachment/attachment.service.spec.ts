@@ -15,8 +15,9 @@ import { UserProfile } from "../user/entities/user-profile.entity";
 import { initializePgMem } from "src/test/pg-mem.helper";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import { FakeS3StorageService } from "src/s3-storage/s3-storage.service.fake";
+import { PostComment } from "src/comment/entities/post-comment.entity";
 
-const entities = [UserProfile, User, Post, Attachment];
+const entities = [UserProfile, User, PostComment, Post, Attachment];
 
 describe("AttachmentService", () => {
   let module: TestingModule;
