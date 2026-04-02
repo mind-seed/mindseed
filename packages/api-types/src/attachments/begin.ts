@@ -11,7 +11,7 @@ export const BeginAttachmentUploadResponseDtoSchema = responseDtoSchema(
     attachmentId: z.int(),
     presignedUrl: z.url(),
   }),
-  z.enum([]),
+  z.never(),
 );
 
 export type BeginAttachmentUploadResponseDto = z.output<

@@ -6,24 +6,22 @@
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
 import { PostCategorySchema, PostDtoSchema } from "../common/post";
-import { numberSerializerCodec } from "src/common/codecs";
+import {
+  CursorPaginationQuerySchema,
+  CursorPaginatedResultSchema,
+} from "../common/pagination";
 import { PostErrorCode } from "../common/error-codes";
 
-export const ListPostsQueryDtoSchema = z.object({
-  cursor: z.string().optional(),
-  limit: numberSerializerCodec.pipe(z.int().min(1)).default(10),
+export const ListPostsQueryDtoSchema = CursorPaginationQuerySchema([
+  "createdAt",
+]).extend({
   category: PostCategorySchema.optional(),
-  orderBy: z.enum(["createdAt"]).default("createdAt"),
-  orderDirection: z.enum(["asc", "desc"]).default("asc"),
 });
 
 export type ListPostsQueryDto = z.output<typeof ListPostsQueryDtoSchema>;
 
 export const ListPostsResponseDtoSchema = responseDtoSchema(
-  z.object({
-    items: z.array(PostDtoSchema),
-    nextCursor: z.string().nullable(),
-  }),
+  CursorPaginatedResultSchema(PostDtoSchema),
   z.enum([PostErrorCode.INVALID_CURSOR]),
 );
 

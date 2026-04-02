@@ -25,3 +25,7 @@ export const CommentErrorCode = {
   COMMENT_NOT_FOUND: "COMMENT_NOT_FOUND",
   NOT_COMMENT_AUTHOR: "NOT_COMMENT_AUTHOR",
 } as const;
+
+export const ResourceErrorCode = {
+  RESOURCE_NOT_FOUND: "RESOURCE_NOT_FOUND",
+} as const;
