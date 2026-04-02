@@ -27,6 +27,7 @@ import type {
   GetPostSuccessResponseDto,
   ListPostsQueryDto,
   ListPostsSuccessResponseDto,
+  PostCategorySchema,
   SetPostLikeRequestDto,
   SetPostLikeSuccessResponseDto,
   UpdatePostRequestDto,
@@ -43,16 +44,17 @@ import {
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 import { CurrentUser, UserOnly } from "src/auth/decorators/auth.decorators";
 import { User } from "src/user/entities/user.entity";
+import z from "zod";
 
-type ApiCategory = "dummy1" | "dummy2" | "dummy3";
+type ApiPostCategory = z.output<typeof PostCategorySchema>;
 
-const apiToEntityCategory: Record<ApiCategory, PostCategory> = {
+const apiToEntityCategory: Record<ApiPostCategory, PostCategory> = {
   dummy1: PostCategory.DUMMY1,
   dummy2: PostCategory.DUMMY2,
   dummy3: PostCategory.DUMMY3,
 };
 
-const entityToApiCategory: Record<PostCategory, ApiCategory> = {
+const entityToApiCategory: Record<PostCategory, ApiPostCategory> = {
   [PostCategory.DUMMY1]: "dummy1",
   [PostCategory.DUMMY2]: "dummy2",
   [PostCategory.DUMMY3]: "dummy3",
