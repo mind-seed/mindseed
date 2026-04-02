@@ -1,6 +1,10 @@
 import { HttpStatus } from "@nestjs/common";
 import { ServiceError } from "src/common/errors/service.error";
-import { PostErrorCode, AttachmentErrorCode } from "@mindseed/api-types";
+import {
+  PostErrorCode,
+  AttachmentErrorCode,
+  PaginationErrorCode,
+} from "@mindseed/api-types";
 
 export class PostServiceError extends ServiceError {}
 
@@ -12,7 +16,7 @@ export class PostNotFoundError extends PostServiceError {
 
 export class InvalidCursorError extends PostServiceError {
   constructor() {
-    super(HttpStatus.BAD_REQUEST, PostErrorCode.INVALID_CURSOR);
+    super(HttpStatus.BAD_REQUEST, PaginationErrorCode.INVALID_CURSOR);
   }
 }
 
