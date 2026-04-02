@@ -9,7 +9,7 @@ import { UserDtoSchema } from "../common/user";
 
 export const GetCurrentUserResponseDtoSchema = responseDtoSchema(
   UserDtoSchema,
-  z.enum([]),
+  z.never(),
 );
 
 export type GetCurrentUserResponseDto = z.output<

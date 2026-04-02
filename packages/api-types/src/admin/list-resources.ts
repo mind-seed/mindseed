@@ -23,7 +23,7 @@ export type AdminListResourcesQueryDto = z.output<
 
 export const AdminListResourcesResponseDtoSchema = responseDtoSchema(
   OffsetPaginatedResultSchema(ResourceDtoSchema),
-  z.enum([]),
+  z.never(),
 );
 
 export type AdminListResourcesResponseDto = z.output<

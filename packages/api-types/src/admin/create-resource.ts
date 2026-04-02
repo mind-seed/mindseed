@@ -25,7 +25,7 @@ export type AdminCreateResourceRequestDto = z.output<
 
 export const AdminCreateResourceResponseDtoSchema = responseDtoSchema(
   ResourceDtoSchema,
-  z.enum([]),
+  z.never(),
 );
 
 export type AdminCreateResourceResponseDto = z.output<
