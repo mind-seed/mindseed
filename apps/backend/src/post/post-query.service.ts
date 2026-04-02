@@ -5,7 +5,8 @@ import { Post, PostCategory } from "./entities/post.entity";
 import { PostLike } from "./entities/post-like.entity";
 import { Attachment } from "../attachment/entities/attachment.entity";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
-import { InvalidCursorError, PostNotFoundError } from "./post.errors";
+import { PostNotFoundError } from "./post.errors";
+import { InvalidCursorError } from "src/common/errors/pagination.errors";
 
 /* shared types */
 
