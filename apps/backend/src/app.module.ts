@@ -25,6 +25,7 @@ import { Attachment } from "./attachment/entities/attachment.entity";
 import { PostLike } from "./post/entities/post-like.entity";
 import { CommentModule } from "./comment/comment.module";
 import { PostComment } from "./comment/entities/post-comment.entity";
+import { ResourceModule } from "./resource/resource.module";
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { PostComment } from "./comment/entities/post-comment.entity";
     AttachmentModule,
     PostModule,
     CommentModule,
+    ResourceModule,
   ],
   // 2026-03-18: AuthGuard -- UserService circular dependency 문제를 해결하기
   // 위해 다음과 같이 배치하였습니다.
