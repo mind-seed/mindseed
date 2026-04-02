@@ -26,9 +26,15 @@ export class PostComment {
   @Column({ type: "text" })
   content: string;
 
+  @Column({ name: "post_id" })
+  postId: number;
+
   @ManyToOne(() => Post, { onDelete: "CASCADE" })
   @JoinColumn({ name: "post_id" })
   post: Post;
+
+  @Column({ name: "author_id" })
+  authorId: number;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: "author_id" })
@@ -42,6 +48,9 @@ export class PostComment {
 
   @Column({ type: "timestamptz", name: "deleted_at", nullable: true })
   deletedAt: Date | null;
+
+  @Column({ name: "deleted_by", nullable: true })
+  deletedById: number | null;
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: "deleted_by" })

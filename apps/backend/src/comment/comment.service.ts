@@ -78,14 +78,13 @@ export class CommentService {
 
     const comment = await this.commentRepository.findOne({
       where: { id: commentId, post: { id: postId }, deletedAt: IsNull() },
-      relations: { author: true },
     });
 
     if (!comment) {
       throw new CommentNotFoundError();
     }
 
-    if (comment.author.id !== userId) {
+    if (comment.authorId !== userId) {
       throw new NotCommentAuthorError();
     }
 
@@ -108,14 +107,13 @@ export class CommentService {
 
     const comment = await this.commentRepository.findOne({
       where: { id: commentId, post: { id: postId }, deletedAt: IsNull() },
-      relations: { author: true },
     });
 
     if (!comment) {
       throw new CommentNotFoundError();
     }
 
-    if (comment.author.id !== userId) {
+    if (comment.authorId !== userId) {
       throw new NotCommentAuthorError();
     }
 

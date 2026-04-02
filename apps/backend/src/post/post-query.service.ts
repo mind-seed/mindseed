@@ -163,9 +163,8 @@ export class PostQueryService {
                 user: { id: userId },
                 post: { id: In(postIds) },
               },
-              relations: { post: true },
             })
-          ).map((l) => l.post.id)
+          ).map((l) => l.postId)
         : [],
     );
 
@@ -177,7 +176,7 @@ export class PostQueryService {
       entries: posts.map((post) => ({
         post,
         withUser: {
-          isOwner: post.author.id === userId,
+          isOwner: post.authorId === userId,
           isLiked: likedPostIds.has(post.id),
         },
       })),
@@ -219,7 +218,7 @@ export class PostQueryService {
       entry: {
         post,
         withUser: {
-          isOwner: post.author.id === userId,
+          isOwner: post.authorId === userId,
           isLiked,
         },
       },

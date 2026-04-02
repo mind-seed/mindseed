@@ -37,12 +37,11 @@ export class RefreshTokenService {
   async findUserIdByToken(token: string): Promise<number | null> {
     const refreshToken = await this.refreshTokenRepository.findOne({
       where: { token },
-      relations: { user: true },
     });
     if (!refreshToken || refreshToken.expiresAt < new Date()) {
       return null;
     }
-    return refreshToken.user.id;
+    return refreshToken.userId;
   }
 
   /*
@@ -53,7 +52,7 @@ export class RefreshTokenService {
     const refreshToken = await this.dataSource.transaction(async (manager) => {
       // 2026-03-16: NestJS에서 이게 최선일까?
       const refreshTokenRepository = manager.getRepository(RefreshToken);
-      refreshTokenRepository.delete({ user: { id: userId } });
+      refreshTokenRepository.delete({ userId });
       const refreshToken = await this.createRefreshToken(userId);
       refreshTokenRepository.save(refreshToken);
       return refreshToken;
@@ -77,7 +76,7 @@ export class RefreshTokenService {
     const refreshToken = this.refreshTokenRepository.create({
       token,
       expiresAt,
-      user: { id: userId },
+      userId,
     });
     return refreshToken;
   }

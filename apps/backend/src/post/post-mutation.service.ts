@@ -85,14 +85,14 @@ export class PostMutationService {
 
     const post = await this.postRepository.findOne({
       where: { id: postId },
-      relations: { author: true, attachments: true },
+      relations: { attachments: true },
     });
 
     if (!post) {
       throw new PostNotFoundError();
     }
 
-    if (post.author.id !== userId) {
+    if (post.authorId !== userId) {
       throw new NotPostAuthorError();
     }
 
@@ -178,14 +178,14 @@ export class PostMutationService {
   async deletePost(userId: number, postId: number): Promise<void> {
     const post = await this.postRepository.findOne({
       where: { id: postId },
-      relations: { author: true, attachments: true },
+      relations: { attachments: true },
     });
 
     if (!post) {
       throw new PostNotFoundError();
     }
 
-    if (post.author.id !== userId) {
+    if (post.authorId !== userId) {
       throw new NotPostAuthorError();
     }
 
