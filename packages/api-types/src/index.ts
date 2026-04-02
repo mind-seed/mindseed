@@ -6,6 +6,7 @@ export * from "./common/user";
 export * from "./common/author";
 export * from "./common/comment";
 export * from "./common/post";
+export * from "./common/resource";
 export * from "./common/pagination";
 export * from "./common/error-codes";
 
@@ -30,3 +31,8 @@ export * from "./posts/delete-post";
 export * from "./post-comments/create-comment";
 export * from "./post-comments/update-comment";
 export * from "./post-comments/delete-comment";
+
+export * from "./admin/list-resources";
+export * from "./admin/create-resource";
+export * from "./admin/update-resource";
+export * from "./admin/delete-resource";
