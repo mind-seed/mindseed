@@ -82,7 +82,7 @@
     ],
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/$1",
-      "^@mindseed/api-types$": "<rootDir>/../../../packages/api-types/src/index.ts"
+      "^@mindseed/api-types$": "<rootDir>/../../../packages/api-types/dist/index.js"
     },
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"

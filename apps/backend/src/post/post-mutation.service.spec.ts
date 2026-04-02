@@ -18,8 +18,9 @@ import { UserProfile } from "../user/entities/user-profile.entity";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import { FakeS3StorageService } from "src/s3-storage/s3-storage.service.fake";
 import { initializePgMem } from "src/test/pg-mem.helper";
+import { PostComment } from "src/comment/entities/post-comment.entity";
 
-const entities = [UserProfile, User, Post, PostLike, Attachment];
+const entities = [UserProfile, User, PostComment, Post, PostLike, Attachment];
 
 let userCounter = 0;
 
