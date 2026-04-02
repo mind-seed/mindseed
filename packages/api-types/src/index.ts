@@ -6,6 +6,7 @@ export * from "./common/user";
 export * from "./common/author";
 export * from "./common/comment";
 export * from "./common/post";
+export * from "./common/pagination";
 export * from "./common/error-codes";
 
 export * from "./auth/complete-signup";
