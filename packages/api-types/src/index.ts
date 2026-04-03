@@ -32,7 +32,8 @@ export * from "./post-comments/create-comment";
 export * from "./post-comments/update-comment";
 export * from "./post-comments/delete-comment";
 
-export * from "./admin/list-resources";
-export * from "./admin/create-resource";
-export * from "./admin/update-resource";
-export * from "./admin/delete-resource";
+export * from "./resources/list-resources";
+export * from "./resources/admin/list-resources";
+export * from "./resources/admin/create-resource";
+export * from "./resources/admin/update-resource";
+export * from "./resources/admin/delete-resource";

@@ -4,8 +4,8 @@
  */
 
 import z from "zod";
-import { responseDtoSchema } from "../helpers";
-import { ResourceErrorCode } from "../common/error-codes";
+import { responseDtoSchema } from "src/helpers";
+import { ResourceErrorCode } from "src/common/error-codes";
 
 export const AdminDeleteResourceResponseDtoSchema = responseDtoSchema(
   z.null(),
