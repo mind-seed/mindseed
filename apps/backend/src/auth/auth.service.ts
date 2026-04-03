@@ -7,7 +7,6 @@ import { SignUpTokenService } from "./sign-up-token/sign-up-token.service";
 import { AccessTokenService } from "./access-token/access-token.service";
 import { RefreshTokenService } from "./refresh-token/refresh-token.service";
 import { JsonWebTokenError } from "@nestjs/jwt";
-import { User } from "src/user/entities/user.entity";
 import { bcryptHash, bcryptCompare } from "./bcrypt.helper";
 import {
   EmailAlreadyExistsError,
@@ -22,11 +21,6 @@ import {
 export type TokenPair = {
   accessToken: string;
   refreshToken: string;
-};
-
-export type LoginResult = {
-  user: User;
-  tokens: TokenPair;
 };
 
 /**
@@ -130,9 +124,9 @@ export class AuthService {
 
   /**
    * email과 password를 이용해 로그인을 시도한다.
-   * @returns access token 및 refresh token과 user
+   * @returns access token 및 refresh token
    */
-  async login(email: string, password: string): Promise<LoginResult> {
+  async login(email: string, password: string): Promise<TokenPair> {
     const user = await this.userService.findByEmail(email);
     if (!user) throw new InvalidCredentialsError();
 
@@ -143,7 +137,7 @@ export class AuthService {
     const accessToken = this.accessTokenService.sign(user.id);
     const refreshToken = await this.refreshTokenService.issue(user.id);
 
-    return { user, tokens: { accessToken, refreshToken } };
+    return { accessToken, refreshToken };
   }
 
   /**
