@@ -162,14 +162,15 @@ export class ResourceQueryService {
     const items = await qb
       .orderBy(orderEntry.path, sqlDirection)
       .addOrderBy("resource.id", sqlDirection)
-      .take(limit)
+      .take(limit + 1)
       .getMany();
 
-    const lastItem = items.at(-1);
+    const resultItems = items.slice(0, limit);
+    const lastItem = resultItems.at(-1);
     return {
-      items,
+      items: resultItems,
       nextCursor:
-        items.length === limit && lastItem
+        items.length > limit && lastItem
           ? encodeCursor({
               orderBy,
               orderDirection,

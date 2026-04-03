@@ -152,7 +152,7 @@ export class PostQueryService {
     const posts = await qb
       .orderBy(orderEntry.path, sqlDirection)
       .addOrderBy("post.id", sqlDirection)
-      .take(limit)
+      .take(limit + 1)
       .getMany();
 
     const postIds = posts.map((p) => p.id);
@@ -173,9 +173,10 @@ export class PostQueryService {
     const attachments = posts.flatMap((p) => p.attachments);
     const attachmentToUrl = this.buildAttachmentToUrl(attachments);
 
-    const lastPost = posts.at(-1)!;
+    const resultPosts = posts.slice(0, limit);
+    const lastPost = resultPosts.at(-1);
     return {
-      entries: posts.map((post) => ({
+      entries: resultPosts.map((post) => ({
         post,
         withUser: {
           isOwner: post.author.id === userId,
@@ -183,7 +184,7 @@ export class PostQueryService {
         },
       })),
       nextCursor:
-        posts.length === limit
+        posts.length > limit && lastPost
           ? encodeCursor({
               orderBy,
               orderDirection,

@@ -83,6 +83,7 @@ describe("ResourceQueryService", () => {
         { category: ResourceCategory.DUMMY2 },
         { category: ResourceCategory.DUMMY1 },
         { category: ResourceCategory.DUMMY1 },
+        { category: ResourceCategory.DUMMY1 },
       ]);
 
       // When: 첫 페이지 조회
@@ -108,7 +109,7 @@ describe("ResourceQueryService", () => {
       });
 
       // Then: 올바른 결과 반환
-      expect(result2.items.map((r) => r.id)).toEqual([ids[3]]);
+      expect(result2.items.map((r) => r.id)).toEqual([ids[3], ids[4]]);
       expect(result2.hasNext).toBe(false);
     });
   });
@@ -119,6 +120,7 @@ describe("ResourceQueryService", () => {
       const ids = await saveTestResources(resourceRepository, [
         { category: ResourceCategory.DUMMY1 },
         { category: ResourceCategory.DUMMY2 },
+        { category: ResourceCategory.DUMMY1 },
         { category: ResourceCategory.DUMMY1 },
         { category: ResourceCategory.DUMMY1 },
       ]);
@@ -144,7 +146,7 @@ describe("ResourceQueryService", () => {
       });
 
       // Then: 올바른 결과 반환
-      expect(result2.items.map((r) => r.id)).toEqual([ids[3]]);
+      expect(result2.items.map((r) => r.id)).toEqual([ids[3], ids[4]]);
       expect(result2.nextCursor).toBeUndefined();
     });
 
