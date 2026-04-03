@@ -85,23 +85,10 @@ export class AuthController {
   async login(
     @ZodBody(LoginRequestDtoSchema) body: LoginRequestDto,
   ): Promise<LoginSuccessResponseDto> {
-    const { user, tokens } = await this.authService.login(
-      body.email,
-      body.password,
-    );
+    const { tokens } = await this.authService.login(body.email, body.password);
     return {
       success: true,
       data: {
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role,
-          createdAt: user.createdAt,
-          profile: {
-            nickname: user.userProfile.nickname,
-            age: user.userProfile.age,
-          },
-        },
         accessToken: tokens.accessToken,
         refreshToken: tokens.refreshToken,
       },
