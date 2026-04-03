@@ -32,6 +32,9 @@ export class Post {
   @Column()
   nickname: string;
 
+  @Column({ name: "author_id" })
+  authorId: number;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: "author_id" })
   author: User;

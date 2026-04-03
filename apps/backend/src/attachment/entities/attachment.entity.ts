@@ -21,6 +21,9 @@ export class Attachment {
   @Column({ type: "int", nullable: true })
   index: number | null;
 
+  @Column({ name: "post_id", nullable: true })
+  postId: number | null;
+
   @ManyToOne(() => Post, (post) => post.attachments, {
     nullable: true,
     onDelete: "CASCADE",

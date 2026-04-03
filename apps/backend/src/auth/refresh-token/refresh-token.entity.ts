@@ -18,6 +18,9 @@ export class RefreshToken {
   @Column({ type: "timestamptz", name: "expires_at" })
   expiresAt: Date;
 
+  @Column({ name: "user_id" })
+  userId: number;
+
   @ManyToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user: User;

@@ -160,12 +160,11 @@ export class PostQueryService {
         ? (
             await this.postLikeRepository.find({
               where: {
-                user: { id: userId },
+                userId,
                 post: { id: In(postIds) },
               },
-              relations: { post: true },
             })
-          ).map((l) => l.post.id)
+          ).map((l) => l.postId)
         : [],
     );
 
@@ -177,7 +176,7 @@ export class PostQueryService {
       entries: posts.map((post) => ({
         post,
         withUser: {
-          isOwner: post.author.id === userId,
+          isOwner: post.authorId === userId,
           isLiked: likedPostIds.has(post.id),
         },
       })),
@@ -209,8 +208,8 @@ export class PostQueryService {
     }
 
     const isLiked = await this.postLikeRepository.existsBy({
-      user: { id: userId },
-      post: { id: postId },
+      userId,
+      postId,
     });
 
     const attachmentToUrl = this.buildAttachmentToUrl(post.attachments);
@@ -219,7 +218,7 @@ export class PostQueryService {
       entry: {
         post,
         withUser: {
-          isOwner: post.author.id === userId,
+          isOwner: post.authorId === userId,
           isLiked,
         },
       },

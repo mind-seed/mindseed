@@ -50,8 +50,8 @@ export class CommentService {
 
     return this.commentRepository.save(
       this.commentRepository.create({
-        post: { id: postId },
-        author: { id: userId },
+        postId,
+        authorId: userId,
         nickname,
         content,
         deletedAt: null,
@@ -77,15 +77,14 @@ export class CommentService {
     }
 
     const comment = await this.commentRepository.findOne({
-      where: { id: commentId, post: { id: postId }, deletedAt: IsNull() },
-      relations: { author: true },
+      where: { id: commentId, postId, deletedAt: IsNull() },
     });
 
     if (!comment) {
       throw new CommentNotFoundError();
     }
 
-    if (comment.author.id !== userId) {
+    if (comment.authorId !== userId) {
       throw new NotCommentAuthorError();
     }
 
@@ -107,15 +106,14 @@ export class CommentService {
     }
 
     const comment = await this.commentRepository.findOne({
-      where: { id: commentId, post: { id: postId }, deletedAt: IsNull() },
-      relations: { author: true },
+      where: { id: commentId, postId, deletedAt: IsNull() },
     });
 
     if (!comment) {
       throw new CommentNotFoundError();
     }
 
-    if (comment.author.id !== userId) {
+    if (comment.authorId !== userId) {
       throw new NotCommentAuthorError();
     }
 
@@ -123,7 +121,7 @@ export class CommentService {
       { id: commentId },
       {
         deletedAt: new Date(),
-        deletedBy: { id: userId },
+        deletedById: userId,
         deletionType: DeletionType.AUTHOR,
       },
     );

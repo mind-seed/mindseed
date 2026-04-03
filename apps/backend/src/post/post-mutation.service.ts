@@ -60,7 +60,7 @@ export class PostMutationService {
 
     const post = await this.postRepository.save(
       this.postRepository.create({
-        author: { id: userId },
+        authorId: userId,
         content,
         nickname,
         category,
@@ -85,14 +85,14 @@ export class PostMutationService {
 
     const post = await this.postRepository.findOne({
       where: { id: postId },
-      relations: { author: true, attachments: true },
+      relations: { attachments: true },
     });
 
     if (!post) {
       throw new PostNotFoundError();
     }
 
-    if (post.author.id !== userId) {
+    if (post.authorId !== userId) {
       throw new NotPostAuthorError();
     }
 
@@ -142,8 +142,8 @@ export class PostMutationService {
     }
 
     const postLikeExists = await this.postLikeRepository.existsBy({
-      user: { id: userId },
-      post: { id: postId },
+      userId,
+      postId,
     });
 
     await this.dataSource.transaction(async (manager) => {
@@ -155,8 +155,8 @@ export class PostMutationService {
 
         await postLikeRepository.save(
           this.postLikeRepository.create({
-            user: { id: userId },
-            post: { id: postId },
+            userId,
+            postId,
           }),
         );
       }
@@ -165,8 +165,8 @@ export class PostMutationService {
         await postRepository.decrement({ id: postId }, "likeCount", 1);
 
         await postLikeRepository.delete({
-          user: { id: userId },
-          post: { id: postId },
+          userId,
+          postId,
         });
       }
     });
@@ -178,14 +178,14 @@ export class PostMutationService {
   async deletePost(userId: number, postId: number): Promise<void> {
     const post = await this.postRepository.findOne({
       where: { id: postId },
-      relations: { author: true, attachments: true },
+      relations: { attachments: true },
     });
 
     if (!post) {
       throw new PostNotFoundError();
     }
 
-    if (post.author.id !== userId) {
+    if (post.authorId !== userId) {
       throw new NotPostAuthorError();
     }
 
