@@ -52,9 +52,9 @@ export class RefreshTokenService {
     const refreshToken = await this.dataSource.transaction(async (manager) => {
       // 2026-03-16: NestJS에서 이게 최선일까?
       const refreshTokenRepository = manager.getRepository(RefreshToken);
-      refreshTokenRepository.delete({ userId });
+      await refreshTokenRepository.delete({ userId });
       const refreshToken = await this.createRefreshToken(userId);
-      refreshTokenRepository.save(refreshToken);
+      await refreshTokenRepository.save(refreshToken);
       return refreshToken;
     });
     return refreshToken.token;
