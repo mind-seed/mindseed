@@ -160,7 +160,7 @@ export class PostQueryService {
         ? (
             await this.postLikeRepository.find({
               where: {
-                user: { id: userId },
+                userId,
                 post: { id: In(postIds) },
               },
             })
@@ -208,8 +208,8 @@ export class PostQueryService {
     }
 
     const isLiked = await this.postLikeRepository.existsBy({
-      user: { id: userId },
-      post: { id: postId },
+      userId,
+      postId,
     });
 
     const attachmentToUrl = this.buildAttachmentToUrl(post.attachments);
