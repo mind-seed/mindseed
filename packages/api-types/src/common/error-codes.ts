@@ -15,10 +15,13 @@ export const AttachmentErrorCode = {
   ATTACHMENT_ALREADY_ASSOCIATED: "ATTACHMENT_ALREADY_ASSOCIATED",
 } as const;
 
+export const PaginationErrorCode = {
+  INVALID_CURSOR: "INVALID_CURSOR",
+} as const;
+
 export const PostErrorCode = {
   POST_NOT_FOUND: "POST_NOT_FOUND",
   NOT_POST_AUTHOR: "NOT_POST_AUTHOR",
-  INVALID_CURSOR: "INVALID_CURSOR",
 } as const;
 
 export const CommentErrorCode = {

@@ -5,7 +5,8 @@ import { Post, PostCategory } from "./entities/post.entity";
 import { PostLike } from "./entities/post-like.entity";
 import { Attachment } from "../attachment/entities/attachment.entity";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
-import { InvalidCursorError, PostNotFoundError } from "./post.errors";
+import { PostNotFoundError } from "./post.errors";
+import { InvalidCursorError } from "src/common/errors/pagination.errors";
 
 /* shared types */
 
@@ -151,7 +152,7 @@ export class PostQueryService {
     const posts = await qb
       .orderBy(orderEntry.path, sqlDirection)
       .addOrderBy("post.id", sqlDirection)
-      .take(limit)
+      .take(limit + 1)
       .getMany();
 
     const postIds = posts.map((p) => p.id);
@@ -171,9 +172,10 @@ export class PostQueryService {
     const attachments = posts.flatMap((p) => p.attachments);
     const attachmentToUrl = this.buildAttachmentToUrl(attachments);
 
-    const lastPost = posts.at(-1)!;
+    const resultPosts = posts.slice(0, limit);
+    const lastPost = resultPosts.at(-1);
     return {
-      entries: posts.map((post) => ({
+      entries: resultPosts.map((post) => ({
         post,
         withUser: {
           isOwner: post.authorId === userId,
@@ -181,7 +183,7 @@ export class PostQueryService {
         },
       })),
       nextCursor:
-        posts.length === limit
+        posts.length > limit && lastPost
           ? encodeCursor({
               orderBy,
               orderDirection,

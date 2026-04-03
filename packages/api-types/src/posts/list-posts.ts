@@ -10,11 +10,11 @@ import {
   CursorPaginationQuerySchema,
   CursorPaginatedResultSchema,
 } from "../common/pagination";
-import { PostErrorCode } from "../common/error-codes";
+import { PaginationErrorCode } from "../common/error-codes";
 
 export const ListPostsQueryDtoSchema = CursorPaginationQuerySchema([
   "createdAt",
-]).extend({
+] as const).extend({
   category: PostCategorySchema.optional(),
 });
 
@@ -22,7 +22,7 @@ export type ListPostsQueryDto = z.output<typeof ListPostsQueryDtoSchema>;
 
 export const ListPostsResponseDtoSchema = responseDtoSchema(
   CursorPaginatedResultSchema(PostDtoSchema),
-  z.enum([PostErrorCode.INVALID_CURSOR]),
+  z.enum([PaginationErrorCode.INVALID_CURSOR]),
 );
 
 export type ListPostsResponseDto = z.output<typeof ListPostsResponseDtoSchema>;

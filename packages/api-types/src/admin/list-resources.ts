@@ -13,7 +13,7 @@ import {
 
 export const AdminListResourcesQueryDtoSchema = OffsetPaginationQuerySchema([
   "createdAt",
-]).extend({
+] as const).extend({
   category: ResourceCategorySchema.optional(),
 });
 

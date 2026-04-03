@@ -1,25 +1,3 @@
-import {
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Put,
-  Post,
-} from "@nestjs/common";
-import {
-  CreatePostRequestDtoSchema,
-  CreatePostResponseDtoSchema,
-  DeletePostResponseDtoSchema,
-  GetPostResponseDtoSchema,
-  idParamSchema,
-  ListPostsQueryDtoSchema,
-  ListPostsResponseDtoSchema,
-  SetPostLikeRequestDtoSchema,
-  SetPostLikeResponseDtoSchema,
-  UpdatePostRequestDtoSchema,
-  UpdatePostResponseDtoSchema,
-} from "@mindseed/api-types";
 import type {
   CreatePostRequestDto,
   CreatePostSuccessResponseDto,
@@ -32,27 +10,51 @@ import type {
   UpdatePostRequestDto,
   UpdatePostSuccessResponseDto,
 } from "@mindseed/api-types";
-import { PostCategory } from "./entities/post.entity";
-import { PostQueryService } from "./post-query.service";
-import { PostMutationService } from "./post-mutation.service";
+import {
+  CreatePostRequestDtoSchema,
+  CreatePostResponseDtoSchema,
+  DeletePostResponseDtoSchema,
+  GetPostResponseDtoSchema,
+  idParamSchema,
+  ListPostsQueryDtoSchema,
+  ListPostsResponseDtoSchema,
+  PostCategorySchema,
+  SetPostLikeRequestDtoSchema,
+  SetPostLikeResponseDtoSchema,
+  UpdatePostRequestDtoSchema,
+  UpdatePostResponseDtoSchema,
+} from "@mindseed/api-types";
+import {
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Put,
+} from "@nestjs/common";
+import { CurrentUser, UserOnly } from "src/auth/decorators/auth.decorators";
+import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 import {
   ZodBody,
   ZodParam,
   ZodQuery,
 } from "src/common/pipes/zod-validation.decorator";
-import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
-import { CurrentUser, UserOnly } from "src/auth/decorators/auth.decorators";
 import { User } from "src/user/entities/user.entity";
+import z from "zod";
+import { PostCategory } from "./entities/post.entity";
+import { PostMutationService } from "./post-mutation.service";
+import { PostQueryService } from "./post-query.service";
 
-type ApiCategory = "dummy1" | "dummy2" | "dummy3";
+type ApiPostCategory = z.output<typeof PostCategorySchema>;
 
-const apiToEntityCategory: Record<ApiCategory, PostCategory> = {
+const apiToEntityCategory: Record<ApiPostCategory, PostCategory> = {
   dummy1: PostCategory.DUMMY1,
   dummy2: PostCategory.DUMMY2,
   dummy3: PostCategory.DUMMY3,
 };
 
-const entityToApiCategory: Record<PostCategory, ApiCategory> = {
+const entityToApiCategory: Record<PostCategory, ApiPostCategory> = {
   [PostCategory.DUMMY1]: "dummy1",
   [PostCategory.DUMMY2]: "dummy2",
   [PostCategory.DUMMY3]: "dummy3",

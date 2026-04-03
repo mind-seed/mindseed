@@ -3,7 +3,8 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource, Repository } from "typeorm";
 import PGMem from "pg-mem";
 import { PostQueryService } from "./post-query.service";
-import { InvalidCursorError, PostNotFoundError } from "./post.errors";
+import { PostNotFoundError } from "./post.errors";
+import { InvalidCursorError } from "src/common/errors/pagination.errors";
 import { Post, PostCategory } from "./entities/post.entity";
 import { PostLike } from "./entities/post-like.entity";
 import { Attachment } from "../attachment/entities/attachment.entity";
@@ -128,6 +129,7 @@ describe("PostQueryService", () => {
           { category: PostCategory.DUMMY1 },
           { category: PostCategory.DUMMY1 },
           { category: PostCategory.DUMMY2 },
+          { category: PostCategory.DUMMY1 },
         ]);
 
         // When: 글 조회 시도
@@ -152,7 +154,7 @@ describe("PostQueryService", () => {
         });
 
         // Then: 올바른 결과 반환
-        expect(result2.entries.map((p) => p.post.id)).toEqual([ids[2]]);
+        expect(result2.entries.map((p) => p.post.id)).toEqual([ids[2], ids[4]]);
         expect(result2.nextCursor).toBeUndefined();
       });
 

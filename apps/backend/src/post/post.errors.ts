@@ -10,12 +10,6 @@ export class PostNotFoundError extends PostServiceError {
   }
 }
 
-export class InvalidCursorError extends PostServiceError {
-  constructor() {
-    super(HttpStatus.BAD_REQUEST, PostErrorCode.INVALID_CURSOR);
-  }
-}
-
 export class NotPostAuthorError extends PostServiceError {
   constructor() {
     super(HttpStatus.FORBIDDEN, PostErrorCode.NOT_POST_AUTHOR);
