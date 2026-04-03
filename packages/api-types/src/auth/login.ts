@@ -4,7 +4,6 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
-import { UserDtoSchema } from "../common/user";
 import { AuthErrorCode } from "../common/error-codes";
 
 export const LoginRequestDtoSchema = z.object({
@@ -16,7 +15,6 @@ export type LoginRequestDto = z.output<typeof LoginRequestDtoSchema>;
 
 export const LoginResponseDtoSchema = responseDtoSchema(
   z.object({
-    user: UserDtoSchema,
     accessToken: z.string(),
     refreshToken: z.string(),
   }),
