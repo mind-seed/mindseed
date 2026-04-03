@@ -387,7 +387,7 @@ describe("AuthService", () => {
   });
 
   describe("login", () => {
-    it("success: 토큰 저장, 유저 및 토큰 반환", async () => {
+    it("success: 토큰 저장 및 반환", async () => {
       // Given: 올바른 이메일 및 비밀번호
       const email = "test@example.com";
       const password = "password";
@@ -397,15 +397,14 @@ describe("AuthService", () => {
       // When: 로그인 시도
       const result = await authService.login(email, password);
 
-      // Then: 토큰 저장, 유저 및 토큰 반환
-      expect(result.user.email).toBe(email);
+      // Then: 토큰 저장 및 반환
       expect(
-        jwtService.verify<AccessTokenPayload>(result.tokens.accessToken).sub,
-      ).toBe(result.user.id);
+        jwtService.verify<AccessTokenPayload>(result.accessToken).sub,
+      ).toBe(user.id);
       const storedToken = await refreshTokenRepository.findOneBy({
-        user: { id: result.user.id },
+        user: { id: user.id },
       });
-      expect(storedToken?.token).toBe(result.tokens.refreshToken);
+      expect(storedToken?.token).toBe(result.refreshToken);
     });
 
     it("존재하지 않는 유저 처리", async () => {
