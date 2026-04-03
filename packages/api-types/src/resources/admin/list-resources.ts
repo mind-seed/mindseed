@@ -4,12 +4,12 @@
  */
 
 import z from "zod";
-import { responseDtoSchema } from "../helpers";
-import { ResourceCategorySchema, ResourceDtoSchema } from "../common/resource";
+import { responseDtoSchema } from "src/helpers";
+import { ResourceCategorySchema, ResourceDtoSchema } from "src/common/resource";
 import {
   OffsetPaginationQuerySchema,
   OffsetPaginatedResultSchema,
-} from "../common/pagination";
+} from "src/common/pagination";
 
 export const AdminListResourcesQueryDtoSchema = OffsetPaginationQuerySchema([
   "createdAt",

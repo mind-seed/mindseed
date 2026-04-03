@@ -4,13 +4,13 @@
  */
 
 import z from "zod";
-import { responseDtoSchema } from "../helpers";
+import { responseDtoSchema } from "src/helpers";
 import {
   ResourceTypeSchema,
   ResourceCategorySchema,
   ResourceDtoSchema,
   ResourceTitleSchema,
-} from "../common/resource";
+} from "src/common/resource";
 
 export const AdminCreateResourceRequestDtoSchema = z.object({
   title: ResourceTitleSchema,

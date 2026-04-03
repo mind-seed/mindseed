@@ -26,6 +26,7 @@ import { PostLike } from "./post/entities/post-like.entity";
 import { CommentModule } from "./comment/comment.module";
 import { PostComment } from "./comment/entities/post-comment.entity";
 import { ResourceModule } from "./resource/resource.module";
+import { Resource } from "./resource/entities/resource.entity";
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { ResourceModule } from "./resource/resource.module";
           Post,
           PostComment,
           PostLike,
+          Resource,
         ],
         synchronize: process.env.NODE_ENV !== "production",
       }),
