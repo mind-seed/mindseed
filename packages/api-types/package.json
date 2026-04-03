@@ -2,15 +2,10 @@
   "name": "@mindseed/api-types",
   "version": "1.0.0",
   "private": true,
-  "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    }
-  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts"
+    "build": "tsup src/index.ts --format esm --dts"
   },
   "dependencies": {
     "zod": "^4.3.6"
