@@ -23,6 +23,9 @@ export const AgeSchema = z.int().min(0);
 export const UserProfileDtoSchema = z.object({
   nickname: NicknameSchema,
   age: AgeSchema,
+  points: z.int(),
+  level: z.int(),
+  characterIndex: z.int(),
 });
 
 export const UserDtoSchema = z.object({
