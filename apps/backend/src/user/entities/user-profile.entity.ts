@@ -21,7 +21,7 @@ export class UserProfile {
   @Column({ default: 0 })
   points: number;
 
-  @Column({ default: 0 })
+  @Column({ default: 1 })
   level: number;
 
   @Column({ name: "character_index", default: 0 })
