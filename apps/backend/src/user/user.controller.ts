@@ -27,6 +27,9 @@ export class UserController {
         profile: user.profile && {
           nickname: user.profile.nickname,
           age: user.profile.age,
+          points: user.profile.points,
+          level: user.profile.level,
+          characterIndex: user.profile.characterIndex,
         },
       },
     };

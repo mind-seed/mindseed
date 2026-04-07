@@ -18,6 +18,15 @@ export class UserProfile {
   @Column()
   age: number;
 
+  @Column({ default: 0 })
+  points: number;
+
+  @Column({ default: 0 })
+  level: number;
+
+  @Column({ name: "character_index", default: 0 })
+  characterIndex: number;
+
   @OneToOne(() => User, (user) => user.profile, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
   user: User;
