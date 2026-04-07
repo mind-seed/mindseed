@@ -9,6 +9,7 @@ import {
 } from "src/auth/decorators/auth.decorators";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 import { User } from "./entities/user.entity";
+import { entityToApiRole } from "./user.mappers";
 
 @Controller("/users")
 export class UserController {
@@ -22,7 +23,7 @@ export class UserController {
       data: {
         id: user.id,
         email: user.email,
-        role: user.role,
+        role: entityToApiRole[user.role],
         createdAt: user.createdAt,
         profile: user.profile && {
           nickname: user.profile.nickname,
