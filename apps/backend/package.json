@@ -30,6 +30,7 @@
     "bcrypt": "^6.0.0",
     "ioredis": "^5.10.0",
     "ioredis-mock": "^8.13.1",
+    "jest-each": "^30.3.0",
     "nodemailer": "^8.0.3",
     "pg": "^8.20.0",
     "pg-mem": "^3.0.14",
