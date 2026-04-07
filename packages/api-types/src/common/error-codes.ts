@@ -32,3 +32,9 @@ export const CommentErrorCode = {
 export const ResourceErrorCode = {
   RESOURCE_NOT_FOUND: "RESOURCE_NOT_FOUND",
 } as const;
+
+export const MissionErrorCode = {
+  MISSION_NOT_FOUND: "MISSION_NOT_FOUND",
+  MISSION_NOT_FOR_TODAY: "MISSION_NOT_FOR_TODAY",
+  MISSION_ALREADY_COMPLETED: "MISSION_ALREADY_COMPLETED",
+} as const;
