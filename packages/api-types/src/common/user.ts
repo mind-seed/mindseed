@@ -28,10 +28,12 @@ export const UserProfileDtoSchema = z.object({
   characterIndex: z.int(),
 });
 
+export const UserRoleSchema = z.enum(["user", "admin"]);
+
 export const UserDtoSchema = z.object({
   id: z.int(),
   email: z.email(),
-  role: z.enum(["USER", "ADMIN"]),
+  role: UserRoleSchema,
   createdAt: dateSerializerCodec,
   profile: z.nullable(UserProfileDtoSchema),
 });
