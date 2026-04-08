@@ -9,7 +9,7 @@ import { MissionAssignmentDtoSchema } from "../common/mission";
 
 export const ListTodayMissionAssignmentsResponseDtoSchema = responseDtoSchema(
   z.object({
-    missions: z.array(MissionAssignmentDtoSchema),
+    assignments: z.array(MissionAssignmentDtoSchema),
   }),
   z.never(),
 );

@@ -1,6 +1,6 @@
 import z from "zod";
 
-export const MissionAssignmentStateSchema = z.enum([
+export const MissionAssignmentStatusSchema = z.enum([
   "uncompleted",
   "completed",
 ]);
@@ -13,6 +13,6 @@ export const SimplifiedMissionSchema = z.object({
 
 export const MissionAssignmentDtoSchema = z.object({
   id: z.int(),
-  state: MissionAssignmentStateSchema,
+  status: MissionAssignmentStatusSchema,
   mission: SimplifiedMissionSchema,
 });
