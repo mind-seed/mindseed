@@ -8,7 +8,6 @@ import { responseDtoSchema } from "src/helpers";
 import {
   ResourceTypeSchema,
   ResourceCategorySchema,
-  ResourceDtoSchema,
   ResourceTitleSchema,
 } from "src/common/resource";
 
@@ -24,7 +23,9 @@ export type AdminCreateResourceRequestDto = z.output<
 >;
 
 export const AdminCreateResourceResponseDtoSchema = responseDtoSchema(
-  ResourceDtoSchema,
+  z.object({
+    id: z.int(),
+  }),
   z.never(),
 );
 
