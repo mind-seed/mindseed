@@ -15,6 +15,7 @@ import {
   MAX_LEVEL_TOKEN,
   POINTS_FOR_NEXT_LEVEL_TOKEN,
 } from "./level-points/level-points-calculator.service";
+import { MissionAssignmentController } from "./mission-assignment.controller";
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import {
     AuthModule,
     UserModule,
   ],
+  controllers: [MissionAssignmentController],
   providers: [
     { provide: MAX_LEVEL_TOKEN, useValue: MAX_LEVEL },
     { provide: POINTS_FOR_NEXT_LEVEL_TOKEN, useValue: pointsForNextLevel },

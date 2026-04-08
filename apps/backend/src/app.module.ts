@@ -28,6 +28,8 @@ import { PostComment } from "./comment/entities/post-comment.entity";
 import { ResourceModule } from "./resource/resource.module";
 import { Resource } from "./resource/entities/resource.entity";
 import { MissionModule } from "./mission/mission.module";
+import { Mission } from "./mission/entities/mission.entity";
+import { MissionAssignment } from "./mission/entities/mission-assignment.entity";
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { MissionModule } from "./mission/mission.module";
           PostComment,
           PostLike,
           Resource,
+          Mission,
+          MissionAssignment,
         ],
         synchronize: process.env.NODE_ENV !== "production",
       }),
