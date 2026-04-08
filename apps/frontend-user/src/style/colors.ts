@@ -11,7 +11,7 @@ export const COLORS = {
   main: {
     disabled: "#D4DFC4",
     back: "#C0EF7E",
-    ligther: "#C0EF7E",
+    lighter: "#C0EF7E",
     main: "#97BC62",
     darker: "#586F37",
   },
@@ -23,7 +23,7 @@ export const COLORS = {
   },
   text: {
     black: "#000000",
-    2: "#494736",
-    1: "#69664D",
+    primary: "#494736",
+    secondary: "#69664D",
   },
 };
