@@ -104,12 +104,6 @@ export class ResourceAdminController {
       success: true,
       data: {
         id: resource.id,
-        title: resource.title,
-        type: entityToApiType[resource.type],
-        category: entityToApiCategory[resource.category],
-        url: resource.url,
-        createdAt: resource.createdAt,
-        updatedAt: resource.updatedAt,
       },
     };
   }
