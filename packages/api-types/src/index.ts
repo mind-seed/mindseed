@@ -36,6 +36,11 @@ export * from "./post-comments/delete-comment";
 export * from "./mission-assignments/list-today";
 export * from "./mission-assignments/complete";
 
+export * from "./missions/admin/list-missions";
+export * from "./missions/admin/create-mission";
+export * from "./missions/admin/update-mission";
+export * from "./missions/admin/delete-mission";
+
 export * from "./resources/list-resources";
 export * from "./resources/admin/list-resources";
 export * from "./resources/admin/create-resource";
