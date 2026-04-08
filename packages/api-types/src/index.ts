@@ -33,8 +33,8 @@ export * from "./post-comments/create-comment";
 export * from "./post-comments/update-comment";
 export * from "./post-comments/delete-comment";
 
-export * from "./missions/list-today";
-export * from "./missions/complete-mission";
+export * from "./mission-assignments/list-today";
+export * from "./mission-assignments/complete";
 
 export * from "./resources/list-resources";
 export * from "./resources/admin/list-resources";

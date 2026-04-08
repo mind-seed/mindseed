@@ -1,11 +1,18 @@
 import z from "zod";
 
-export const MissionStateSchema = z.enum(["uncompleted", "completed"]);
+export const MissionAssignmentStateSchema = z.enum([
+  "uncompleted",
+  "completed",
+]);
 
-export const MissionDtoSchema = z.object({
-  id: z.int(),
+export const SimplifiedMissionSchema = z.object({
   title: z.string(),
   description: z.string(),
   points: z.int(),
-  state: MissionStateSchema,
+});
+
+export const MissionAssignmentDtoSchema = z.object({
+  id: z.int(),
+  state: MissionAssignmentStateSchema,
+  mission: SimplifiedMissionSchema,
 });

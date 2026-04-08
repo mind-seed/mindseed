@@ -21,11 +21,14 @@ export class UserProfile {
   @Column({ default: 0 })
   points: number;
 
-  @Column({ default: 0 })
+  @Column({ default: 1 })
   level: number;
 
   @Column({ name: "character_index", default: 0 })
   characterIndex: number;
+
+  @Column({ name: "user_id" })
+  userId: number;
 
   @OneToOne(() => User, (user) => user.profile, { onDelete: "CASCADE" })
   @JoinColumn({ name: "user_id" })
