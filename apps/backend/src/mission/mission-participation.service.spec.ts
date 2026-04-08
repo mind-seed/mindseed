@@ -89,9 +89,9 @@ async function saveTestAssignment(
   overrides?: Partial<MissionAssignment>,
 ): Promise<MissionAssignment> {
   const availableFrom = new Date(dueDate);
-  availableFrom.setHours(0, 0, 0, 0);
+  availableFrom.setUTCHours(0, 0, 0, 0);
   const availableUntil = new Date(dueDate);
-  availableUntil.setHours(23, 59, 59, 999);
+  availableUntil.setUTCHours(23, 59, 59, 999);
 
   return repository.save(
     repository.create({
