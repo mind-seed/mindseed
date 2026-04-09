@@ -41,6 +41,8 @@ export * from "./missions/admin/create-mission";
 export * from "./missions/admin/update-mission";
 export * from "./missions/admin/delete-mission";
 
+export * from "./diagnoses/create-diagnosis";
+
 export * from "./resources/list-resources";
 export * from "./resources/admin/list-resources";
 export * from "./resources/admin/create-resource";
