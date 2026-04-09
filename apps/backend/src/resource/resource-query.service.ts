@@ -3,34 +3,28 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Resource, ResourceCategory } from "./entities/resource.entity";
 import { InvalidCursorError } from "src/common/errors/pagination.errors";
+import {
+  CursorPaginationOptions,
+  CursorPaginationResult,
+  OffsetPaginationOptions,
+  OffsetPaginationResult,
+} from "src/common/types/pagination";
 
 export type ListResourcesOrderBy = "createdAt";
 
-export type ListResourcesWithOffsetOptions = {
-  offset: number;
-  limit: number;
-  category?: ResourceCategory;
-  orderBy: ListResourcesOrderBy;
-  orderDirection: "asc" | "desc";
-};
+export type ListResourcesWithOffsetOptions =
+  OffsetPaginationOptions<ListResourcesOrderBy> & {
+    category?: ResourceCategory;
+  };
 
-export type ListResourcesWithOffsetResult = {
-  items: Resource[];
-  hasNext: boolean;
-};
+export type ListResourcesWithOffsetResult = OffsetPaginationResult<Resource>;
 
-export type ListResourcesWithCursorOptions = {
-  cursor?: string;
-  limit: number;
-  category?: ResourceCategory;
-  orderBy: ListResourcesOrderBy;
-  orderDirection: "asc" | "desc";
-};
+export type ListResourcesWithCursorOptions =
+  CursorPaginationOptions<ListResourcesOrderBy> & {
+    category?: ResourceCategory;
+  };
 
-export type ListResourcesWithCursorResult = {
-  items: Resource[];
-  nextCursor?: string;
-};
+export type ListResourcesWithCursorResult = CursorPaginationResult<Resource>;
 
 type CursorPayload = {
   category: ResourceCategory | null;

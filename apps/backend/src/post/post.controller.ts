@@ -93,16 +93,19 @@ export class PostController {
     @CurrentUser() user: User,
     @ZodQuery(ListPostsQueryDtoSchema) query: ListPostsQueryDto,
   ): Promise<ListPostsSuccessResponseDto> {
-    const { entries, nextCursor, attachmentToUrl } =
-      await this.postQueryService.listPosts(user.id, {
-        cursor: query.cursor,
-        limit: query.limit,
-        category: query.category
-          ? apiToEntityCategory[query.category]
-          : undefined,
-        orderBy: query.orderBy,
-        orderDirection: query.orderDirection,
-      });
+    const {
+      items: entries,
+      nextCursor,
+      attachmentToUrl,
+    } = await this.postQueryService.listPosts(user.id, {
+      cursor: query.cursor,
+      limit: query.limit,
+      category: query.category
+        ? apiToEntityCategory[query.category]
+        : undefined,
+      orderBy: query.orderBy,
+      orderDirection: query.orderDirection,
+    });
 
     return {
       success: true,

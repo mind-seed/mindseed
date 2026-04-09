@@ -141,7 +141,7 @@ describe("PostQueryService", () => {
         });
 
         // Then: 올바른 결과 반환
-        expect(result.entries.map((p) => p.post.id)).toEqual([ids[0], ids[1]]);
+        expect(result.items.map((p) => p.post.id)).toEqual([ids[0], ids[1]]);
         expect(result.nextCursor).toBeDefined();
 
         // When: nextCursor로 글 조회 시도
@@ -154,7 +154,7 @@ describe("PostQueryService", () => {
         });
 
         // Then: 올바른 결과 반환
-        expect(result2.entries.map((p) => p.post.id)).toEqual([ids[2], ids[4]]);
+        expect(result2.items.map((p) => p.post.id)).toEqual([ids[2], ids[4]]);
         expect(result2.nextCursor).toBeUndefined();
       });
 
@@ -179,7 +179,7 @@ describe("PostQueryService", () => {
         });
 
         // Then: 삭제된 글 다음부터 올바르게 반환
-        expect(result.entries.map((p) => p.post.id)).toEqual([ids[1], ids[2]]);
+        expect(result.items.map((p) => p.post.id)).toEqual([ids[1], ids[2]]);
       });
 
       it("category 및 orderBy와 벗어난 cursor 처리", async () => {
@@ -225,7 +225,7 @@ describe("PostQueryService", () => {
         });
 
         // Then: isOwner === true
-        expect(result.entries[0].withUser.isOwner).toBe(true);
+        expect(result.items[0].withUser.isOwner).toBe(true);
       });
 
       it("success: user가 owner 아님 -> isOwner false", async () => {
@@ -242,7 +242,7 @@ describe("PostQueryService", () => {
         });
 
         // Then: isOwner === false
-        expect(result.entries[0].withUser.isOwner).toBe(false);
+        expect(result.items[0].withUser.isOwner).toBe(false);
       });
 
       it("success: user가 like한 글 -> isLiked true", async () => {
@@ -264,7 +264,7 @@ describe("PostQueryService", () => {
         });
 
         // Then: isLiked === true
-        expect(result.entries[0].withUser.isLiked).toBe(true);
+        expect(result.items[0].withUser.isLiked).toBe(true);
       });
 
       it("success: user가 like 하지 않은 글 -> isLiked false", async () => {
@@ -280,7 +280,7 @@ describe("PostQueryService", () => {
         });
 
         // Then: isLiked === false
-        expect(result.entries[0].withUser.isLiked).toBe(false);
+        expect(result.items[0].withUser.isLiked).toBe(false);
       });
     });
 
