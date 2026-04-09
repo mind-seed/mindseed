@@ -1,8 +1,17 @@
 import { HttpStatus } from "@nestjs/common";
 import { ServiceError } from "src/common/errors/service.error";
-import { MissionAssignmentErrorCode } from "@mindseed/api-types";
+import {
+  MissionErrorCode,
+  MissionAssignmentErrorCode,
+} from "@mindseed/api-types";
 
 export class MissionServiceError extends ServiceError {}
+
+export class MissionNotFoundError extends MissionServiceError {
+  constructor() {
+    super(HttpStatus.NOT_FOUND, MissionErrorCode.MISSION_NOT_FOUND);
+  }
+}
 
 export class MissionAssignmentNotFoundError extends MissionServiceError {
   constructor() {

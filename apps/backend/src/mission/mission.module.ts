@@ -16,6 +16,7 @@ import {
   POINTS_FOR_NEXT_LEVEL_TOKEN,
 } from "./level-points/level-points-calculator.service";
 import { MissionAssignmentController } from "./mission-assignment.controller";
+import { MissionManagementService } from "./mission-management.service";
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { MissionAssignmentController } from "./mission-assignment.controller";
     { provide: POINTS_FOR_NEXT_LEVEL_TOKEN, useValue: pointsForNextLevel },
     LevelCalculatorService,
     MissionParticipationService,
+    MissionManagementService,
   ],
 })
 export class MissionModule {}
