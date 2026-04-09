@@ -7,6 +7,10 @@ import { Attachment } from "../attachment/entities/attachment.entity";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import { PostNotFoundError } from "./post.errors";
 import { InvalidCursorError } from "src/common/errors/pagination.errors";
+import {
+  CursorPaginationOptions,
+  CursorPaginationResult,
+} from "src/common/types/pagination";
 
 /* shared types */
 
@@ -20,21 +24,16 @@ export type PostWithRelations = {
 
 export type AttachmentToUrlMap = Record<number, string>;
 
-export type ListPostsOrderBy = "createdAt";
-
 /* listPosts */
 
-export type ListPostsPaginationOptions = {
-  cursor?: string;
-  limit: number;
-  category?: PostCategory;
-  orderBy: ListPostsOrderBy;
-  orderDirection: "asc" | "desc";
-};
+export type ListPostsOrderBy = "createdAt";
 
-export type ListPostsResult = {
-  entries: PostWithRelations[];
-  nextCursor?: string;
+export type ListPostsPaginationOptions =
+  CursorPaginationOptions<ListPostsOrderBy> & {
+    category?: PostCategory;
+  };
+
+export type ListPostsResult = CursorPaginationResult<PostWithRelations> & {
   attachmentToUrl: AttachmentToUrlMap;
 };
 
@@ -175,7 +174,7 @@ export class PostQueryService {
     const resultPosts = posts.slice(0, limit);
     const lastPost = resultPosts.at(-1);
     return {
-      entries: resultPosts.map((post) => ({
+      items: resultPosts.map((post) => ({
         post,
         withUser: {
           isOwner: post.authorId === userId,

@@ -14,58 +14,6 @@ import { Attachment } from "src/attachment/entities/attachment.entity";
 
 const entities = [UserProfile, User, Attachment, PostComment, Post];
 
-let userCounter = 0;
-
-async function saveTestUser(
-  repository: Repository<User>,
-  overrides?: Partial<User>,
-): Promise<User> {
-  return repository.save(
-    repository.create({
-      email: `user${++userCounter}@test.com`,
-      password: "password",
-      role: UserRole.USER,
-      ...overrides,
-    }),
-  );
-}
-
-async function saveTestPost(
-  repository: Repository<Post>,
-  userId: number,
-  overrides?: Partial<Post>,
-): Promise<Post> {
-  return repository.save(
-    repository.create({
-      content: "test content",
-      category: PostCategory.DUMMY1,
-      nickname: "testnick",
-      author: { id: userId } as User,
-      ...overrides,
-    }),
-  );
-}
-
-async function saveTestComment(
-  repository: Repository<PostComment>,
-  postId: number,
-  authorId: number,
-  overrides?: Partial<PostComment>,
-): Promise<PostComment> {
-  return repository.save(
-    repository.create({
-      content: "test comment",
-      nickname: "testnick",
-      post: { id: postId } as Post,
-      author: { id: authorId } as User,
-      deletedAt: null,
-      deletedBy: null,
-      deletionType: null,
-      ...overrides,
-    }),
-  );
-}
-
 describe("CommentService", () => {
   let module: TestingModule;
   let commentService: CommentService;
@@ -74,6 +22,53 @@ describe("CommentService", () => {
   let userRepository: Repository<User>;
   let dataSource: DataSource;
   let dbBackup: PGMem.IBackup;
+
+  let userCounter = 0;
+
+  async function saveTestUser(overrides?: Partial<User>): Promise<User> {
+    return userRepository.save(
+      userRepository.create({
+        email: `user${++userCounter}@test.com`,
+        password: "password",
+        role: UserRole.USER,
+        ...overrides,
+      }),
+    );
+  }
+
+  async function saveTestPost(
+    userId: number,
+    overrides?: Partial<Post>,
+  ): Promise<Post> {
+    return postRepository.save(
+      postRepository.create({
+        content: "test content",
+        category: PostCategory.DUMMY1,
+        nickname: "testnick",
+        author: { id: userId } as User,
+        ...overrides,
+      }),
+    );
+  }
+
+  async function saveTestComment(
+    postId: number,
+    authorId: number,
+    overrides?: Partial<PostComment>,
+  ): Promise<PostComment> {
+    return commentRepository.save(
+      commentRepository.create({
+        content: "test comment",
+        nickname: "testnick",
+        post: { id: postId } as Post,
+        author: { id: authorId } as User,
+        deletedAt: null,
+        deletedBy: null,
+        deletionType: null,
+        ...overrides,
+      }),
+    );
+  }
 
   beforeAll(async () => {
     const { dataSource: ds, backup } = await initializePgMem(entities);
@@ -117,8 +112,8 @@ describe("CommentService", () => {
   describe("createComment", () => {
     it("success: 댓글 저장", async () => {
       // Given: 글이 존재하는 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
 
       // When: 댓글 생성 시도
       const comment = await commentService.createComment({
@@ -137,7 +132,7 @@ describe("CommentService", () => {
 
     it("존재하지 않는 글 처리", async () => {
       // Given: 글이 존재하지 않는 경우
-      const user = await saveTestUser(userRepository);
+      const user = await saveTestUser();
       const nonExistentPostId = 0;
 
       // When: 댓글 생성 시도
@@ -156,13 +151,9 @@ describe("CommentService", () => {
   describe("updateComment", () => {
     it("success: 댓글 업데이트", async () => {
       // Given: 댓글이 존재하며, 사용자가 댓글의 작성자인 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
-      const comment = await saveTestComment(
-        commentRepository,
-        post.id,
-        user.id,
-      );
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, user.id);
       const newContent = "new content";
 
       // When: 댓글 업데이트 시도
@@ -184,7 +175,7 @@ describe("CommentService", () => {
 
     it("존재하지 않는 글 처리", async () => {
       // Given: 글이 존재하지 않는 경우
-      const user = await saveTestUser(userRepository);
+      const user = await saveTestUser();
       const nonExistentPostId = 0;
       const newContent = "new content";
 
@@ -202,8 +193,8 @@ describe("CommentService", () => {
 
     it("DB에 존재하지 않는 댓글 처리", async () => {
       // Given: 글은 존재하지만 댓글이 존재하지 않는 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
       const nonExistentCommentId = 0;
       const newContent = "new content";
 
@@ -221,14 +212,10 @@ describe("CommentService", () => {
 
     it("해당 글의 댓글이 아닌 경우 처리", async () => {
       // Given: 댓글이 존재하지만, 해당 글의 댓글이 아닌 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
-      const otherPost = await saveTestPost(postRepository, user.id);
-      const comment = await saveTestComment(
-        commentRepository,
-        otherPost.id,
-        user.id,
-      );
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const otherPost = await saveTestPost(user.id);
+      const comment = await saveTestComment(otherPost.id, user.id);
       const newContent = "new content";
 
       // When: 댓글 업데이트 시도
@@ -245,18 +232,13 @@ describe("CommentService", () => {
 
     it("삭제된 댓글 처리", async () => {
       // Given: 댓글이 삭제된 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
-      const comment = await saveTestComment(
-        commentRepository,
-        post.id,
-        user.id,
-        {
-          deletedAt: new Date(),
-          deletedBy: user,
-          deletionType: DeletionType.AUTHOR,
-        },
-      );
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, user.id, {
+        deletedAt: new Date(),
+        deletedBy: user,
+        deletionType: DeletionType.AUTHOR,
+      });
       const newContent = "new content";
 
       // When: 댓글 업데이트 시도
@@ -273,14 +255,10 @@ describe("CommentService", () => {
 
     it("댓글 작성자가 아닌 경우 처리", async () => {
       // Given: 댓글이 존재하지만, 사용자가 댓글 작성자가 아닌 경우
-      const user = await saveTestUser(userRepository);
-      const otherUser = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
-      const comment = await saveTestComment(
-        commentRepository,
-        post.id,
-        otherUser.id,
-      );
+      const user = await saveTestUser();
+      const otherUser = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, otherUser.id);
       const newContent = "new content";
 
       // When: 댓글 업데이트 시도
@@ -299,13 +277,9 @@ describe("CommentService", () => {
   describe("deleteComment", () => {
     it("success: 댓글 삭제 column 업데이트", async () => {
       // Given: 댓글이 존재하며, 사용자가 댓글 작성자인 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
-      const comment = await saveTestComment(
-        commentRepository,
-        post.id,
-        user.id,
-      );
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, user.id);
 
       // When: 댓글 삭제 시도
       await commentService.deleteComment(post.id, comment.id, user.id);
@@ -323,7 +297,7 @@ describe("CommentService", () => {
 
     it("존재하지 않는 글 처리", async () => {
       // Given: 글이 존재하지 않는 경우
-      const user = await saveTestUser(userRepository);
+      const user = await saveTestUser();
       const nonExistentPostId = 0;
 
       // When: 댓글 삭제 시도
@@ -339,8 +313,8 @@ describe("CommentService", () => {
 
     it("DB에 존재하지 않는 댓글 처리", async () => {
       // Given: 글은 존재하지만 댓글이 존재하지 않는 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
       const nonExistentCommentId = 0;
 
       // When: 댓글 삭제 시도
@@ -356,14 +330,10 @@ describe("CommentService", () => {
 
     it("해당 글의 댓글이 아닌 경우 처리", async () => {
       // Given: 댓글이 존재하지만, 해당 글의 댓글이 아닌 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
-      const otherPost = await saveTestPost(postRepository, user.id);
-      const comment = await saveTestComment(
-        commentRepository,
-        otherPost.id,
-        user.id,
-      );
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const otherPost = await saveTestPost(user.id);
+      const comment = await saveTestComment(otherPost.id, user.id);
 
       // When: 댓글 삭제 시도
       const result = commentService.deleteComment(post.id, comment.id, user.id);
@@ -374,18 +344,13 @@ describe("CommentService", () => {
 
     it("삭제된 댓글 처리", async () => {
       // Given: 댓글이 삭제된 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
-      const comment = await saveTestComment(
-        commentRepository,
-        post.id,
-        user.id,
-        {
-          deletedAt: new Date(),
-          deletedBy: user,
-          deletionType: DeletionType.AUTHOR,
-        },
-      );
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, user.id, {
+        deletedAt: new Date(),
+        deletedBy: user,
+        deletionType: DeletionType.AUTHOR,
+      });
 
       // When: 댓글 삭제 시도
       const result = commentService.deleteComment(post.id, comment.id, user.id);
@@ -396,14 +361,10 @@ describe("CommentService", () => {
 
     it("댓글 작성자가 아닌 경우 처리", async () => {
       // Given: 댓글이 존재하지만, 사용자가 댓글 작성자가 아닌 경우
-      const user = await saveTestUser(userRepository);
-      const otherUser = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
-      const comment = await saveTestComment(
-        commentRepository,
-        post.id,
-        otherUser.id,
-      );
+      const user = await saveTestUser();
+      const otherUser = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, otherUser.id);
 
       // When: 댓글 삭제 시도
       const result = commentService.deleteComment(post.id, comment.id, user.id);
