@@ -8,7 +8,7 @@ import {
   CursorPaginationResult,
   OffsetPaginationOptions,
   OffsetPaginationResult,
-} from "src/common/types/pagination";
+} from "src/common/helpers/pagination";
 
 export type ListResourcesOrderBy = "createdAt";
 

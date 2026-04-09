@@ -10,11 +10,7 @@ import { Controller, Get, HttpCode, HttpStatus } from "@nestjs/common";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 import { ZodQuery } from "src/common/pipes/zod-validation.decorator";
 import { ResourceQueryService } from "./resource-query.service";
-import {
-  apiToEntityCategory,
-  entityToApiCategory,
-  entityToApiType,
-} from "./resource.mappers";
+import { categoryMap, typeMap } from "./resource.mappers";
 import { UserOnly } from "src/auth/decorators/auth.decorators";
 
 @Controller("/resources")
@@ -34,7 +30,7 @@ export class ResourceController {
         cursor: query.cursor,
         limit: query.limit,
         category: query.category
-          ? apiToEntityCategory[query.category]
+          ? categoryMap.decode(query.category)
           : undefined,
         orderBy: query.orderBy,
         orderDirection: query.orderDirection,
@@ -46,8 +42,8 @@ export class ResourceController {
         items: items.map((r) => ({
           id: r.id,
           title: r.title,
-          type: entityToApiType[r.type],
-          category: entityToApiCategory[r.category],
+          type: typeMap.encode(r.type),
+          category: categoryMap.encode(r.category),
           url: r.url,
           createdAt: r.createdAt,
           updatedAt: r.updatedAt,

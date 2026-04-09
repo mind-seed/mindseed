@@ -4,7 +4,7 @@ import { Repository } from "typeorm";
 import {
   OffsetPaginationOptions,
   OffsetPaginationResult,
-} from "src/common/types/pagination";
+} from "src/common/helpers/pagination";
 import { Mission, TestCategory } from "./entities/mission.entity";
 import { MissionNotFoundError } from "./mission.errors";
 

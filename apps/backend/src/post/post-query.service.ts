@@ -10,7 +10,7 @@ import { InvalidCursorError } from "src/common/errors/pagination.errors";
 import {
   CursorPaginationOptions,
   CursorPaginationResult,
-} from "src/common/types/pagination";
+} from "src/common/helpers/pagination";
 
 /* shared types */
 

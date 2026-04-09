@@ -8,8 +8,15 @@ import {
   CurrentUser,
 } from "src/auth/decorators/auth.decorators";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
-import { User } from "./entities/user.entity";
-import { entityToApiRole } from "./user.mappers";
+import { User, UserRole } from "./entities/user.entity";
+import { UserRoleSchema } from "@mindseed/api-types";
+import { z } from "zod";
+import { createBiMap } from "src/common/helpers/mapper";
+
+const roleMap = createBiMap<UserRole, z.output<typeof UserRoleSchema>>([
+  [UserRole.USER, "user"],
+  [UserRole.ADMIN, "admin"],
+]);
 
 @Controller("/users")
 export class UserController {
@@ -23,7 +30,7 @@ export class UserController {
       data: {
         id: user.id,
         email: user.email,
-        role: entityToApiRole[user.role],
+        role: roleMap.encode(user.role),
         createdAt: user.createdAt,
         profile: user.profile && {
           nickname: user.profile.nickname,
