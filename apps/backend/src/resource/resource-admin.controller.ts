@@ -35,12 +35,7 @@ import {
 } from "src/common/pipes/zod-validation.decorator";
 import { ResourceMutationService } from "./resource-mutation.service";
 import { ResourceQueryService } from "./resource-query.service";
-import {
-  apiToEntityCategory,
-  apiToEntityType,
-  entityToApiCategory,
-  entityToApiType,
-} from "./resource.mappers";
+import { categoryMap, typeMap } from "./resource.mappers";
 
 @Controller("/admin/resources")
 export class ResourceAdminController {
@@ -62,7 +57,7 @@ export class ResourceAdminController {
         offset: query.offset,
         limit: query.limit,
         category: query.category
-          ? apiToEntityCategory[query.category]
+          ? categoryMap.decode(query.category)
           : undefined,
         orderBy: query.orderBy,
         orderDirection: query.orderDirection,
@@ -74,8 +69,8 @@ export class ResourceAdminController {
         items: items.map((r) => ({
           id: r.id,
           title: r.title,
-          type: entityToApiType[r.type],
-          category: entityToApiCategory[r.category],
+          type: typeMap.encode(r.type),
+          category: categoryMap.encode(r.category),
           url: r.url,
           createdAt: r.createdAt,
           updatedAt: r.updatedAt,
@@ -95,8 +90,8 @@ export class ResourceAdminController {
   ): Promise<AdminCreateResourceSuccessResponseDto> {
     const resource = await this.resourceMutationService.createResource({
       title: body.title,
-      type: apiToEntityType[body.type],
-      category: apiToEntityCategory[body.category],
+      type: typeMap.decode(body.type),
+      category: categoryMap.decode(body.category),
       url: body.url,
     });
 
@@ -120,8 +115,8 @@ export class ResourceAdminController {
     await this.resourceMutationService.updateResource({
       resourceId: id,
       title: body.title,
-      type: apiToEntityType[body.type],
-      category: apiToEntityCategory[body.category],
+      type: typeMap.decode(body.type),
+      category: categoryMap.decode(body.category),
       url: body.url,
     });
     return { success: true, data: null };
