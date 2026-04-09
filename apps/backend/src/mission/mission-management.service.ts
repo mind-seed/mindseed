@@ -72,20 +72,16 @@ export class MissionManagementService {
   }
 
   async updateMission({ id, ...fields }: UpdateMissionOptions): Promise<void> {
-    const mission = await this.missionRepository.findOneBy({ id });
-    if (!mission) {
+    const result = await this.missionRepository.update({ id }, fields);
+    if (!result.affected) {
       throw new MissionNotFoundError();
     }
-
-    await this.missionRepository.save({ ...mission, ...fields });
   }
 
   async deleteMission(id: number): Promise<void> {
-    const mission = await this.missionRepository.findOneBy({ id });
-    if (!mission) {
+    const result = await this.missionRepository.delete({ id });
+    if (!result.affected) {
       throw new MissionNotFoundError();
     }
-
-    await this.missionRepository.delete(id);
   }
 }
