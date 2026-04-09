@@ -34,35 +34,28 @@ const entities = [UserProfile, User, Mission, MissionAssignment];
 let userCounter = 0;
 
 async function saveTestUser(
-  repository: Repository<User>,
-  overrides?: Partial<User>,
+  userRepository: Repository<User>,
+  userProfileRepository: Repository<UserProfile>,
+  overrides?: { level?: number; points?: number },
 ): Promise<User> {
-  return repository.save(
-    repository.create({
+  const user = await userRepository.save(
+    userRepository.create({
       email: `user${++userCounter}@test.com`,
       password: "password",
       role: UserRole.USER,
-      ...overrides,
     }),
   );
-}
-
-async function saveTestUserProfile(
-  repository: Repository<UserProfile>,
-  user: User,
-  overrides?: Partial<UserProfile>,
-): Promise<UserProfile> {
-  return repository.save(
-    repository.create({
+  await userProfileRepository.save(
+    userProfileRepository.create({
       user,
       nickname: "testnick",
       age: 20,
-      points: 0,
-      level: 0,
+      level: overrides?.level ?? 0,
+      points: overrides?.points ?? 0,
       characterIndex: 0,
-      ...overrides,
     }),
   );
+  return user;
 }
 
 async function saveTestMission(
@@ -166,8 +159,7 @@ describe("MissionParticipationService", () => {
       // Given: 날짜
       const date = new Date("2025-01-15T00:00:00Z");
       const otherDate = new Date("2025-01-16T00:00:00Z");
-      const user = await saveTestUser(userRepository);
-      await saveTestUserProfile(userProfileRepository, user);
+      const user = await saveTestUser(userRepository, userProfileRepository);
       const mission1 = await saveTestMission(missionRepository);
       const mission2 = await saveTestMission(missionRepository);
       const assignment1 = await saveTestAssignment(
@@ -208,8 +200,7 @@ describe("MissionParticipationService", () => {
     it("success: 최대 레벨이 아닌 경우 처리", async () => {
       // Given: 최대 레벨이 아닌 사용자, 현재 날짜에 대한 완료하지 않은
       // assignment
-      const user = await saveTestUser(userRepository);
-      await saveTestUserProfile(userProfileRepository, user, {
+      const user = await saveTestUser(userRepository, userProfileRepository, {
         level: 1,
         points: 0,
       });
@@ -249,8 +240,7 @@ describe("MissionParticipationService", () => {
     it("success: 레벨업이 발생한 경우 처리", async () => {
       // Given: 최대 레벨이 아니며 레벨업 예정인 사용자, 현재 날짜에 대한
       // 완료하지 않은 assignment
-      const user = await saveTestUser(userRepository);
-      await saveTestUserProfile(userProfileRepository, user, {
+      const user = await saveTestUser(userRepository, userProfileRepository, {
         level: 1,
         points: 90,
       });
@@ -290,8 +280,7 @@ describe("MissionParticipationService", () => {
     it("success: 최대 레벨인 경우 처리", async () => {
       // Given: 최대 레벨인 사용자, 현재 날짜에 대한
       // 완료하지 않은 assignment
-      const user = await saveTestUser(userRepository);
-      await saveTestUserProfile(userProfileRepository, user, {
+      const user = await saveTestUser(userRepository, userProfileRepository, {
         level: testMaxLevel,
         points: 0,
       });
@@ -330,10 +319,11 @@ describe("MissionParticipationService", () => {
 
     it("사용자에 대해 존재하지 않는 assignment 처리", async () => {
       // Given: 사용자에 대해 존재하지 않는 assignment
-      const user = await saveTestUser(userRepository);
-      await saveTestUserProfile(userProfileRepository, user);
-      const otherUser = await saveTestUser(userRepository);
-      await saveTestUserProfile(userProfileRepository, otherUser);
+      const user = await saveTestUser(userRepository, userProfileRepository);
+      const otherUser = await saveTestUser(
+        userRepository,
+        userProfileRepository,
+      );
       const currentDate = new Date("2025-01-15T00:00:00Z");
       const mission = await saveTestMission(missionRepository);
       const otherAssignment = await saveTestAssignment(
@@ -356,8 +346,7 @@ describe("MissionParticipationService", () => {
 
     it("주어진 날짜에 대한 assignment가 아닌 경우 처리", async () => {
       // Given: 주어진 날짜에 대해 존재하지 않는 assignment
-      const user = await saveTestUser(userRepository);
-      await saveTestUserProfile(userProfileRepository, user);
+      const user = await saveTestUser(userRepository, userProfileRepository);
       const assignmentDate = new Date("2025-01-14T00:00:00Z");
       const currentDate = new Date("2025-01-15T00:00:00Z");
       const mission = await saveTestMission(missionRepository);
@@ -381,8 +370,7 @@ describe("MissionParticipationService", () => {
 
     it("이미 완료한 assignment 처리", async () => {
       // Given: 이미 완료한 assignment
-      const user = await saveTestUser(userRepository);
-      await saveTestUserProfile(userProfileRepository, user);
+      const user = await saveTestUser(userRepository, userProfileRepository);
       const currentDate = new Date("2025-01-15T00:00:00Z");
       const mission = await saveTestMission(missionRepository);
       const assignment = await saveTestAssignment(
