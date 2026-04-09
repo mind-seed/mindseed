@@ -17,50 +17,6 @@ import { PostComment } from "src/comment/entities/post-comment.entity";
 
 const entities = [UserProfile, User, PostComment, Post, PostLike, Attachment];
 
-let userCounter = 0;
-
-async function saveTestUser(
-  repository: Repository<User>,
-  overrides?: Partial<User>,
-): Promise<User> {
-  return repository.save(
-    repository.create({
-      email: `user${++userCounter}@test.com`,
-      password: "password",
-      role: UserRole.USER,
-      ...overrides,
-    }),
-  );
-}
-
-async function saveTestPost(
-  repository: Repository<Post>,
-  userId: number,
-  overrides?: Partial<Post>,
-): Promise<Post> {
-  return repository.save(
-    repository.create({
-      content: "test content",
-      category: PostCategory.DUMMY1,
-      nickname: "testnick",
-      author: { id: userId } as User,
-      ...overrides,
-    }),
-  );
-}
-
-async function saveTestPosts(
-  repository: Repository<Post>,
-  userId: number,
-  overridesList: Partial<Post>[],
-): Promise<number[]> {
-  const ids: number[] = [];
-  for (const overrides of overridesList) {
-    ids.push((await saveTestPost(repository, userId, overrides)).id);
-  }
-  return ids;
-}
-
 describe("PostQueryService", () => {
   let module: TestingModule;
   let postQueryService: PostQueryService;
@@ -71,6 +27,45 @@ describe("PostQueryService", () => {
   let fakeS3: FakeS3StorageService;
   let dataSource: DataSource;
   let dbBackup: PGMem.IBackup;
+
+  let userCounter = 0;
+
+  async function saveTestUser(overrides?: Partial<User>): Promise<User> {
+    return userRepository.save(
+      userRepository.create({
+        email: `user${++userCounter}@test.com`,
+        password: "password",
+        role: UserRole.USER,
+        ...overrides,
+      }),
+    );
+  }
+
+  async function saveTestPost(
+    userId: number,
+    overrides?: Partial<Post>,
+  ): Promise<Post> {
+    return postRepository.save(
+      postRepository.create({
+        content: "test content",
+        category: PostCategory.DUMMY1,
+        nickname: "testnick",
+        author: { id: userId } as User,
+        ...overrides,
+      }),
+    );
+  }
+
+  async function saveTestPosts(
+    userId: number,
+    overridesList: Partial<Post>[],
+  ): Promise<number[]> {
+    const ids: number[] = [];
+    for (const overrides of overridesList) {
+      ids.push((await saveTestPost(userId, overrides)).id);
+    }
+    return ids;
+  }
 
   beforeAll(async () => {
     const { dataSource: ds, backup } = await initializePgMem(entities);
@@ -123,8 +118,8 @@ describe("PostQueryService", () => {
       // 처리합니다.
       it("success: 각 parameter 처리", async () => {
         // Given: posts
-        const user = await saveTestUser(userRepository);
-        const ids = await saveTestPosts(postRepository, user.id, [
+        const user = await saveTestUser();
+        const ids = await saveTestPosts(user.id, [
           { category: PostCategory.DUMMY1 },
           { category: PostCategory.DUMMY1 },
           { category: PostCategory.DUMMY1 },
@@ -160,8 +155,8 @@ describe("PostQueryService", () => {
 
       it("success: cursor에 해당하는 글이 삭제된 경우 올바르게 처리", async () => {
         // Given: cursor에 해당하는 글이 삭제된 경우
-        const user = await saveTestUser(userRepository);
-        const ids = await saveTestPosts(postRepository, user.id, [{}, {}, {}]);
+        const user = await saveTestUser();
+        const ids = await saveTestPosts(user.id, [{}, {}, {}]);
 
         const firstPage = await postQueryService.listPosts(user.id, {
           limit: 1,
@@ -185,8 +180,8 @@ describe("PostQueryService", () => {
       it("category 및 orderBy와 벗어난 cursor 처리", async () => {
         // Given: cursor가 category 및 orderBy를 다르게 하여 조회했을 때의
         // 결과물인 경우
-        const user = await saveTestUser(userRepository);
-        await saveTestPosts(postRepository, user.id, [
+        const user = await saveTestUser();
+        await saveTestPosts(user.id, [
           { category: PostCategory.DUMMY1 },
           { category: PostCategory.DUMMY1 },
         ]);
@@ -214,8 +209,8 @@ describe("PostQueryService", () => {
     describe("relation fields", () => {
       it("success: user가 owner -> isOwner true", async () => {
         // Given: 사용자 및 글 (테스트를 위해 단일로만 저장)
-        const user = await saveTestUser(userRepository);
-        await saveTestPost(postRepository, user.id);
+        const user = await saveTestUser();
+        await saveTestPost(user.id);
 
         // When: 글 목록 조회 시도
         const result = await postQueryService.listPosts(user.id, {
@@ -230,9 +225,9 @@ describe("PostQueryService", () => {
 
       it("success: user가 owner 아님 -> isOwner false", async () => {
         // Given: 글 작성자와 다른 사용자
-        const author = await saveTestUser(userRepository);
-        const viewer = await saveTestUser(userRepository);
-        await saveTestPost(postRepository, author.id);
+        const author = await saveTestUser();
+        const viewer = await saveTestUser();
+        await saveTestPost(author.id);
 
         // When: viewer로 글 목록 조회 시도
         const result = await postQueryService.listPosts(viewer.id, {
@@ -247,8 +242,8 @@ describe("PostQueryService", () => {
 
       it("success: user가 like한 글 -> isLiked true", async () => {
         // Given: user가 like한 글
-        const user = await saveTestUser(userRepository);
-        const post = await saveTestPost(postRepository, user.id);
+        const user = await saveTestUser();
+        const post = await saveTestPost(user.id);
         await postLikeRepository.save(
           postLikeRepository.create({
             user: { id: user.id },
@@ -269,8 +264,8 @@ describe("PostQueryService", () => {
 
       it("success: user가 like 하지 않은 글 -> isLiked false", async () => {
         // Given: user가 like하지 않은 글
-        const user = await saveTestUser(userRepository);
-        await saveTestPost(postRepository, user.id);
+        const user = await saveTestUser();
+        await saveTestPost(user.id);
 
         // When: 글 목록 조회 시도
         const result = await postQueryService.listPosts(user.id, {
@@ -286,8 +281,8 @@ describe("PostQueryService", () => {
 
     it("success: 올바른 attachments URL 맵 반환", async () => {
       // Given: attachment가 있는 글
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
       const attachment = await attachmentRepository.save(
         attachmentRepository.create({
           confirmed: true,
@@ -314,7 +309,7 @@ describe("PostQueryService", () => {
   describe("getPost", () => {
     it("success: 올바른 fields 반환", async () => {
       // Given: 글이 존재하는 경우
-      const user = await saveTestUser(userRepository);
+      const user = await saveTestUser();
       const post = await postRepository.save(
         postRepository.create({
           content: "hello world",
@@ -338,8 +333,8 @@ describe("PostQueryService", () => {
     describe("relation fields", () => {
       it("success: user가 owner -> isOwner true", async () => {
         // Given: 글 작성자
-        const user = await saveTestUser(userRepository);
-        const post = await saveTestPost(postRepository, user.id);
+        const user = await saveTestUser();
+        const post = await saveTestPost(user.id);
 
         // When: 글 조회 시도
         const result = await postQueryService.getPost(user.id, post.id);
@@ -350,9 +345,9 @@ describe("PostQueryService", () => {
 
       it("success: user가 owner 아님 -> isOwner false", async () => {
         // Given: 글 작성자와 다른 사용자
-        const author = await saveTestUser(userRepository);
-        const viewer = await saveTestUser(userRepository);
-        const post = await saveTestPost(postRepository, author.id);
+        const author = await saveTestUser();
+        const viewer = await saveTestUser();
+        const post = await saveTestPost(author.id);
 
         // When: viewer로 글 조회 시도
         const result = await postQueryService.getPost(viewer.id, post.id);
@@ -363,8 +358,8 @@ describe("PostQueryService", () => {
 
       it("success: user가 like한 글 -> isLiked true", async () => {
         // Given: user가 like한 글
-        const user = await saveTestUser(userRepository);
-        const post = await saveTestPost(postRepository, user.id);
+        const user = await saveTestUser();
+        const post = await saveTestPost(user.id);
         await postLikeRepository.save(
           postLikeRepository.create({
             user: { id: user.id },
@@ -381,8 +376,8 @@ describe("PostQueryService", () => {
 
       it("success: user가 like 하지 않은 글 -> isLiked false", async () => {
         // Given: user가 like하지 않은 글
-        const user = await saveTestUser(userRepository);
-        const post = await saveTestPost(postRepository, user.id);
+        const user = await saveTestUser();
+        const post = await saveTestPost(user.id);
 
         // When: 글 조회 시도
         const result = await postQueryService.getPost(user.id, post.id);
@@ -394,8 +389,8 @@ describe("PostQueryService", () => {
 
     it("success: 올바른 attachments URL 맵 반환", async () => {
       // Given: attachment가 있는 글
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
       const attachment = await attachmentRepository.save(
         attachmentRepository.create({
           confirmed: true,
@@ -416,7 +411,7 @@ describe("PostQueryService", () => {
 
     it("존재하지 않는 글 처리", async () => {
       // Given: 글이 존재하지 않는 경우
-      const user = await saveTestUser(userRepository);
+      const user = await saveTestUser();
       const nonExistentId = 0;
 
       // When: 글 조회 시도

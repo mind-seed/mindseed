@@ -22,53 +22,6 @@ import { PostComment } from "src/comment/entities/post-comment.entity";
 
 const entities = [UserProfile, User, PostComment, Post, PostLike, Attachment];
 
-let userCounter = 0;
-
-async function saveTestUser(
-  repository: Repository<User>,
-  overrides?: Partial<User>,
-): Promise<User> {
-  return repository.save(
-    repository.create({
-      email: `user${++userCounter}@test.com`,
-      password: "password",
-      role: UserRole.USER,
-      ...overrides,
-    }),
-  );
-}
-
-async function saveTestPost(
-  repository: Repository<Post>,
-  userId: number,
-  overrides?: Partial<Post>,
-): Promise<Post> {
-  return repository.save(
-    repository.create({
-      content: "test content",
-      category: PostCategory.DUMMY1,
-      nickname: "testnick",
-      author: { id: userId } as User,
-      ...overrides,
-    }),
-  );
-}
-
-async function saveTestAttachment(
-  repository: Repository<Attachment>,
-  overrides?: Partial<Attachment>,
-): Promise<Attachment> {
-  return repository.save(
-    repository.create({
-      confirmed: true,
-      s3Key: `attachments/${randomUUID()}`,
-      index: null,
-      post: null,
-      ...overrides,
-    }),
-  );
-}
-
 describe("PostMutationService", () => {
   let module: TestingModule;
   let postMutationService: PostMutationService;
@@ -79,6 +32,48 @@ describe("PostMutationService", () => {
   let fakeS3: FakeS3StorageService;
   let dataSource: DataSource;
   let dbBackup: PGMem.IBackup;
+
+  let userCounter = 0;
+
+  async function saveTestUser(overrides?: Partial<User>): Promise<User> {
+    return userRepository.save(
+      userRepository.create({
+        email: `user${++userCounter}@test.com`,
+        password: "password",
+        role: UserRole.USER,
+        ...overrides,
+      }),
+    );
+  }
+
+  async function saveTestPost(
+    userId: number,
+    overrides?: Partial<Post>,
+  ): Promise<Post> {
+    return postRepository.save(
+      postRepository.create({
+        content: "test content",
+        category: PostCategory.DUMMY1,
+        nickname: "testnick",
+        author: { id: userId } as User,
+        ...overrides,
+      }),
+    );
+  }
+
+  async function saveTestAttachment(
+    overrides?: Partial<Attachment>,
+  ): Promise<Attachment> {
+    return attachmentRepository.save(
+      attachmentRepository.create({
+        confirmed: true,
+        s3Key: `attachments/${randomUUID()}`,
+        index: null,
+        post: null,
+        ...overrides,
+      }),
+    );
+  }
 
   beforeAll(async () => {
     const { dataSource: ds, backup } = await initializePgMem(entities);
@@ -131,9 +126,9 @@ describe("PostMutationService", () => {
   describe("createPost", () => {
     it("success: 글 생성, attachment 업데이트", async () => {
       // Given: confirmed이며 associated 되지 않은 attachment 존재
-      const user = await saveTestUser(userRepository);
-      const a1 = await saveTestAttachment(attachmentRepository);
-      const a2 = await saveTestAttachment(attachmentRepository);
+      const user = await saveTestUser();
+      const a1 = await saveTestAttachment();
+      const a2 = await saveTestAttachment();
 
       // When: 글 생성 시도
       const post = await postMutationService.createPost({
@@ -157,7 +152,7 @@ describe("PostMutationService", () => {
 
     it("존재하지 않는 attachment 처리", async () => {
       // Given: 존재하지 않는 attachment인 경우
-      const user = await saveTestUser(userRepository);
+      const user = await saveTestUser();
       const nonExistentAttachmentId = 0;
 
       // When: 글 생성 시도
@@ -175,10 +170,8 @@ describe("PostMutationService", () => {
 
     it("confirmed 되지 않은 attachment 처리", async () => {
       // Given: confirmed 되지 않은 attachment인 경우
-      const user = await saveTestUser(userRepository);
-      const attachment = await saveTestAttachment(attachmentRepository, {
-        confirmed: false,
-      });
+      const user = await saveTestUser();
+      const attachment = await saveTestAttachment({ confirmed: false });
 
       // When: 글 생성 시도
       const result = postMutationService.createPost({
@@ -196,11 +189,9 @@ describe("PostMutationService", () => {
 
     it("이미 associated 된 attachment 처리", async () => {
       // Given: attachment가 이미 associated된 경우
-      const user = await saveTestUser(userRepository);
-      const existingPost = await saveTestPost(postRepository, user.id);
-      const attachment = await saveTestAttachment(attachmentRepository, {
-        post: existingPost,
-      });
+      const user = await saveTestUser();
+      const existingPost = await saveTestPost(user.id);
+      const attachment = await saveTestAttachment({ post: existingPost });
 
       // When: 글 생성 시도
       const result = postMutationService.createPost({
@@ -220,15 +211,13 @@ describe("PostMutationService", () => {
   describe("updatePost", () => {
     it("success: 글 업데이트 및 old attachment들 삭제", async () => {
       // Given: 존재하는 글 및 owner인 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
-      const oldAttachment = await saveTestAttachment(attachmentRepository, {
-        post,
-      });
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const oldAttachment = await saveTestAttachment({ post });
       fakeS3.put(oldAttachment.s3Key);
 
       // Given: new attachments가 confirmed이며 associated 되지 않은 경우
-      const newAttachment = await saveTestAttachment(attachmentRepository);
+      const newAttachment = await saveTestAttachment();
 
       // When: 글 업데이트 시도
       await postMutationService.updatePost({
@@ -277,9 +266,9 @@ describe("PostMutationService", () => {
 
     it("글 owner가 아닌 경우 처리", async () => {
       // Given: 글이 존재하지만, owner가 일치하지 않는 경우
-      const author = await saveTestUser(userRepository);
-      const otherUser = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, author.id);
+      const author = await saveTestUser();
+      const otherUser = await saveTestUser();
+      const post = await saveTestPost(author.id);
 
       // When: 글 업데이트 시도
       const result = postMutationService.updatePost({
@@ -296,8 +285,8 @@ describe("PostMutationService", () => {
 
     it("존재하지 않는 new attachment 처리", async () => {
       // Given: 존재하는 글 및 owner인 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
 
       // Given: new attachment가 존재하지 않을 경우
       const nonExistentAttachmentId = 0;
@@ -317,13 +306,11 @@ describe("PostMutationService", () => {
 
     it("confirmed 되지 않은 새 attachment 처리", async () => {
       // Given: 존재하는 글 및 owner인 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
 
       // Given: new attachments가 confirmed가 아닌 경우
-      const attachment = await saveTestAttachment(attachmentRepository, {
-        confirmed: false,
-      });
+      const attachment = await saveTestAttachment({ confirmed: false });
 
       // When: 글 업데이트 시도
       const result = postMutationService.updatePost({
@@ -340,14 +327,12 @@ describe("PostMutationService", () => {
 
     it("이미 associated 된 새 attachment 처리", async () => {
       // Given: 존재하는 글 및 owner인 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
-      const otherPost = await saveTestPost(postRepository, user.id);
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const otherPost = await saveTestPost(user.id);
 
       // Given: new attachments가 confirmed 되었지만, associated 된 경우
-      const attachment = await saveTestAttachment(attachmentRepository, {
-        post: otherPost,
-      });
+      const attachment = await saveTestAttachment({ post: otherPost });
 
       // When: 글 업데이트 시도
       const result = postMutationService.updatePost({
@@ -366,8 +351,8 @@ describe("PostMutationService", () => {
   describe("setPostLike", () => {
     it("success: liked false -> true, post like entity 생성", async () => {
       // Given: 글이 존재하는 경우, liked: false
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
 
       // When: liked를 true로 지정하여 요청
       await postMutationService.setPostLike(user.id, post.id, true);
@@ -386,10 +371,8 @@ describe("PostMutationService", () => {
 
     it("success: liked true -> true, post like entity 유지", async () => {
       // Given: 글이 존재하는 경우, liked: true
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id, {
-        likeCount: 1,
-      });
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id, { likeCount: 1 });
       await postLikeRepository.save(
         postLikeRepository.create({
           user: { id: user.id },
@@ -411,10 +394,8 @@ describe("PostMutationService", () => {
 
     it("success: liked true -> false, post like entity 삭제", async () => {
       // Given: 글이 존재하는 경우, liked: true
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id, {
-        likeCount: 1,
-      });
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id, { likeCount: 1 });
       await postLikeRepository.save(
         postLikeRepository.create({
           user: { id: user.id },
@@ -436,8 +417,8 @@ describe("PostMutationService", () => {
 
     it("success: liked false -> false, post like entity 없음 유지", async () => {
       // Given: 글이 존재하는 경우, liked: false
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
 
       // When: liked를 false로 지정하여 요청
       await postMutationService.setPostLike(user.id, post.id, false);
@@ -453,7 +434,7 @@ describe("PostMutationService", () => {
 
     it("존재하지 않는 글 처리", async () => {
       // Given: 글이 존재하지 않는 경우
-      const user = await saveTestUser(userRepository);
+      const user = await saveTestUser();
 
       // When: liked 요청 시도
       const result = postMutationService.setPostLike(user.id, 0, true);
@@ -466,11 +447,9 @@ describe("PostMutationService", () => {
   describe("deletePost", () => {
     it("success: 글 및 attachment 삭제", async () => {
       // Given: 글이 존재하며 owner가 일치하는 경우
-      const user = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, user.id);
-      const attachment = await saveTestAttachment(attachmentRepository, {
-        post,
-      });
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const attachment = await saveTestAttachment({ post });
       fakeS3.put(attachment.s3Key);
 
       // When: 글 삭제 시도
@@ -486,7 +465,7 @@ describe("PostMutationService", () => {
 
     it("존재하지 않는 글 처리", async () => {
       // Given: 글이 존재하지 않는 경우
-      const user = await saveTestUser(userRepository);
+      const user = await saveTestUser();
 
       // When: 글 삭제 시도
       const result = postMutationService.deletePost(user.id, 0);
@@ -497,9 +476,9 @@ describe("PostMutationService", () => {
 
     it("글 owner가 아닌 경우 처리", async () => {
       // Given: 글이 존재하지만, owner가 일치하지 않는 경우
-      const user = await saveTestUser(userRepository);
-      const otherUser = await saveTestUser(userRepository);
-      const post = await saveTestPost(postRepository, otherUser.id);
+      const user = await saveTestUser();
+      const otherUser = await saveTestUser();
+      const post = await saveTestPost(otherUser.id);
 
       // When: 글 삭제 시도
       const result = postMutationService.deletePost(user.id, post.id);

@@ -38,26 +38,6 @@ import { bcryptHash } from "./bcrypt.helper";
 // dependent 한 order
 const entities = [RefreshToken, UserProfile, User];
 
-async function saveTestUser(
-  repository: Repository<User>,
-  email: string,
-  password: string,
-  overrides?: Partial<User>,
-): Promise<User> {
-  return repository.save(
-    repository.create({
-      email,
-      password: await bcryptHash(password),
-      role: UserRole.USER,
-      profile: repository.manager.create(UserProfile, {
-        nickname: "John Doe",
-        age: 20,
-      }),
-      ...overrides,
-    }),
-  );
-}
-
 describe("AuthService", () => {
   let module: TestingModule;
 
@@ -74,6 +54,25 @@ describe("AuthService", () => {
   let redis: InstanceType<typeof IORedisMock>;
   let dataSource: DataSource;
   let dbBackup: PGMem.IBackup;
+
+  async function saveTestUser(
+    email: string,
+    password: string,
+    overrides?: Partial<User>,
+  ): Promise<User> {
+    return userRepository.save(
+      userRepository.create({
+        email,
+        password: await bcryptHash(password),
+        role: UserRole.USER,
+        profile: userRepository.manager.create(UserProfile, {
+          nickname: "John Doe",
+          age: 20,
+        }),
+        ...overrides,
+      }),
+    );
+  }
 
   beforeAll(async () => {
     const { dataSource: ds, backup } = await initializePgMem(entities);
@@ -154,7 +153,7 @@ describe("AuthService", () => {
     it("이메일 중복 처리", async () => {
       // Given: 이미 가입된 이메일인 경우
       const email = "test@example.com";
-      await saveTestUser(userRepository, email, "password");
+      await saveTestUser(email, "password");
 
       // When
       const result = authService.sendVerificationMail(email);
@@ -376,7 +375,7 @@ describe("AuthService", () => {
       const age = 20;
       const signUpToken = signUpTokenService.sign(email);
 
-      await saveTestUser(userRepository, email, "password");
+      await saveTestUser(email, "password");
 
       // When: 회원가입 시도
       const result = authService.completeSignup(
@@ -396,7 +395,7 @@ describe("AuthService", () => {
       // Given: 올바른 이메일 및 비밀번호
       const email = "test@example.com";
       const password = "password";
-      const user = await saveTestUser(userRepository, email, password);
+      const user = await saveTestUser(email, password);
 
       // When: 로그인 시도
       const result = await authService.login(email, password);
@@ -428,7 +427,7 @@ describe("AuthService", () => {
       const email = "test@example.com";
       const expectedPassword = "password";
       const incorrectPassword = "invalid";
-      const user = await saveTestUser(userRepository, email, expectedPassword);
+      const user = await saveTestUser(email, expectedPassword);
 
       // When: 로그인 시도
       const result = authService.login(email, incorrectPassword);
@@ -443,7 +442,7 @@ describe("AuthService", () => {
       // Given: 존재하는 유저에 대한 올바른 refresh token
       const email = "test@example.com";
       const password = "password";
-      const user = await saveTestUser(userRepository, email, password);
+      const user = await saveTestUser(email, password);
       const oldToken = await refreshTokenService.issue(user.id);
 
       // When: refresh 시도

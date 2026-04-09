@@ -13,27 +13,26 @@ import { initializePgMem } from "src/test/pg-mem.helper";
 
 const entities = [Resource];
 
-async function saveTestResource(
-  repository: Repository<Resource>,
-  overrides?: Partial<Resource>,
-): Promise<Resource> {
-  return repository.save(
-    repository.create({
-      title: "test resource",
-      type: ResourceType.ARTICLE,
-      category: ResourceCategory.DUMMY1,
-      url: "https://example.com",
-      ...overrides,
-    }),
-  );
-}
-
 describe("ResourceMutationService", () => {
   let module: TestingModule;
   let resourceMutationService: ResourceMutationService;
   let resourceRepository: Repository<Resource>;
   let dataSource: DataSource;
   let dbBackup: PGMem.IBackup;
+
+  async function saveTestResource(
+    overrides?: Partial<Resource>,
+  ): Promise<Resource> {
+    return resourceRepository.save(
+      resourceRepository.create({
+        title: "test resource",
+        type: ResourceType.ARTICLE,
+        category: ResourceCategory.DUMMY1,
+        url: "https://example.com",
+        ...overrides,
+      }),
+    );
+  }
 
   beforeAll(async () => {
     const { dataSource: ds, backup } = await initializePgMem(entities);
@@ -88,7 +87,7 @@ describe("ResourceMutationService", () => {
   describe("updateResource", () => {
     it("success: 콘텐츠 업데이트", async () => {
       // Given: 콘텐츠가 존재하는 경우
-      const resource = await saveTestResource(resourceRepository);
+      const resource = await saveTestResource();
 
       // When: 콘텐츠 업데이트 시도
       await resourceMutationService.updateResource({
@@ -130,7 +129,7 @@ describe("ResourceMutationService", () => {
   describe("deleteResource", () => {
     it("success: 콘텐츠 삭제", async () => {
       // Given: 콘텐츠가 존재하는 경우
-      const resource = await saveTestResource(resourceRepository);
+      const resource = await saveTestResource();
 
       // When: 콘텐츠 삭제 시도
       await resourceMutationService.deleteResource(resource.id);

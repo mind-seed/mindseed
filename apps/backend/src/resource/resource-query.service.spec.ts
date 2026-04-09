@@ -13,38 +13,36 @@ import { initializePgMem } from "src/test/pg-mem.helper";
 
 const entities = [Resource];
 
-async function saveTestResource(
-  repository: Repository<Resource>,
-  overrides?: Partial<Resource>,
-): Promise<Resource> {
-  return repository.save(
-    repository.create({
-      title: "test resource",
-      type: ResourceType.ARTICLE,
-      category: ResourceCategory.DUMMY1,
-      url: "https://example.com",
-      ...overrides,
-    }),
-  );
-}
-
-async function saveTestResources(
-  repository: Repository<Resource>,
-  overridesList: Partial<Resource>[],
-): Promise<number[]> {
-  const ids: number[] = [];
-  for (const overrides of overridesList) {
-    ids.push((await saveTestResource(repository, overrides)).id);
-  }
-  return ids;
-}
-
 describe("ResourceQueryService", () => {
   let module: TestingModule;
   let resourceQueryService: ResourceQueryService;
   let resourceRepository: Repository<Resource>;
   let dataSource: DataSource;
   let dbBackup: PGMem.IBackup;
+
+  async function saveTestResource(
+    overrides?: Partial<Resource>,
+  ): Promise<Resource> {
+    return resourceRepository.save(
+      resourceRepository.create({
+        title: "test resource",
+        type: ResourceType.ARTICLE,
+        category: ResourceCategory.DUMMY1,
+        url: "https://example.com",
+        ...overrides,
+      }),
+    );
+  }
+
+  async function saveTestResources(
+    overridesList: Partial<Resource>[],
+  ): Promise<number[]> {
+    const ids: number[] = [];
+    for (const overrides of overridesList) {
+      ids.push((await saveTestResource(overrides)).id);
+    }
+    return ids;
+  }
 
   beforeAll(async () => {
     const { dataSource: ds, backup } = await initializePgMem(entities);
@@ -78,7 +76,7 @@ describe("ResourceQueryService", () => {
   describe("listResourcesWithOffset", () => {
     it("success: 각 parameter 처리", async () => {
       // Given: resources
-      const ids = await saveTestResources(resourceRepository, [
+      const ids = await saveTestResources([
         { category: ResourceCategory.DUMMY1 },
         { category: ResourceCategory.DUMMY2 },
         { category: ResourceCategory.DUMMY1 },
@@ -117,7 +115,7 @@ describe("ResourceQueryService", () => {
   describe("listResourcesWithCursor", () => {
     it("success: 각 parameter 처리", async () => {
       // Given: resources
-      const ids = await saveTestResources(resourceRepository, [
+      const ids = await saveTestResources([
         { category: ResourceCategory.DUMMY1 },
         { category: ResourceCategory.DUMMY2 },
         { category: ResourceCategory.DUMMY1 },
@@ -152,7 +150,7 @@ describe("ResourceQueryService", () => {
 
     it("success: cursor에 해당하는 resource가 삭제된 경우 올바르게 처리", async () => {
       // Given: cursor에 해당하는 resource가 삭제된 경우
-      const ids = await saveTestResources(resourceRepository, [{}, {}, {}]);
+      const ids = await saveTestResources([{}, {}, {}]);
 
       const firstPage = await resourceQueryService.listResourcesWithCursor({
         limit: 1,
@@ -176,7 +174,7 @@ describe("ResourceQueryService", () => {
     it("category 및 orderBy와 벗어난 cursor 처리", async () => {
       // Given: cursor가 category 및 orderBy를 다르게 하여 조회했을 때의
       // 결과물인 경우
-      await saveTestResources(resourceRepository, [
+      await saveTestResources([
         { category: ResourceCategory.DUMMY1 },
         { category: ResourceCategory.DUMMY1 },
       ]);
