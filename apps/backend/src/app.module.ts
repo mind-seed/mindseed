@@ -30,6 +30,8 @@ import { Resource } from "./resource/entities/resource.entity";
 import { MissionModule } from "./mission/mission.module";
 import { Mission } from "./mission/entities/mission.entity";
 import { MissionAssignment } from "./mission/entities/mission-assignment.entity";
+import { DiagnosisModule } from "./diagnosis/diagnosis.module";
+import { DiagnosisEntry } from "./diagnosis/entities/diagnosis-entry.entity";
 
 @Module({
   imports: [
@@ -58,6 +60,7 @@ import { MissionAssignment } from "./mission/entities/mission-assignment.entity"
           Resource,
           Mission,
           MissionAssignment,
+          DiagnosisEntry,
         ],
         synchronize: process.env.NODE_ENV !== "production",
       }),
@@ -72,6 +75,7 @@ import { MissionAssignment } from "./mission/entities/mission-assignment.entity"
     CommentModule,
     ResourceModule,
     MissionModule,
+    DiagnosisModule,
   ],
   // 2026-03-18: AuthGuard -- UserService circular dependency 문제를 해결하기
   // 위해 다음과 같이 배치하였습니다.
