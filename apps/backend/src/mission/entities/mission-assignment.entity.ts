@@ -20,24 +20,24 @@ export class MissionAssignment {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: "user_id" })
+  @Column()
   userId: number;
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "user_id" })
+  @JoinColumn()
   user: User;
 
-  @Column({ name: "mission_id" })
+  @Column()
   missionId: number;
 
   @ManyToOne(() => Mission, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "mission_id" })
+  @JoinColumn()
   mission: Mission;
 
-  @TimestampColumn({ name: "available_from" })
+  @TimestampColumn()
   availableFrom: Temporal.Instant;
 
-  @TimestampColumn({ name: "available_until" })
+  @TimestampColumn()
   availableUntil: Temporal.Instant;
 
   @Column({
@@ -47,6 +47,6 @@ export class MissionAssignment {
   })
   status: MissionAssignmentStatus;
 
-  @TimestampColumn({ name: "completed_at", nullable: true })
+  @TimestampColumn({ nullable: true })
   completedAt: Temporal.Instant | null;
 }

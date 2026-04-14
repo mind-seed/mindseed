@@ -31,7 +31,7 @@ export class User {
   @Column({ type: "enum", enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
-  @CreateTimestampColumn({ name: "created_at" })
+  @CreateTimestampColumn()
   createdAt: Temporal.Instant;
 
   @OneToOne(() => UserProfile, (profile) => profile.user, { cascade: true })

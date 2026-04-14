@@ -34,9 +34,9 @@ export class Resource {
   @Column()
   url: string;
 
-  @CreateTimestampColumn({ name: "created_at" })
+  @CreateTimestampColumn()
   createdAt: Temporal.Instant;
 
-  @UpdateTimestampColumn({ name: "updated_at" })
+  @UpdateTimestampColumn()
   updatedAt: Temporal.Instant;
 }

@@ -15,21 +15,21 @@ export class DiagnosisEntry {
   id: number;
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "user_id" })
+  @JoinColumn()
   user: User;
 
-  @Column({ name: "user_id" })
+  @Column()
   userId: number;
 
-  @Column({ name: "depression_score" })
+  @Column()
   depressionScore: number;
 
-  @Column({ name: "anxiety_score" })
+  @Column()
   anxietyScore: number;
 
-  @Column({ name: "stress_score" })
+  @Column()
   stressScore: number;
 
-  @CreateTimestampColumn({ name: "created_at" })
+  @CreateTimestampColumn()
   createdAt: Temporal.Instant;
 }
