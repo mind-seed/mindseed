@@ -1,13 +1,16 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from "typeorm";
+import { Temporal } from "@js-temporal/polyfill";
+import {
+  CreateTimestampColumn,
+  UpdateTimestampColumn,
+} from "src/database/decorators/temporal.decorators";
 import { User } from "src/user/entities/user.entity";
 import { Attachment } from "src/attachment/entities/attachment.entity";
 import { PostComment } from "src/comment/entities/post-comment.entity";
@@ -39,11 +42,11 @@ export class Post {
   @JoinColumn({ name: "author_id" })
   author: User;
 
-  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
-  createdAt: Date;
+  @CreateTimestampColumn({ name: "created_at" })
+  createdAt: Temporal.Instant;
 
-  @UpdateDateColumn({ type: "timestamptz", name: "updated_at" })
-  updatedAt: Date;
+  @UpdateTimestampColumn({ name: "updated_at" })
+  updatedAt: Temporal.Instant;
 
   @OneToMany(() => Attachment, (attachment) => attachment.post)
   attachments: Attachment[];

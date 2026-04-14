@@ -1,14 +1,18 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
-  UpdateDateColumn,
 } from "typeorm";
 import { Post } from "src/post/entities/post.entity";
 import { User } from "src/user/entities/user.entity";
+import { Temporal } from "@js-temporal/polyfill";
+import {
+  CreateTimestampColumn,
+  TimestampColumn,
+  UpdateTimestampColumn,
+} from "src/database/decorators/temporal.decorators";
 
 export enum DeletionType {
   AUTHOR = "AUTHOR",
@@ -40,14 +44,17 @@ export class PostComment {
   @JoinColumn({ name: "author_id" })
   author: User;
 
-  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
-  createdAt: Date;
+  @CreateTimestampColumn({ name: "created_at" })
+  createdAt: Temporal.Instant;
 
-  @UpdateDateColumn({ type: "timestamptz", name: "updated_at" })
-  updatedAt: Date;
+  @UpdateTimestampColumn({ name: "updated_at" })
+  updatedAt: Temporal.Instant;
 
-  @Column({ type: "timestamptz", name: "deleted_at", nullable: true })
-  deletedAt: Date | null;
+  @TimestampColumn({
+    name: "deleted_at",
+    nullable: true,
+  })
+  deletedAt: Temporal.Instant | null;
 
   @Column({ name: "deleted_by", nullable: true })
   deletedById: number | null;

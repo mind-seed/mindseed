@@ -79,7 +79,7 @@ const orderByMap: Record<
     path: "post.createdAt",
     column: 'extract(epoch FROM "post"."created_at")::int',
     cast: "extract(epoch FROM :cursorValue::timestamp)::int",
-    getValue: (post) => post.createdAt.toISOString(),
+    getValue: (post) => post.createdAt.toString(),
   },
 };
 

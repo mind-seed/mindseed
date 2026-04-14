@@ -12,6 +12,7 @@ import {
   MissionAssignmentNotForDateError,
   MissionAssignmentAlreadyCompletedError,
 } from "./mission.errors";
+import { Temporal } from "@js-temporal/polyfill";
 
 export type CompleteMissionResult = {
   points: number;
@@ -38,25 +39,25 @@ export class MissionParticipationService {
    */
   async listMissionAssignmentsForDate(
     userId: number,
-    date: Date,
+    dateInstant: Temporal.Instant,
   ): Promise<MissionAssignment[]> {
     return this.missionAssignmentRepository
       .createQueryBuilder("a")
       .leftJoinAndSelect("a.mission", "mission")
       .where("a.userId = :userId", { userId })
-      .andWhere("a.availableFrom <= :date", { date })
-      .andWhere("a.availableUntil >= :date", { date })
+      .andWhere("a.availableFrom <= :date", { date: dateInstant.toString() })
+      .andWhere("a.availableUntil >= :date", { date: dateInstant.toString() })
       .getMany();
   }
 
   /**
-   * missionAssignment가 가리키는 미션 assignment 완료 처리한다.
+   * missionAssignment가 가리키는 미션 assignment를 완료 처리한다.
    * @returns 업데이트된 유저의 points와 level
    */
   async completeMissionAssignment(
     userId: number,
     missionAssignmentId: number,
-    date: Date,
+    dateInstant: Temporal.Instant,
   ): Promise<CompleteMissionResult> {
     const assignment = await this.missionAssignmentRepository.findOne({
       where: { id: missionAssignmentId, userId },
@@ -67,7 +68,10 @@ export class MissionParticipationService {
       throw new MissionAssignmentNotFoundError();
     }
 
-    if (date < assignment.availableFrom || date > assignment.availableUntil) {
+    if (
+      Temporal.Instant.compare(dateInstant, assignment.availableFrom) < 0 ||
+      Temporal.Instant.compare(dateInstant, assignment.availableUntil) > 0
+    ) {
       throw new MissionAssignmentNotForDateError();
     }
 
@@ -88,7 +92,7 @@ export class MissionParticipationService {
       await manager.save(profile);
 
       assignment.status = MissionAssignmentStatus.COMPLETED;
-      assignment.completedAt = new Date();
+      assignment.completedAt = Temporal.Now.instant();
       await manager.save(assignment);
     });
 

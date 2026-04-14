@@ -7,6 +7,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { Temporal } from "@js-temporal/polyfill";
+import { TimestampColumn } from "src/database/decorators/temporal.decorators";
 
 export enum MissionAssignmentStatus {
   UNCOMPLETED = "UNCOMPLETED",
@@ -32,11 +34,11 @@ export class MissionAssignment {
   @JoinColumn({ name: "mission_id" })
   mission: Mission;
 
-  @Column({ type: "timestamptz", name: "available_from" })
-  availableFrom: Date;
+  @TimestampColumn({ name: "available_from" })
+  availableFrom: Temporal.Instant;
 
-  @Column({ type: "timestamptz", name: "available_until" })
-  availableUntil: Date;
+  @TimestampColumn({ name: "available_until" })
+  availableUntil: Temporal.Instant;
 
   @Column({
     type: "enum",
@@ -45,6 +47,6 @@ export class MissionAssignment {
   })
   status: MissionAssignmentStatus;
 
-  @Column({ type: "timestamptz", name: "completed_at", nullable: true })
-  completedAt: Date | null;
+  @TimestampColumn({ name: "completed_at", nullable: true })
+  completedAt: Temporal.Instant | null;
 }

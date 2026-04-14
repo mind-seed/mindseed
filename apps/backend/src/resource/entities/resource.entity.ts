@@ -1,10 +1,9 @@
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Temporal } from "@js-temporal/polyfill";
 import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  PrimaryGeneratedColumn,
-  UpdateDateColumn,
-} from "typeorm";
+  CreateTimestampColumn,
+  UpdateTimestampColumn,
+} from "src/database/decorators/temporal.decorators";
 
 export enum ResourceType {
   ARTICLE = "ARTICLE",
@@ -35,9 +34,9 @@ export class Resource {
   @Column()
   url: string;
 
-  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
-  createdAt: Date;
+  @CreateTimestampColumn({ name: "created_at" })
+  createdAt: Temporal.Instant;
 
-  @UpdateDateColumn({ type: "timestamptz", name: "updated_at" })
-  updatedAt: Date;
+  @UpdateTimestampColumn({ name: "updated_at" })
+  updatedAt: Temporal.Instant;
 }
