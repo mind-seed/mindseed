@@ -1,4 +1,4 @@
-import { User } from "src/user/entities/user.entity";
+import { User, UserRole } from "src/user/entities/user.entity";
 import { MissionGenerationService } from "./mission-generation.service";
 import { Repository } from "typeorm";
 import { Inject, Injectable } from "@nestjs/common";
@@ -32,7 +32,10 @@ export class MissionGenerationJob {
 
   async assignMissionsToUsers(): Promise<void> {
     const nowZdt = Temporal.Now.zonedDateTimeISO(this.timeZoneCfg.timeZone);
-    const users = await this.userRepository.find({ select: { id: true } });
+    const users = await this.userRepository.find({
+      select: { id: true },
+      where: { role: UserRole.USER },
+    });
     const chunks = chunk(users, USER_CHUNK_SIZE);
 
     for (const chunk of chunks) {
