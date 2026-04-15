@@ -50,6 +50,7 @@ export class MissionGenerationService {
    * 사용자에게 미션들을 할당한다.
    * @param userId 미션들을 할당할 사용자
    * @param assignedZdt 미션 할당일
+   * assumption: 이전에 같은 userId 및 assignedZdt로 호출되지 않았다.
    * output: DB에 MissionAssignment entity들을 생성한다.
    * 할당 시 사용자의 자가진단 결과 및 이전 미션 상태를 반영한다.
    */
