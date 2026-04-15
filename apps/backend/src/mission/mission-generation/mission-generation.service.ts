@@ -5,7 +5,7 @@ import { Repository } from "typeorm";
 import { MissionAssignment } from "../entities/mission-assignment.entity";
 import { DiagnosisEntry } from "src/diagnosis/entities/diagnosis-entry.entity";
 import { UserProfile } from "src/user/entities/user-profile.entity";
-import { Temporal } from "@js-temporal/polyfill";
+import { Temporal, toTemporalInstant } from "@js-temporal/polyfill";
 import {
   type MissionPicker,
   MISSION_PICKER_TOKEN,
@@ -150,9 +150,12 @@ export class MissionGenerationService {
 
     for (let i = 0; i < entities.length; i++) {
       const entity = entities[i];
+      const lastAssignedAt = raw[i].lastAssignedAt;
       pool[entity.category].push({
         id: entity.id,
-        lastAssignedAt: raw[i].last_assignment_lastAssignedAt ?? null,
+        lastAssignedAt: lastAssignedAt
+          ? toTemporalInstant.call(lastAssignedAt)
+          : null,
       });
     }
 
