@@ -107,7 +107,7 @@ export class MissionGenerationService {
 
   /**
    * 사용자에 할당 가능한 미션 목록을 카테고리별로 반환한다.
-   * @param userId 사용자
+   * @param userId 사용자: role은 USER여야 한다.
    * @param nowZdt 현재 일시: 최신 assignment 정보 반영에 사용됨
    * @returns 최신 assignment 정보가 포함된, 카테고리별 미션 목록
    */
@@ -115,9 +115,10 @@ export class MissionGenerationService {
     userId: number,
     nowZdt: Temporal.ZonedDateTime,
   ): Promise<AvailableMissionPool> {
-    const profile = (await this.userProfileRepository.findOneBy({
+    // this should never fail.
+    const profile = await this.userProfileRepository.findOneByOrFail({
       userId,
-    }))!;
+    });
 
     const windowCutoff = nowZdt
       .subtract({ days: HISTORY_WINDOW_DAYS })
