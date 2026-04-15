@@ -14,6 +14,7 @@ export type MissionWithMetadata = {
 
 /**
  * metadata 기반으로 mission을 pick 한다.
+ * assumption: missions.length >= count
  */
 export type MissionPicker = (
   missions: MissionWithMetadata[],
