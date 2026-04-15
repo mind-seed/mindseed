@@ -22,14 +22,18 @@ import { MissionManagementService } from "./mission-management.service";
 import { MissionGenerationService } from "./mission-generation/mission-generation.service";
 import { MISSION_PICKER_TOKEN } from "./mission-generation/mission-picker/mission-picker.common";
 import { cooldownFilterMissionPicker } from "./mission-generation/mission-picker/cooldown-filter-mission-picker";
+import { MissionGenerationJob } from "./mission-generation/mission-generation.job";
+import { MissionGenerationCron } from "./mission-generation/mission-generation.cron";
+import { User } from "src/user/entities/user.entity";
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
+      DiagnosisEntry,
       Mission,
       MissionAssignment,
       UserProfile,
-      DiagnosisEntry,
+      User,
     ]),
     AuthModule,
     UserModule,
@@ -43,6 +47,8 @@ import { cooldownFilterMissionPicker } from "./mission-generation/mission-picker
     MissionParticipationService,
     MissionManagementService,
     MissionGenerationService,
+    MissionGenerationJob,
+    MissionGenerationCron,
   ],
 })
 export class MissionModule {}
