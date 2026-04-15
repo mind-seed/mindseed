@@ -22,6 +22,9 @@ import {
   POINTS_FOR_NEXT_LEVEL_TOKEN,
   PointsForNextLevel,
 } from "./level-points/level-points-calculator.service";
+import { Temporal } from "@js-temporal/polyfill";
+
+const timeZone = "Asia/Seoul";
 
 const testMaxLevel = 3;
 const testPointsForNextLevel: PointsForNextLevel = {
@@ -85,13 +88,25 @@ describe("MissionParticipationService", () => {
   async function saveTestAssignment(
     userId: number,
     missionId: number,
-    dueDate: Date,
+    dueDateInstant: Temporal.Instant,
     overrides?: Partial<MissionAssignment>,
   ): Promise<MissionAssignment> {
-    const availableFrom = new Date(dueDate);
-    availableFrom.setUTCHours(0, 0, 0, 0);
-    const availableUntil = new Date(dueDate);
-    availableUntil.setUTCHours(23, 59, 59, 999);
+    const availableFrom = dueDateInstant
+      .toZonedDateTimeISO(timeZone)
+      .with({
+        hour: 0,
+        minute: 0,
+        second: 0,
+      })
+      .toInstant();
+    const availableUntil = dueDateInstant
+      .toZonedDateTimeISO(timeZone)
+      .with({
+        hour: 23,
+        minute: 59,
+        second: 59,
+      })
+      .toInstant();
 
     return missionAssignmentRepository.save(
       missionAssignmentRepository.create({
@@ -154,20 +169,28 @@ describe("MissionParticipationService", () => {
   describe("listMissionAssignmentsForDate", () => {
     it("success: 주어진 날짜의 assignment 목록 반환", async () => {
       // Given: 날짜
-      const date = new Date("2025-01-15T00:00:00Z");
-      const otherDate = new Date("2025-01-16T00:00:00Z");
+      const dateInstant = Temporal.Instant.from("2025-01-15T00:00:00Z");
+      const otherDateInstant = Temporal.Instant.from("2025-01-16T00:00:00Z");
       const user = await saveTestUser();
       const mission1 = await saveTestMission();
       const mission2 = await saveTestMission();
-      const assignment1 = await saveTestAssignment(user.id, mission1.id, date);
-      const assignment2 = await saveTestAssignment(user.id, mission2.id, date);
-      await saveTestAssignment(user.id, mission1.id, otherDate);
+      const assignment1 = await saveTestAssignment(
+        user.id,
+        mission1.id,
+        dateInstant,
+      );
+      const assignment2 = await saveTestAssignment(
+        user.id,
+        mission2.id,
+        dateInstant,
+      );
+      await saveTestAssignment(user.id, mission1.id, otherDateInstant);
 
       // When: assignmeent 목록 조회 시도
       const result =
         await missionParticipationService.listMissionAssignmentsForDate(
           user.id,
-          date,
+          dateInstant,
         );
 
       // Then: 주어진 날짜에 대한 assignment만 올바르게 반환
@@ -183,12 +206,12 @@ describe("MissionParticipationService", () => {
       // Given: 최대 레벨이 아닌 사용자, 현재 날짜에 대한 완료하지 않은
       // assignment
       const user = await saveTestUser({ level: 1, points: 0 });
-      const currentDate = new Date("2025-01-15T00:00:00Z");
+      const currentDateInstant = Temporal.Instant.from("2025-01-15T00:00:00Z");
       const mission = await saveTestMission({ points: 10 });
       const assignment = await saveTestAssignment(
         user.id,
         mission.id,
-        currentDate,
+        currentDateInstant,
       );
 
       // When: assignment 완료 처리 시도
@@ -196,7 +219,7 @@ describe("MissionParticipationService", () => {
         await missionParticipationService.completeMissionAssignment(
           user.id,
           assignment.id,
-          currentDate,
+          currentDateInstant,
         );
 
       // Then: 새로운 레벨과 포인트 반환
@@ -219,12 +242,12 @@ describe("MissionParticipationService", () => {
       // Given: 최대 레벨이 아니며 레벨업 예정인 사용자, 현재 날짜에 대한
       // 완료하지 않은 assignment
       const user = await saveTestUser({ level: 1, points: 90 });
-      const currentDate = new Date("2025-01-15T00:00:00Z");
+      const currentDateInstant = Temporal.Instant.from("2025-01-15T00:00:00Z");
       const mission = await saveTestMission({ points: 10 });
       const assignment = await saveTestAssignment(
         user.id,
         mission.id,
-        currentDate,
+        currentDateInstant,
       );
 
       // When: assignment 완료 처리 시도
@@ -232,7 +255,7 @@ describe("MissionParticipationService", () => {
         await missionParticipationService.completeMissionAssignment(
           user.id,
           assignment.id,
-          currentDate,
+          currentDateInstant,
         );
 
       // Then: 새로운 레벨과 포인트 반환
@@ -255,12 +278,12 @@ describe("MissionParticipationService", () => {
       // Given: 최대 레벨인 사용자, 현재 날짜에 대한
       // 완료하지 않은 assignment
       const user = await saveTestUser({ level: testMaxLevel, points: 0 });
-      const currentDate = new Date("2025-01-15T00:00:00Z");
+      const currentDateInstant = Temporal.Instant.from("2025-01-15T00:00:00Z");
       const mission = await saveTestMission({ points: 10 });
       const assignment = await saveTestAssignment(
         user.id,
         mission.id,
-        currentDate,
+        currentDateInstant,
       );
 
       // When: assignment 완료 처리 시도
@@ -268,7 +291,7 @@ describe("MissionParticipationService", () => {
         await missionParticipationService.completeMissionAssignment(
           user.id,
           assignment.id,
-          currentDate,
+          currentDateInstant,
         );
 
       // Then: 새로운 레벨과 포인트 반환
@@ -291,19 +314,19 @@ describe("MissionParticipationService", () => {
       // Given: 사용자에 대해 존재하지 않는 assignment
       const user = await saveTestUser();
       const otherUser = await saveTestUser();
-      const currentDate = new Date("2025-01-15T00:00:00Z");
+      const currentDateInstant = Temporal.Instant.from("2025-01-15T00:00:00Z");
       const mission = await saveTestMission();
       const otherAssignment = await saveTestAssignment(
         otherUser.id,
         mission.id,
-        currentDate,
+        currentDateInstant,
       );
 
       // When: assignment 완료 처리 시도
       const result = missionParticipationService.completeMissionAssignment(
         user.id,
         otherAssignment.id,
-        currentDate,
+        currentDateInstant,
       );
 
       // Then: throws handled error
@@ -313,20 +336,22 @@ describe("MissionParticipationService", () => {
     it("주어진 날짜에 대한 assignment가 아닌 경우 처리", async () => {
       // Given: 주어진 날짜에 대해 존재하지 않는 assignment
       const user = await saveTestUser();
-      const assignmentDate = new Date("2025-01-14T00:00:00Z");
-      const currentDate = new Date("2025-01-15T00:00:00Z");
+      const assignmentDateInstant = Temporal.Instant.from(
+        "2025-01-14T00:00:00Z",
+      );
+      const currentDateInstant = Temporal.Instant.from("2025-01-15T00:00:00Z");
       const mission = await saveTestMission();
       const assignment = await saveTestAssignment(
         user.id,
         mission.id,
-        assignmentDate,
+        assignmentDateInstant,
       );
 
       // When: assignment 완료 처리 시도
       const result = missionParticipationService.completeMissionAssignment(
         user.id,
         assignment.id,
-        currentDate,
+        currentDateInstant,
       );
 
       // Then: throws handled error
@@ -336,15 +361,15 @@ describe("MissionParticipationService", () => {
     it("이미 완료한 assignment 처리", async () => {
       // Given: 이미 완료한 assignment
       const user = await saveTestUser();
-      const currentDate = new Date("2025-01-15T00:00:00Z");
+      const currentDateInstant = Temporal.Instant.from("2025-01-15T00:00:00Z");
       const mission = await saveTestMission();
       const assignment = await saveTestAssignment(
         user.id,
         mission.id,
-        currentDate,
+        currentDateInstant,
         {
           status: MissionAssignmentStatus.COMPLETED,
-          completedAt: currentDate,
+          completedAt: currentDateInstant,
         },
       );
 
@@ -352,7 +377,7 @@ describe("MissionParticipationService", () => {
       const result = missionParticipationService.completeMissionAssignment(
         user.id,
         assignment.id,
-        currentDate,
+        currentDateInstant,
       );
 
       // Then: throws handled error

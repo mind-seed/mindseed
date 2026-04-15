@@ -11,6 +11,7 @@ import { UserProfile } from "src/user/entities/user-profile.entity";
 import { initializePgMem } from "src/test/pg-mem.helper";
 import { PostNotFoundError } from "src/post/post.errors";
 import { Attachment } from "src/attachment/entities/attachment.entity";
+import { Temporal } from "@js-temporal/polyfill";
 
 const entities = [UserProfile, User, Attachment, PostComment, Post];
 
@@ -235,7 +236,7 @@ describe("CommentService", () => {
       const user = await saveTestUser();
       const post = await saveTestPost(user.id);
       const comment = await saveTestComment(post.id, user.id, {
-        deletedAt: new Date(),
+        deletedAt: Temporal.Now.instant(),
         deletedBy: user,
         deletionType: DeletionType.AUTHOR,
       });
@@ -347,7 +348,7 @@ describe("CommentService", () => {
       const user = await saveTestUser();
       const post = await saveTestPost(user.id);
       const comment = await saveTestComment(post.id, user.id, {
-        deletedAt: new Date(),
+        deletedAt: Temporal.Now.instant(),
         deletedBy: user,
         deletionType: DeletionType.AUTHOR,
       });

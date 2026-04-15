@@ -1,10 +1,6 @@
-import {
-  Column,
-  CreateDateColumn,
-  Entity,
-  OneToOne,
-  PrimaryGeneratedColumn,
-} from "typeorm";
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Temporal } from "@js-temporal/polyfill";
+import { CreateTimestampColumn } from "src/database/decorators/temporal.decorators";
 import { UserProfile } from "./user-profile.entity";
 import assert from "node:assert";
 
@@ -35,8 +31,8 @@ export class User {
   @Column({ type: "enum", enum: UserRole, default: UserRole.USER })
   role: UserRole;
 
-  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
-  createdAt: Date;
+  @CreateTimestampColumn({ name: "created_at" })
+  createdAt: Temporal.Instant;
 
   @OneToOne(() => UserProfile, (profile) => profile.user, { cascade: true })
   profile: UserProfile | null;

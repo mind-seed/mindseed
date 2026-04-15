@@ -1,11 +1,12 @@
 import {
   Column,
-  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { Temporal } from "@js-temporal/polyfill";
+import { CreateTimestampColumn } from "src/database/decorators/temporal.decorators";
 import { User } from "src/user/entities/user.entity";
 
 @Entity({ name: "diagnosis_entry" })
@@ -29,6 +30,6 @@ export class DiagnosisEntry {
   @Column({ name: "stress_score" })
   stressScore: number;
 
-  @CreateDateColumn({ type: "timestamptz", name: "created_at" })
-  createdAt: Date;
+  @CreateTimestampColumn({ name: "created_at" })
+  createdAt: Temporal.Instant;
 }

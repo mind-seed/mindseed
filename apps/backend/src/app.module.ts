@@ -1,6 +1,5 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule, ConfigType } from "@nestjs/config";
-import { TypeOrmModule } from "@nestjs/typeorm";
+import { ConfigModule } from "@nestjs/config";
 import {
   databaseConfig,
   jwtConfig,
@@ -8,30 +7,20 @@ import {
   redisConfig,
   s3Config,
 } from "./config";
+import { DatabaseModule } from "./database/database.module";
 import { RedisModule } from "./redis/redis.module";
 import { MailModule } from "./mail/mail.module";
 import { UserModule } from "./user/user.module";
 import { AuthModule } from "./auth/auth.module";
-import { User } from "./user/entities/user.entity";
-import { UserProfile } from "./user/entities/user-profile.entity";
-import { RefreshToken } from "./auth/refresh-token/refresh-token.entity";
 import { ScheduleModule } from "@nestjs/schedule";
 import { UserController } from "./user/user.controller";
 import { S3StorageModule } from "./s3-storage/s3-storage.module";
 import { AttachmentModule } from "./attachment/attachment.module";
 import { PostModule } from "./post/post.module";
-import { Post } from "./post/entities/post.entity";
-import { Attachment } from "./attachment/entities/attachment.entity";
-import { PostLike } from "./post/entities/post-like.entity";
 import { CommentModule } from "./comment/comment.module";
-import { PostComment } from "./comment/entities/post-comment.entity";
 import { ResourceModule } from "./resource/resource.module";
-import { Resource } from "./resource/entities/resource.entity";
 import { MissionModule } from "./mission/mission.module";
-import { Mission } from "./mission/entities/mission.entity";
-import { MissionAssignment } from "./mission/entities/mission-assignment.entity";
 import { DiagnosisModule } from "./diagnosis/diagnosis.module";
-import { DiagnosisEntry } from "./diagnosis/entities/diagnosis-entry.entity";
 
 @Module({
   imports: [
@@ -40,31 +29,7 @@ import { DiagnosisEntry } from "./diagnosis/entities/diagnosis-entry.entity";
       load: [databaseConfig, redisConfig, jwtConfig, mailConfig, s3Config],
     }),
     ScheduleModule.forRoot(),
-    TypeOrmModule.forRootAsync({
-      inject: [databaseConfig.KEY],
-      useFactory: (db: ConfigType<typeof databaseConfig>) => ({
-        type: "postgres",
-        host: db.host,
-        port: db.port,
-        username: db.username,
-        password: db.password,
-        database: db.database,
-        entities: [
-          Attachment,
-          User,
-          UserProfile,
-          RefreshToken,
-          Post,
-          PostComment,
-          PostLike,
-          Resource,
-          Mission,
-          MissionAssignment,
-          DiagnosisEntry,
-        ],
-        synchronize: process.env.NODE_ENV !== "production",
-      }),
-    }),
+    DatabaseModule,
     RedisModule,
     MailModule,
     S3StorageModule,

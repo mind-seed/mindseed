@@ -5,6 +5,7 @@ import { PostComment, DeletionType } from "./entities/post-comment.entity";
 import { Post } from "src/post/entities/post.entity";
 import { CommentNotFoundError, NotCommentAuthorError } from "./comment.errors";
 import { PostNotFoundError } from "src/post/post.errors";
+import { Temporal } from "@js-temporal/polyfill";
 
 export type CreateCommentOptions = {
   postId: number;
@@ -120,7 +121,7 @@ export class CommentService {
     await this.commentRepository.update(
       { id: commentId },
       {
-        deletedAt: new Date(),
+        deletedAt: Temporal.Now.instant(),
         deletedById: userId,
         deletionType: DeletionType.AUTHOR,
       },

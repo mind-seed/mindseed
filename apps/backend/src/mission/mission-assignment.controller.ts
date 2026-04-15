@@ -14,6 +14,7 @@ import { MissionParticipationService } from "./mission-participation.service";
 import { ZodParam } from "src/common/pipes/zod-validation.decorator";
 import { MissionAssignmentStatus } from "./entities/mission-assignment.entity";
 import z from "zod";
+import { Temporal } from "@js-temporal/polyfill";
 
 const entityToApiStatus: Record<
   MissionAssignmentStatus,
@@ -36,11 +37,11 @@ export class MissionAssignmentController {
   async listToday(
     @CurrentUser() user: User,
   ): Promise<ListTodayMissionAssignmentsSuccessResponseDto> {
-    const currentDate = new Date();
+    const currentDateInstant = Temporal.Now.instant();
     const assignments =
       await this.missionParticipationService.listMissionAssignmentsForDate(
         user.id,
-        currentDate,
+        currentDateInstant,
       );
 
     return {
@@ -67,13 +68,13 @@ export class MissionAssignmentController {
     @CurrentUser() user: User,
     @ZodParam("id", idParamSchema) id: number,
   ): Promise<CompleteMissionAssignmentSuccessResponseDto> {
-    const currentDate = new Date();
+    const currentDateInstant = Temporal.Now.instant();
 
     const { level, points } =
       await this.missionParticipationService.completeMissionAssignment(
         user.id,
         id,
-        currentDate,
+        currentDateInstant,
       );
 
     return {

@@ -5,6 +5,8 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
+import { Temporal } from "@js-temporal/polyfill";
+import { TimestampColumn } from "src/database/decorators/temporal.decorators";
 import { User } from "src/user/entities/user.entity";
 
 @Entity({ name: "refresh_token" })
@@ -15,8 +17,8 @@ export class RefreshToken {
   @Column()
   token: string;
 
-  @Column({ type: "timestamptz", name: "expires_at" })
-  expiresAt: Date;
+  @TimestampColumn({ name: "expires_at" })
+  expiresAt: Temporal.Instant;
 
   @Column({ name: "user_id" })
   userId: number;
