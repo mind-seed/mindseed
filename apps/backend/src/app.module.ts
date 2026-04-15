@@ -6,6 +6,7 @@ import {
   mailConfig,
   redisConfig,
   s3Config,
+  timeZoneConfig,
 } from "./config";
 import { DatabaseModule } from "./database/database.module";
 import { RedisModule } from "./redis/redis.module";
@@ -26,7 +27,14 @@ import { DiagnosisModule } from "./diagnosis/diagnosis.module";
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [databaseConfig, redisConfig, jwtConfig, mailConfig, s3Config],
+      load: [
+        databaseConfig,
+        redisConfig,
+        jwtConfig,
+        mailConfig,
+        s3Config,
+        timeZoneConfig,
+      ],
     }),
     ScheduleModule.forRoot(),
     DatabaseModule,
