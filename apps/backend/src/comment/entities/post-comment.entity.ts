@@ -30,30 +30,27 @@ export class PostComment {
   @Column({ type: "text" })
   content: string;
 
-  @Column({ name: "post_id" })
+  @Column()
   postId: number;
 
   @ManyToOne(() => Post, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "post_id" })
+  @JoinColumn()
   post: Post;
 
-  @Column({ name: "author_id" })
+  @Column()
   authorId: number;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: "author_id" })
+  @JoinColumn()
   author: User;
 
-  @CreateTimestampColumn({ name: "created_at" })
+  @CreateTimestampColumn()
   createdAt: Temporal.Instant;
 
-  @UpdateTimestampColumn({ name: "updated_at" })
+  @UpdateTimestampColumn()
   updatedAt: Temporal.Instant;
 
-  @TimestampColumn({
-    name: "deleted_at",
-    nullable: true,
-  })
+  @TimestampColumn({ nullable: true })
   deletedAt: Temporal.Instant | null;
 
   @Column({ name: "deleted_by", nullable: true })
@@ -66,7 +63,6 @@ export class PostComment {
   @Column({
     type: "enum",
     enum: DeletionType,
-    name: "deletion_type",
     nullable: true,
   })
   deletionType: DeletionType | null;

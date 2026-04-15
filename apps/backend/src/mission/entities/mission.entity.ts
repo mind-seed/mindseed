@@ -22,7 +22,7 @@ export class Mission {
   @Column()
   description: string;
 
-  @Column({ name: "min_level" })
+  @Column()
   minLevel: number;
 
   @Column({ type: "enum", enum: TestCategory })
@@ -31,9 +31,9 @@ export class Mission {
   @Column()
   points: number;
 
-  @CreateTimestampColumn({ name: "created_at" })
+  @CreateTimestampColumn()
   createdAt: Temporal.Instant;
 
-  @UpdateTimestampColumn({ name: "updated_at" })
+  @UpdateTimestampColumn()
   updatedAt: Temporal.Instant;
 }

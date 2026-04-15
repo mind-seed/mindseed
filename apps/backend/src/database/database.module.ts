@@ -13,6 +13,7 @@ import { Resource } from "src/resource/entities/resource.entity";
 import { Mission } from "src/mission/entities/mission.entity";
 import { MissionAssignment } from "src/mission/entities/mission-assignment.entity";
 import { DiagnosisEntry } from "src/diagnosis/entities/diagnosis-entry.entity";
+import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { DiagnosisEntry } from "src/diagnosis/entities/diagnosis-entry.entity";
           DiagnosisEntry,
         ],
         synchronize: process.env.NODE_ENV !== "production",
+        namingStrategy: new SnakeNamingStrategy(),
       }),
     }),
   ],

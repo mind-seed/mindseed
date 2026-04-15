@@ -17,13 +17,13 @@ export class RefreshToken {
   @Column()
   token: string;
 
-  @TimestampColumn({ name: "expires_at" })
+  @TimestampColumn()
   expiresAt: Temporal.Instant;
 
-  @Column({ name: "user_id" })
+  @Column()
   userId: number;
 
   @ManyToOne(() => User, { onDelete: "CASCADE" })
-  @JoinColumn({ name: "user_id" })
+  @JoinColumn()
   user: User;
 }

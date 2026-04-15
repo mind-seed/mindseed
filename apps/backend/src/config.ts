@@ -34,3 +34,7 @@ export const mailConfig = registerAs("mail", () => ({
   from: process.env.MAIL_FROM,
   driver: process.env.MAIL_DRIVER,
 }));
+
+export const timeZoneConfig = registerAs("timeZone", () => ({
+  timeZone: process.env.TIME_ZONE!,
+}));

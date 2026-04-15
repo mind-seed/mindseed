@@ -35,17 +35,17 @@ export class Post {
   @Column()
   nickname: string;
 
-  @Column({ name: "author_id" })
+  @Column()
   authorId: number;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: "author_id" })
+  @JoinColumn()
   author: User;
 
-  @CreateTimestampColumn({ name: "created_at" })
+  @CreateTimestampColumn()
   createdAt: Temporal.Instant;
 
-  @UpdateTimestampColumn({ name: "updated_at" })
+  @UpdateTimestampColumn()
   updatedAt: Temporal.Instant;
 
   @OneToMany(() => Attachment, (attachment) => attachment.post)
@@ -54,6 +54,6 @@ export class Post {
   @OneToMany(() => PostComment, (comment) => comment.post)
   comments: PostComment[];
 
-  @Column({ name: "like_count", default: 0 })
+  @Column({ default: 0 })
   likeCount: number;
 }

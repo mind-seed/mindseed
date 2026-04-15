@@ -77,7 +77,7 @@ const orderByMap: Record<
 > = {
   createdAt: {
     path: "post.createdAt",
-    column: 'extract(epoch FROM "post"."created_at")::int',
+    column: "extract(epoch FROM post.createdAt)::int",
     cast: "extract(epoch FROM :cursorValue::timestamp)::int",
     getValue: (post) => post.createdAt.toString(),
   },
