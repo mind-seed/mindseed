@@ -18,8 +18,8 @@ import { booleanSerializerCodec } from "src/common/codecs";
 export const AdminListCounselsQueryDtoSchema = OffsetPaginationQuerySchema([
   "createdAt",
 ] as const).extend({
-  category: CounselCategorySchema,
-  responded: booleanSerializerCodec,
+  category: CounselCategorySchema.optional(),
+  responded: booleanSerializerCodec.optional(),
 });
 
 export type AdminListCounselsQueryDto = z.output<

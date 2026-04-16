@@ -19,8 +19,8 @@ import { booleanSerializerCodec } from "src/common/codecs";
 export const ListCounselsQueryDtoSchema = CursorPaginationQuerySchema([
   "createdAt",
 ] as const).extend({
-  category: CounselCategorySchema,
-  responded: booleanSerializerCodec,
+  category: CounselCategorySchema.optional(),
+  responded: booleanSerializerCodec.optional(),
 });
 
 export type ListCounselsQueryDto = z.output<typeof ListCounselsQueryDtoSchema>;
