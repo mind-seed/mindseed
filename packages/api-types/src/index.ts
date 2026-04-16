@@ -8,6 +8,7 @@ export * from "./common/comment";
 export * from "./common/post";
 export * from "./common/resource";
 export * from "./common/mission";
+export * from "./common/counsel";
 export * from "./common/pagination";
 export * from "./common/error-codes";
 
@@ -48,3 +49,12 @@ export * from "./resources/admin/list-resources";
 export * from "./resources/admin/create-resource";
 export * from "./resources/admin/update-resource";
 export * from "./resources/admin/delete-resource";
+
+export * from "./counsels/list-counsels";
+export * from "./counsels/get-counsel";
+export * from "./counsels/create-counsel";
+export * from "./counsels/update-counsel";
+export * from "./counsels/delete-counsel";
+export * from "./counsels/admin/list-counsels";
+export * from "./counsels/admin/get-counsel";
+export * from "./counsels/admin/respond-to-counsel";
