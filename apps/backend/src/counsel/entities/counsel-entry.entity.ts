@@ -46,7 +46,7 @@ export class CounselEntry {
   @UpdateTimestampColumn()
   updatedAt: Temporal.Instant;
 
-  @Column()
+  @Column({ nullable: true })
   responderId: number | null;
 
   // 2026-04-16 onDelete option을 지정하지 않았습니다. 현재는 ADMIN user는
@@ -57,6 +57,6 @@ export class CounselEntry {
   @JoinColumn()
   responder: User | null;
 
-  @Column({ type: "text" })
+  @Column({ type: "text", nullable: true })
   responseContent: string | null;
 }
