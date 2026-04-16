@@ -18,3 +18,12 @@ export const numberSerializerCodec = z.codec(
     encode: (num) => num.toString(),
   },
 );
+
+export const booleanSerializerCodec = z.codec(
+  z.enum(["true", "false"]),
+  z.boolean(),
+  {
+    decode: (str) => (str === "true" ? true : false),
+    encode: (bool) => (bool ? "true" : "false"),
+  },
+);
