@@ -9,6 +9,8 @@ import {
   OffsetPaginationOptions,
   OffsetPaginationResult,
 } from "src/common/helpers/pagination";
+import { createCursorCodec } from "src/common/helpers/cursor";
+import z from "zod";
 
 export type ListResourcesOrderBy = "createdAt";
 
@@ -26,25 +28,12 @@ export type ListResourcesWithCursorOptions =
 
 export type ListResourcesWithCursorResult = CursorPaginationResult<Resource>;
 
-type CursorPayload = {
-  category: ResourceCategory | null;
-  orderBy: ListResourcesOrderBy;
-  orderDirection: "asc" | "desc";
-  cursorValue: string;
-  cursorId: number;
-};
-
-function encodeCursor(payload: CursorPayload): string {
-  return Buffer.from(JSON.stringify(payload)).toString("base64url");
-}
-
-function decodeCursor(cursor: string): CursorPayload {
-  try {
-    return JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
-  } catch {
-    throw new InvalidCursorError();
-  }
-}
+const cursorCodec = createCursorCodec(
+  z.object({
+    value: z.string(),
+    id: z.number(),
+  }),
+);
 
 const orderByMap: Record<
   ListResourcesOrderBy,
@@ -117,16 +106,7 @@ export class ResourceQueryService {
     orderBy,
     orderDirection,
   }: ListResourcesWithCursorOptions): Promise<ListResourcesWithCursorResult> {
-    const decodedCursor = cursor && decodeCursor(cursor);
-
-    if (
-      decodedCursor &&
-      ((category ?? null) !== decodedCursor.category ||
-        orderBy !== decodedCursor.orderBy ||
-        orderDirection !== decodedCursor.orderDirection)
-    ) {
-      throw new InvalidCursorError();
-    }
+    const decodedCursor = cursor && cursorCodec.decode(cursor);
 
     const qb = this.resourceRepository.createQueryBuilder("resource");
 
@@ -145,8 +125,8 @@ export class ResourceQueryService {
           `(${orderEntry.cast}, :cursorId::int)`,
         ].join(""),
         {
-          cursorValue: decodedCursor.cursorValue,
-          cursorId: decodedCursor.cursorId,
+          cursorValue: decodedCursor.value,
+          cursorId: decodedCursor.id,
         },
       );
     }
@@ -165,12 +145,9 @@ export class ResourceQueryService {
       items: resultItems,
       nextCursor:
         items.length > limit && lastItem
-          ? encodeCursor({
-              orderBy,
-              orderDirection,
-              category: category ?? null,
-              cursorId: lastItem.id,
-              cursorValue: orderEntry.getValue(lastItem),
+          ? cursorCodec.encode({
+              id: lastItem.id,
+              value: orderEntry.getValue(lastItem),
             })
           : undefined,
     };

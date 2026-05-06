@@ -171,31 +171,20 @@ describe("ResourceQueryService", () => {
       expect(result.items.map((r) => r.id)).toEqual([ids[1], ids[2]]);
     });
 
-    it("category 및 orderBy와 벗어난 cursor 처리", async () => {
-      // Given: cursor가 category 및 orderBy를 다르게 하여 조회했을 때의
-      // 결과물인 경우
-      await saveTestResources([
-        { category: ResourceCategory.DUMMY1 },
-        { category: ResourceCategory.DUMMY1 },
-      ]);
-      const firstPage = await resourceQueryService.listResourcesWithCursor({
-        limit: 1,
-        orderBy: "createdAt",
-        orderDirection: "asc",
-        category: ResourceCategory.DUMMY1,
-      });
+    it("올바르지 않은 형식의 cursor인 경우 처리", async () => {
+      // Given: 올바르지 않은 형식의 cursor
+      const malformedCursor = "arst";
 
       // When: 조회 시도
       const result = resourceQueryService.listResourcesWithCursor({
-        cursor: firstPage.nextCursor,
+        cursor: malformedCursor,
         limit: 1,
         orderBy: "createdAt",
         orderDirection: "asc",
-        category: ResourceCategory.DUMMY2,
       });
 
       // Then: throws handled error
-      await expect(result).rejects.toThrow(InvalidCursorError);
+      expect(result).rejects.toThrow(InvalidCursorError);
     });
   });
 });

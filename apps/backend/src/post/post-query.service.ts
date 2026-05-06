@@ -6,11 +6,12 @@ import { PostLike } from "./entities/post-like.entity";
 import { Attachment } from "../attachment/entities/attachment.entity";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import { PostNotFoundError } from "./post.errors";
-import { InvalidCursorError } from "src/common/errors/pagination.errors";
 import {
   CursorPaginationOptions,
   CursorPaginationResult,
 } from "src/common/helpers/pagination";
+import { createCursorCodec } from "src/common/helpers/cursor";
+import z from "zod";
 
 /* shared types */
 
@@ -28,14 +29,20 @@ export type AttachmentToUrlMap = Record<number, string>;
 
 export type ListPostsOrderBy = "createdAt";
 
-export type ListPostsPaginationOptions =
-  CursorPaginationOptions<ListPostsOrderBy> & {
-    category?: PostCategory;
-  };
+export type ListPostsOptions = CursorPaginationOptions<ListPostsOrderBy> & {
+  category?: PostCategory;
+};
 
 export type ListPostsResult = CursorPaginationResult<PostWithRelations> & {
   attachmentToUrl: AttachmentToUrlMap;
 };
+
+const cursorCodec = createCursorCodec(
+  z.object({
+    value: z.string(),
+    id: z.number(),
+  }),
+);
 
 /* getPost */
 
@@ -43,27 +50,6 @@ export type GetPostResult = {
   entry: PostWithRelations;
   attachmentToUrl: AttachmentToUrlMap;
 };
-
-type CursorPayload = {
-  category: PostCategory | null;
-  orderBy: ListPostsOrderBy;
-  orderDirection: "asc" | "desc";
-  cursorValue: string;
-  cursorId: number;
-};
-
-function encodeCursor(payload: CursorPayload): string {
-  return Buffer.from(JSON.stringify(payload)).toString("base64url");
-}
-
-// FIXME: structural validation for cursor value
-function decodeCursor(cursor: string): CursorPayload {
-  try {
-    return JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
-  } catch {
-    throw new InvalidCursorError();
-  }
-}
 
 // 2026-03-25 code smell....
 const orderByMap: Record<
@@ -102,24 +88,9 @@ export class PostQueryService {
    */
   async listPosts(
     userId: number,
-    {
-      limit,
-      orderBy,
-      orderDirection,
-      category,
-      cursor,
-    }: ListPostsPaginationOptions,
+    { limit, orderBy, orderDirection, category, cursor }: ListPostsOptions,
   ): Promise<ListPostsResult> {
-    const decodedCursor = cursor && decodeCursor(cursor);
-
-    if (
-      decodedCursor &&
-      (category != decodedCursor.category || // != for null-undefined checks
-        orderBy !== decodedCursor.orderBy ||
-        orderDirection !== decodedCursor.orderDirection)
-    ) {
-      throw new InvalidCursorError();
-    }
+    const decodedCursor = cursor && cursorCodec.decode(cursor);
 
     const sqlDirection = orderDirection === "asc" ? "ASC" : "DESC";
     const cursorOp = orderDirection === "asc" ? ">" : "<";
@@ -142,8 +113,8 @@ export class PostQueryService {
           `(${orderEntry.cast}, :cursorId::int)`,
         ].join(""),
         {
-          cursorValue: decodedCursor.cursorValue,
-          cursorId: decodedCursor.cursorId,
+          cursorValue: decodedCursor.value,
+          cursorId: decodedCursor.id,
         },
       );
     }
@@ -183,12 +154,9 @@ export class PostQueryService {
       })),
       nextCursor:
         posts.length > limit && lastPost
-          ? encodeCursor({
-              orderBy,
-              orderDirection,
-              category: category ?? null,
-              cursorId: lastPost.id,
-              cursorValue: orderEntry.getValue(lastPost),
+          ? cursorCodec.encode({
+              id: lastPost.id,
+              value: orderEntry.getValue(lastPost),
             })
           : undefined,
       attachmentToUrl,
