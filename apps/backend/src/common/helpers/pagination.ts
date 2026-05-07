@@ -1,3 +1,5 @@
+// types for pagination methods in services.
+
 export type CursorPaginationOptions<OrderBy extends string> = {
   cursor?: string;
   limit: number;
