@@ -68,7 +68,7 @@ export class RefreshTokenService {
   @Cron(CronExpression.EVERY_HOUR)
   async deleteExpired(): Promise<void> {
     await this.refreshTokenRepository.delete({
-      expiresAt: LessThan(new Date()),
+      expiresAt: LessThan(Temporal.Now.instant()),
     });
   }
 
