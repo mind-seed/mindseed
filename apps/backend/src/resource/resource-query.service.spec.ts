@@ -184,7 +184,7 @@ describe("ResourceQueryService", () => {
       });
 
       // Then: throws handled error
-      expect(result).rejects.toThrow(InvalidCursorError);
+      await expect(result).rejects.toThrow(InvalidCursorError);
     });
   });
 });
