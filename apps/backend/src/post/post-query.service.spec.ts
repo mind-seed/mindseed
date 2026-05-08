@@ -176,34 +176,6 @@ describe("PostQueryService", () => {
         // Then: 삭제된 글 다음부터 올바르게 반환
         expect(result.items.map((p) => p.post.id)).toEqual([ids[1], ids[2]]);
       });
-
-      it("category 및 orderBy와 벗어난 cursor 처리", async () => {
-        // Given: cursor가 category 및 orderBy를 다르게 하여 조회했을 때의
-        // 결과물인 경우
-        const user = await saveTestUser();
-        await saveTestPosts(user.id, [
-          { category: PostCategory.DUMMY1 },
-          { category: PostCategory.DUMMY1 },
-        ]);
-        const firstPage = await postQueryService.listPosts(user.id, {
-          limit: 1,
-          orderBy: "createdAt",
-          orderDirection: "asc",
-          category: PostCategory.DUMMY1,
-        });
-
-        // When: 글 조회 시도
-        const result = postQueryService.listPosts(user.id, {
-          cursor: firstPage.nextCursor,
-          limit: 1,
-          orderBy: "createdAt",
-          orderDirection: "asc",
-          category: PostCategory.DUMMY2,
-        });
-
-        // Then: throws handled error
-        await expect(result).rejects.toThrow(InvalidCursorError);
-      });
     });
 
     describe("relation fields", () => {
@@ -303,6 +275,23 @@ describe("PostQueryService", () => {
       expect(result.attachmentToUrl[attachment.id]).toBe(
         fakeS3.getPublicUrl(attachment.s3Key),
       );
+    });
+
+    it("올바르지 않은 형식의 cursor인 경우 처리", async () => {
+      // Given: 올바르지 않은 형식의 cursor
+      const user = await saveTestUser();
+      const malformedCursor = "arst";
+
+      // When: 글 목록 조회 시도
+      const result = postQueryService.listPosts(user.id, {
+        limit: 1,
+        orderBy: "createdAt",
+        orderDirection: "asc",
+        cursor: malformedCursor,
+      });
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(InvalidCursorError);
     });
   });
 

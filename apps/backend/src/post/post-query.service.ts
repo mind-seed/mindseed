@@ -6,11 +6,11 @@ import { PostLike } from "./entities/post-like.entity";
 import { Attachment } from "../attachment/entities/attachment.entity";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import { PostNotFoundError } from "./post.errors";
-import { InvalidCursorError } from "src/common/errors/pagination.errors";
 import {
   CursorPaginationOptions,
   CursorPaginationResult,
 } from "src/common/helpers/pagination";
+import { executeCursorPagination } from "src/common/helpers/cursor";
 
 /* shared types */
 
@@ -28,10 +28,9 @@ export type AttachmentToUrlMap = Record<number, string>;
 
 export type ListPostsOrderBy = "createdAt";
 
-export type ListPostsPaginationOptions =
-  CursorPaginationOptions<ListPostsOrderBy> & {
-    category?: PostCategory;
-  };
+export type ListPostsOptions = CursorPaginationOptions<ListPostsOrderBy> & {
+  category?: PostCategory;
+};
 
 export type ListPostsResult = CursorPaginationResult<PostWithRelations> & {
   attachmentToUrl: AttachmentToUrlMap;
@@ -44,44 +43,14 @@ export type GetPostResult = {
   attachmentToUrl: AttachmentToUrlMap;
 };
 
-type CursorPayload = {
-  category: PostCategory | null;
-  orderBy: ListPostsOrderBy;
-  orderDirection: "asc" | "desc";
-  cursorValue: string;
-  cursorId: number;
-};
-
-function encodeCursor(payload: CursorPayload): string {
-  return Buffer.from(JSON.stringify(payload)).toString("base64url");
-}
-
-// FIXME: structural validation for cursor value
-function decodeCursor(cursor: string): CursorPayload {
-  try {
-    return JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
-  } catch {
-    throw new InvalidCursorError();
-  }
-}
-
-// 2026-03-25 code smell....
-const orderByMap: Record<
-  ListPostsOrderBy,
-  {
-    path: string;
-    column: string;
-    cast: string;
-    getValue: (post: Post) => string;
-  }
-> = {
+const orderByMap = {
   createdAt: {
-    path: "post.createdAt",
-    column: "extract(epoch FROM post.createdAt)::int",
-    cast: "extract(epoch FROM :cursorValue::timestamp)::int",
-    getValue: (post) => post.createdAt.toString(),
+    sqlPath: "post.createdAt",
+    sqlCursorValue: "extract(epoch FROM post.createdAt)::int",
+    toCursorValue: (post: Post) =>
+      Math.floor(post.createdAt.epochMilliseconds / 1000),
   },
-};
+} satisfies Record<ListPostsOrderBy, object>;
 
 /**
  * controller에서 사용하기 위한 글의 조회를 담당한다.
@@ -102,29 +71,8 @@ export class PostQueryService {
    */
   async listPosts(
     userId: number,
-    {
-      limit,
-      orderBy,
-      orderDirection,
-      category,
-      cursor,
-    }: ListPostsPaginationOptions,
+    { limit, orderBy, orderDirection, category, cursor }: ListPostsOptions,
   ): Promise<ListPostsResult> {
-    const decodedCursor = cursor && decodeCursor(cursor);
-
-    if (
-      decodedCursor &&
-      (category != decodedCursor.category || // != for null-undefined checks
-        orderBy !== decodedCursor.orderBy ||
-        orderDirection !== decodedCursor.orderDirection)
-    ) {
-      throw new InvalidCursorError();
-    }
-
-    const sqlDirection = orderDirection === "asc" ? "ASC" : "DESC";
-    const cursorOp = orderDirection === "asc" ? ">" : "<";
-    const orderEntry = orderByMap[orderBy];
-
     const qb = this.postRepository
       .createQueryBuilder("post")
       .leftJoinAndSelect("post.author", "author")
@@ -134,25 +82,12 @@ export class PostQueryService {
       qb.where("post.category = :category", { category });
     }
 
-    if (decodedCursor) {
-      qb.andWhere(
-        [
-          `(${orderEntry.column}, "post"."id")`,
-          cursorOp,
-          `(${orderEntry.cast}, :cursorId::int)`,
-        ].join(""),
-        {
-          cursorValue: decodedCursor.cursorValue,
-          cursorId: decodedCursor.cursorId,
-        },
-      );
-    }
-
-    const posts = await qb
-      .orderBy(orderEntry.path, sqlDirection)
-      .addOrderBy("post.id", sqlDirection)
-      .take(limit + 1)
-      .getMany();
+    const { items: posts, nextCursor } = await executeCursorPagination(qb, {
+      cursor,
+      orderByField: orderByMap[orderBy],
+      orderDirection,
+      limit,
+    });
 
     const postIds = posts.map((p) => p.id);
     const likedPostIds = new Set(
@@ -171,26 +106,15 @@ export class PostQueryService {
     const attachments = posts.flatMap((p) => p.attachments);
     const attachmentToUrl = this.buildAttachmentToUrl(attachments);
 
-    const resultPosts = posts.slice(0, limit);
-    const lastPost = resultPosts.at(-1);
     return {
-      items: resultPosts.map((post) => ({
+      items: posts.map((post) => ({
         post,
         withUser: {
           isOwner: post.authorId === userId,
           isLiked: likedPostIds.has(post.id),
         },
       })),
-      nextCursor:
-        posts.length > limit && lastPost
-          ? encodeCursor({
-              orderBy,
-              orderDirection,
-              category: category ?? null,
-              cursorId: lastPost.id,
-              cursorValue: orderEntry.getValue(lastPost),
-            })
-          : undefined,
+      nextCursor,
       attachmentToUrl,
     };
   }

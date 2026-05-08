@@ -2,13 +2,13 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Resource, ResourceCategory } from "./entities/resource.entity";
-import { InvalidCursorError } from "src/common/errors/pagination.errors";
 import {
   CursorPaginationOptions,
   CursorPaginationResult,
   OffsetPaginationOptions,
   OffsetPaginationResult,
 } from "src/common/helpers/pagination";
+import { executeCursorPagination } from "src/common/helpers/cursor";
 
 export type ListResourcesOrderBy = "createdAt";
 
@@ -26,42 +26,14 @@ export type ListResourcesWithCursorOptions =
 
 export type ListResourcesWithCursorResult = CursorPaginationResult<Resource>;
 
-type CursorPayload = {
-  category: ResourceCategory | null;
-  orderBy: ListResourcesOrderBy;
-  orderDirection: "asc" | "desc";
-  cursorValue: string;
-  cursorId: number;
-};
-
-function encodeCursor(payload: CursorPayload): string {
-  return Buffer.from(JSON.stringify(payload)).toString("base64url");
-}
-
-function decodeCursor(cursor: string): CursorPayload {
-  try {
-    return JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
-  } catch {
-    throw new InvalidCursorError();
-  }
-}
-
-const orderByMap: Record<
-  ListResourcesOrderBy,
-  {
-    path: string;
-    column: string;
-    cast: string;
-    getValue: (resource: Resource) => string;
-  }
-> = {
+const orderByMap = {
   createdAt: {
-    path: "resource.createdAt",
-    column: "extract(epoch FROM resource.createdAt)::int",
-    cast: "extract(epoch FROM :cursorValue::timestamp)::int",
-    getValue: (resource) => resource.createdAt.toString(),
+    sqlPath: "resource.createdAt",
+    sqlCursorValue: "extract(epoch FROM resource.createdAt)::int",
+    toCursorValue: (resource: Resource) =>
+      Math.floor(resource.createdAt.epochMilliseconds / 1000),
   },
-};
+} satisfies Record<ListResourcesOrderBy, object>;
 
 /**
  * AdminResourceController에서 사용하기 위한 resource의 조회를 담당한다.
@@ -93,7 +65,7 @@ export class ResourceQueryService {
     const sqlDirection = orderDirection === "asc" ? "ASC" : "DESC";
 
     const items = await qb
-      .orderBy(orderEntry.path, sqlDirection)
+      .orderBy(orderEntry.sqlPath, sqlDirection)
       .addOrderBy("resource.id", sqlDirection)
       .skip(offset)
       .take(limit + 1)
@@ -117,62 +89,17 @@ export class ResourceQueryService {
     orderBy,
     orderDirection,
   }: ListResourcesWithCursorOptions): Promise<ListResourcesWithCursorResult> {
-    const decodedCursor = cursor && decodeCursor(cursor);
-
-    if (
-      decodedCursor &&
-      ((category ?? null) !== decodedCursor.category ||
-        orderBy !== decodedCursor.orderBy ||
-        orderDirection !== decodedCursor.orderDirection)
-    ) {
-      throw new InvalidCursorError();
-    }
-
     const qb = this.resourceRepository.createQueryBuilder("resource");
 
     if (category) {
       qb.where("resource.category = :category", { category });
     }
 
-    const cursorOp = orderDirection === "asc" ? ">" : "<";
-    const orderEntry = orderByMap[orderBy];
-
-    if (decodedCursor) {
-      qb.andWhere(
-        [
-          `(${orderEntry.column}, "resource"."id")`,
-          cursorOp,
-          `(${orderEntry.cast}, :cursorId::int)`,
-        ].join(""),
-        {
-          cursorValue: decodedCursor.cursorValue,
-          cursorId: decodedCursor.cursorId,
-        },
-      );
-    }
-
-    const sqlDirection = orderDirection === "asc" ? "ASC" : "DESC";
-
-    const items = await qb
-      .orderBy(orderEntry.path, sqlDirection)
-      .addOrderBy("resource.id", sqlDirection)
-      .take(limit + 1)
-      .getMany();
-
-    const resultItems = items.slice(0, limit);
-    const lastItem = resultItems.at(-1);
-    return {
-      items: resultItems,
-      nextCursor:
-        items.length > limit && lastItem
-          ? encodeCursor({
-              orderBy,
-              orderDirection,
-              category: category ?? null,
-              cursorId: lastItem.id,
-              cursorValue: orderEntry.getValue(lastItem),
-            })
-          : undefined,
-    };
+    return executeCursorPagination(qb, {
+      cursor,
+      orderByField: orderByMap[orderBy],
+      orderDirection,
+      limit,
+    });
   }
 }

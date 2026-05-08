@@ -14,6 +14,7 @@ import { Mission } from "src/mission/entities/mission.entity";
 import { MissionAssignment } from "src/mission/entities/mission-assignment.entity";
 import { DiagnosisEntry } from "src/diagnosis/entities/diagnosis-entry.entity";
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
+import { CounselEntry } from "src/counsel/entities/counsel-entry.entity";
 
 @Module({
   imports: [
@@ -28,16 +29,17 @@ import { SnakeNamingStrategy } from "typeorm-naming-strategies";
         database: db.database,
         entities: [
           Attachment,
-          User,
-          UserProfile,
-          RefreshToken,
+          CounselEntry,
+          DiagnosisEntry,
+          Mission,
+          MissionAssignment,
           Post,
           PostComment,
           PostLike,
+          RefreshToken,
           Resource,
-          Mission,
-          MissionAssignment,
-          DiagnosisEntry,
+          User,
+          UserProfile,
         ],
         synchronize: process.env.NODE_ENV !== "production",
         namingStrategy: new SnakeNamingStrategy(),
