@@ -5,7 +5,7 @@ import { ObjectLiteral, SelectQueryBuilder } from "typeorm";
 import { InvalidCursorError } from "../errors/pagination.errors";
 
 const cursorPayloadSchema = z.object({
-  value: z.string(),
+  value: z.number(),
   id: z.number(),
 });
 
@@ -79,7 +79,7 @@ export async function executeCursorPagination<T extends ObjectLiteral>(
       items.length > limit && lastItem
         ? cursorCodec.encode({
             id: lastItem.id,
-            value: String(orderByField.toCursorValue(lastItem)),
+            value: orderByField.toCursorValue(lastItem),
           })
         : undefined,
   };
