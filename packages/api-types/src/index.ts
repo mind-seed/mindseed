@@ -18,7 +18,9 @@ export * from "./auth/refresh-tokens";
 export * from "./auth/send-mail";
 export * from "./auth/verify-mail";
 
-export * from "./users/current";
+export * from "./users/get-current";
+export * from "./users/update-current-profile";
+export * from "./users/delete-current";
 
 export * from "./attachments/begin";
 export * from "./attachments/confirm";
