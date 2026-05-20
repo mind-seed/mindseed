@@ -147,6 +147,44 @@ describe("CommentService", () => {
       // Then: throws handled error
       await expect(result).rejects.toThrow(PostNotFoundError);
     });
+
+    it("탈퇴한 owner의 글 처리 (soft-deleted)", async () => {
+      // Given: 탈퇴한 owner의 글인 경우
+      const postOwner = await saveTestUser();
+      const post = await saveTestPost(postOwner.id);
+      await userRepository.softDelete({ id: postOwner.id });
+
+      // When: 댓글 생성 시도
+      const user = await saveTestUser();
+      const result = commentService.createComment({
+        postId: post.id,
+        userId: user.id,
+        content: "hello",
+        nickname: "nick",
+      });
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("탈퇴한 owner의 글 처리 (null authorId)", async () => {
+      // Given: hard-deleted owner의 글인 경우 (authorId = null)
+      const postOwner = await saveTestUser();
+      const post = await saveTestPost(postOwner.id);
+      await postRepository.update({ id: post.id }, { authorId: null });
+
+      // When: 댓글 생성 시도
+      const user = await saveTestUser();
+      const result = commentService.createComment({
+        postId: post.id,
+        userId: user.id,
+        content: "hello",
+        nickname: "nick",
+      });
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
   });
 
   describe("updateComment", () => {
@@ -186,6 +224,46 @@ describe("CommentService", () => {
         commentId: 0,
         userId: user.id,
         content: newContent,
+      });
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("탈퇴한 owner의 글 처리 (soft-deleted)", async () => {
+      // Given: 탈퇴한 owner의 글인 경우
+      const postOwner = await saveTestUser();
+      const post = await saveTestPost(postOwner.id);
+      await userRepository.softDelete({ id: postOwner.id });
+
+      // When: 댓글 업데이트 시도
+      const user = await saveTestUser();
+      const comment = await saveTestComment(post.id, user.id);
+      const result = commentService.updateComment({
+        postId: post.id,
+        commentId: comment.id,
+        userId: user.id,
+        content: "new content",
+      });
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("탈퇴한 owner의 글 처리 (null authorId)", async () => {
+      // Given: hard-deleted owner의 글인 경우 (authorId = null)
+      const postOwner = await saveTestUser();
+      const post = await saveTestPost(postOwner.id);
+      await postRepository.update({ id: post.id }, { authorId: null });
+
+      // When: 댓글 업데이트 시도
+      const user = await saveTestUser();
+      const comment = await saveTestComment(post.id, user.id);
+      const result = commentService.updateComment({
+        postId: post.id,
+        commentId: comment.id,
+        userId: user.id,
+        content: "new content",
       });
 
       // Then: throws handled error
@@ -254,6 +332,48 @@ describe("CommentService", () => {
       await expect(result).rejects.toThrow(CommentNotFoundError);
     });
 
+    it("탈퇴한 댓글 작성자 처리 (soft-deleted)", async () => {
+      // Given: 탈퇴한 댓글 작성자인 경우
+      const postOwner = await saveTestUser();
+      const commentAuthor = await saveTestUser();
+      const post = await saveTestPost(postOwner.id);
+      const comment = await saveTestComment(post.id, commentAuthor.id);
+      await userRepository.softDelete({ id: commentAuthor.id });
+
+      // When: 다른 사용자가 댓글 업데이트 시도
+      const otherUser = await saveTestUser();
+      const result = commentService.updateComment({
+        postId: post.id,
+        commentId: comment.id,
+        userId: otherUser.id,
+        content: "new content",
+      });
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(CommentNotFoundError);
+    });
+
+    it("탈퇴한 댓글 작성자 처리 (null authorId)", async () => {
+      // Given: hard-deleted 댓글 작성자인 경우 (authorId = null)
+      const postOwner = await saveTestUser();
+      const commentAuthor = await saveTestUser();
+      const post = await saveTestPost(postOwner.id);
+      const comment = await saveTestComment(post.id, commentAuthor.id);
+      await commentRepository.update({ id: comment.id }, { authorId: null });
+
+      // When: 다른 사용자가 댓글 업데이트 시도
+      const otherUser = await saveTestUser();
+      const result = commentService.updateComment({
+        postId: post.id,
+        commentId: comment.id,
+        userId: otherUser.id,
+        content: "new content",
+      });
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(CommentNotFoundError);
+    });
+
     it("댓글 작성자가 아닌 경우 처리", async () => {
       // Given: 댓글이 존재하지만, 사용자가 댓글 작성자가 아닌 경우
       const user = await saveTestUser();
@@ -312,6 +432,44 @@ describe("CommentService", () => {
       await expect(result).rejects.toThrow(PostNotFoundError);
     });
 
+    it("탈퇴한 owner의 글 처리 (soft-deleted)", async () => {
+      // Given: 탈퇴한 owner의 글인 경우
+      const postOwner = await saveTestUser();
+      const post = await saveTestPost(postOwner.id);
+      await userRepository.softDelete({ id: postOwner.id });
+
+      // When: 다른 사용자가 댓글 삭제 시도
+      const otherUser = await saveTestUser();
+      const comment = await saveTestComment(post.id, otherUser.id);
+      const result = commentService.deleteComment(
+        post.id,
+        comment.id,
+        otherUser.id,
+      );
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("탈퇴한 owner의 글 처리 (null authorId)", async () => {
+      // Given: hard-deleted owner의 글인 경우 (authorId = null)
+      const postOwner = await saveTestUser();
+      const post = await saveTestPost(postOwner.id);
+      await postRepository.update({ id: post.id }, { authorId: null });
+
+      // When: 다른 사용자가 댓글 삭제 시도
+      const otherUser = await saveTestUser();
+      const comment = await saveTestComment(post.id, otherUser.id);
+      const result = commentService.deleteComment(
+        post.id,
+        comment.id,
+        otherUser.id,
+      );
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
     it("DB에 존재하지 않는 댓글 처리", async () => {
       // Given: 글은 존재하지만 댓글이 존재하지 않는 경우
       const user = await saveTestUser();
@@ -355,6 +513,46 @@ describe("CommentService", () => {
 
       // When: 댓글 삭제 시도
       const result = commentService.deleteComment(post.id, comment.id, user.id);
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(CommentNotFoundError);
+    });
+
+    it("탈퇴한 댓글 작성자 처리 (soft-deleted)", async () => {
+      // Given: 탈퇴한 댓글 작성자인 경우
+      const postOwner = await saveTestUser();
+      const commentAuthor = await saveTestUser();
+      const post = await saveTestPost(postOwner.id);
+      const comment = await saveTestComment(post.id, commentAuthor.id);
+      await userRepository.softDelete({ id: commentAuthor.id });
+
+      // When: 다른 사용자가 댓글 삭제 시도
+      const otherUser = await saveTestUser();
+      const result = commentService.deleteComment(
+        post.id,
+        comment.id,
+        otherUser.id,
+      );
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(CommentNotFoundError);
+    });
+
+    it("탈퇴한 댓글 작성자 처리 (null authorId)", async () => {
+      // Given: hard-deleted 댓글 작성자인 경우 (authorId = null)
+      const postOwner = await saveTestUser();
+      const commentAuthor = await saveTestUser();
+      const post = await saveTestPost(postOwner.id);
+      const comment = await saveTestComment(post.id, commentAuthor.id);
+      await commentRepository.update({ id: comment.id }, { authorId: null });
+
+      // When: 다른 사용자가 댓글 삭제 시도
+      const otherUser = await saveTestUser();
+      const result = commentService.deleteComment(
+        post.id,
+        comment.id,
+        otherUser.id,
+      );
 
       // Then: throws handled error
       await expect(result).rejects.toThrow(CommentNotFoundError);

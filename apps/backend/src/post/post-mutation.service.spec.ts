@@ -264,6 +264,46 @@ describe("PostMutationService", () => {
       await expect(result).rejects.toThrow(PostNotFoundError);
     });
 
+    it("탈퇴한 글 owner 처리 (soft-deleted)", async () => {
+      // Given: 탈퇴된 owner의 글인 경우
+      const author = await saveTestUser();
+      const post = await saveTestPost(author.id);
+      await userRepository.softDelete({ id: author.id });
+
+      // When: 다른 사용자가 글 업데이트 시도
+      const otherUser = await saveTestUser();
+      const result = postMutationService.updatePost({
+        userId: otherUser.id,
+        postId: post.id,
+        content: "content",
+        category: PostCategory.DUMMY1,
+        attachmentIds: [],
+      });
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("탈퇴한 글 owner 처리 (null authorId)", async () => {
+      // Given: hard-deleted owner의 글인 경우
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      await postRepository.update({ id: post.id }, { authorId: null });
+
+      // When: 다른 사용자가 글 업데이트 시도
+      const otherUser = await saveTestUser();
+      const result = postMutationService.updatePost({
+        userId: otherUser.id,
+        postId: post.id,
+        content: "content",
+        category: PostCategory.DUMMY1,
+        attachmentIds: [],
+      });
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
     it("글 owner가 아닌 경우 처리", async () => {
       // Given: 글이 존재하지만, owner가 일치하지 않는 경우
       const author = await saveTestUser();
@@ -442,6 +482,42 @@ describe("PostMutationService", () => {
       // Then: throws handled error
       await expect(result).rejects.toThrow(PostNotFoundError);
     });
+
+    it("탈퇴한 글 owner 처리 (soft-deleted)", async () => {
+      // Given: 탈퇴된 owner의 글인 경우
+      const author = await saveTestUser();
+      const post = await saveTestPost(author.id);
+      await userRepository.softDelete({ id: author.id });
+
+      // When: 다른 사용자가 좋아요 시도
+      const otherUser = await saveTestUser();
+      const result = postMutationService.setPostLike(
+        otherUser.id,
+        post.id,
+        true,
+      );
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("탈퇴한 글 owner 처리 (null authorId)", async () => {
+      // Given: hard-deleted owner의 글인 경우
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      await postRepository.update({ id: post.id }, { authorId: null });
+
+      // When: 다른 사용자가 좋아요 시도
+      const otherUser = await saveTestUser();
+      const result = postMutationService.setPostLike(
+        otherUser.id,
+        post.id,
+        true,
+      );
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
   });
 
   describe("deletePost", () => {
@@ -469,6 +545,34 @@ describe("PostMutationService", () => {
 
       // When: 글 삭제 시도
       const result = postMutationService.deletePost(user.id, 0);
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("탈퇴한 글 owner 처리 (soft-deleted)", async () => {
+      // Given: 탈퇴된 owner의 글인 경우
+      const author = await saveTestUser();
+      const post = await saveTestPost(author.id);
+      await userRepository.softDelete({ id: author.id });
+
+      // When: 다른 사용자가 글 삭제 시도
+      const otherUser = await saveTestUser();
+      const result = postMutationService.deletePost(otherUser.id, post.id);
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("탈퇴한 글 owner 처리 (null authorId)", async () => {
+      // Given: hard-deleted owner의 글인 경우
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      await postRepository.update({ id: post.id }, { authorId: null });
+
+      // When: 다른 사용자가 글 삭제 시도
+      const otherUser = await saveTestUser();
+      const result = postMutationService.deletePost(otherUser.id, post.id);
 
       // Then: throws handled error
       await expect(result).rejects.toThrow(PostNotFoundError);

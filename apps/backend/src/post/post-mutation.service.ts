@@ -85,10 +85,10 @@ export class PostMutationService {
 
     const post = await this.postRepository.findOne({
       where: { id: postId },
-      relations: { attachments: true },
+      relations: { attachments: true, author: true },
     });
 
-    if (!post) {
+    if (!post || !post.isActive()) {
       throw new PostNotFoundError();
     }
 
@@ -133,11 +133,12 @@ export class PostMutationService {
     postId: number,
     liked: boolean,
   ): Promise<void> {
-    const postExists = await this.postRepository.existsBy({
-      id: postId,
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+      relations: { author: true },
     });
 
-    if (!postExists) {
+    if (!post || !post.isActive()) {
       throw new PostNotFoundError();
     }
 
@@ -178,10 +179,10 @@ export class PostMutationService {
   async deletePost(userId: number, postId: number): Promise<void> {
     const post = await this.postRepository.findOne({
       where: { id: postId },
-      relations: { attachments: true },
+      relations: { attachments: true, author: true },
     });
 
-    if (!post) {
+    if (!post || !post.isActive()) {
       throw new PostNotFoundError();
     }
 
