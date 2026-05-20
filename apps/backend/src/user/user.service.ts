@@ -70,4 +70,8 @@ export class UserService {
       options,
     );
   }
+
+  async softDelete(userId: number): Promise<void> {
+    await this.userRepository.softDelete({ id: userId });
+  }
 }
