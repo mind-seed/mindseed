@@ -37,12 +37,12 @@ export class PostComment {
   @JoinColumn()
   post: Post;
 
-  @Column()
-  authorId: number;
+  @Column({ nullable: true })
+  authorId: number | null;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn()
-  author: User;
+  author: User | null;
 
   @CreateTimestampColumn()
   createdAt: Temporal.Instant;
@@ -56,7 +56,7 @@ export class PostComment {
   @Column({ name: "deleted_by", nullable: true })
   deletedById: number | null;
 
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => User, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn({ name: "deleted_by" })
   deletedBy: User | null;
 
@@ -66,4 +66,12 @@ export class PostComment {
     nullable: true,
   })
   deletionType: DeletionType | null;
+
+  /**
+   * active 상태, 즉 일반 사용자에게 보여지는 댓글인지 여부를 반환한다.
+   * constraints: author relation이 로드되어야 한다.
+   */
+  isActive(): boolean {
+    return this.deletedAt === null && this.author !== null;
+  }
 }

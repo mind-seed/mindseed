@@ -35,12 +35,12 @@ export class Post {
   @Column()
   nickname: string;
 
-  @Column()
-  authorId: number;
+  @Column({ nullable: true })
+  authorId: number | null;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn()
-  author: User;
+  author: User | null;
 
   @CreateTimestampColumn()
   createdAt: Temporal.Instant;
@@ -56,4 +56,12 @@ export class Post {
 
   @Column({ default: 0 })
   likeCount: number;
+
+  /**
+   * active 상태, 즉 일반 사용자에게 보여지는 글인지 여부를 반환한다.
+   * constraints: author relation이 로드되어야 한다.
+   */
+  isActive(): boolean {
+    return this.author !== null;
+  }
 }
