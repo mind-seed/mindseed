@@ -4,6 +4,7 @@ import { In, Repository } from "typeorm";
 import { Post, PostCategory } from "./entities/post.entity";
 import { PostLike } from "./entities/post-like.entity";
 import { Attachment } from "../attachment/entities/attachment.entity";
+import { PostComment } from "src/comment/entities/post-comment.entity";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import { PostNotFoundError } from "./post.errors";
 import {
@@ -38,9 +39,16 @@ export type ListPostsResult = CursorPaginationResult<PostWithRelations> & {
 
 /* getPost */
 
-export type GetPostResult = {
-  entry: PostWithRelations;
+export type CommentType = "active" | "deleted" | "authorDeleted";
+
+export type PostCommentWithType = {
+  comment: PostComment;
+  type: CommentType;
+};
+
+export type GetPostResult = PostWithRelations & {
   attachmentToUrl: AttachmentToUrlMap;
+  comments: PostCommentWithType[];
 };
 
 const orderByMap = {
@@ -126,7 +134,11 @@ export class PostQueryService {
   async getPost(userId: number, postId: number): Promise<GetPostResult> {
     const post = await this.postRepository.findOne({
       where: { id: postId },
-      relations: { author: true, attachments: true, comments: true },
+      relations: {
+        author: true,
+        attachments: true,
+        comments: { author: true },
+      },
     });
     if (!post) {
       throw new PostNotFoundError();
@@ -140,15 +152,29 @@ export class PostQueryService {
     const attachmentToUrl = this.buildAttachmentToUrl(post.attachments);
 
     return {
-      entry: {
-        post,
-        withUser: {
-          isOwner: post.authorId === userId,
-          isLiked,
-        },
+      post,
+      withUser: {
+        isOwner: post.authorId === userId,
+        isLiked,
       },
       attachmentToUrl,
+      comments: post.comments.map((comment) => ({
+        comment,
+        type: this.computeCommentType(comment),
+      })),
     };
+  }
+
+  private computeCommentType(comment: PostComment): CommentType {
+    if (comment.deletedAt) {
+      return "deleted";
+    }
+
+    if (!comment.author) {
+      return "authorDeleted";
+    }
+
+    return "active";
   }
 
   private buildAttachmentToUrl(attachments: Attachment[]): AttachmentToUrlMap {
