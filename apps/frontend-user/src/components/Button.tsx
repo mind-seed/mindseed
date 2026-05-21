@@ -4,19 +4,31 @@ import { TEXT_STYLE } from "../style/typography";
 
 type ButtonProps = {
   variant: "contained" | "outlined";
-  showIcon?: boolean;
   size: "normal" | "mini";
+  showIcon?: boolean;
+  disabled: boolean;
   label: string;
 };
 
-export const Button = ({ variant, showIcon, size, label }: ButtonProps) => {
+export const Button = ({
+  variant,
+  size,
+  showIcon,
+  disabled,
+  label,
+}: ButtonProps) => {
   return (
-    <StyledButton $variant={variant} $showIcon={showIcon} $size={size}>
+    <StyledButton
+      $variant={variant}
+      $size={size}
+      $showIcon={showIcon}
+      disabled={disabled}
+    >
       {label}
       {showIcon && (
         <svg
-          width="16"
-          height="16"
+          width="1em"
+          height="1em"
           viewBox="0 0 16 16"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
@@ -41,18 +53,18 @@ const StyledButton = styled.button<{
 }>`
   display: flex;
   justify-content: center;
-  gap: ${({ $showIcon }) => $showIcon && `10px`};
-  font-size: ${TEXT_STYLE.title.ti};
+  gap: ${({ $showIcon }) => $showIcon && `0.625rem`};
+  ${TEXT_STYLE.title.ti};
   cursor: pointer;
 
   ${({ $size }) =>
     $size === "normal"
       ? css`
-          padding: 16px 20px;
+          padding: 1rem 1.25rem;
           border-radius: 12px;
         `
       : css`
-          padding: 8px 10px;
+          padding: 0.5rem 0.625rem;
           border-radius: 6px;
         `}
 
