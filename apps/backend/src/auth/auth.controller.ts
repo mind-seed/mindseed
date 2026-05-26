@@ -10,6 +10,7 @@ import {
   VerifyMailRequestDtoSchema,
   CompleteSignupRequestDtoSchema,
   LoginRequestDtoSchema,
+  LogoutResponseDtoSchema,
   SendMailResponseDtoSchema,
   VerifyMailResponseDtoSchema,
   CompleteSignupResponseDtoSchema,
@@ -25,12 +26,19 @@ import type {
   CompleteSignupSuccessResponseDto,
   LoginRequestDto,
   LoginSuccessResponseDto,
+  LogoutSuccessResponseDto,
   RefreshTokensSuccessResponseDto,
 } from "@mindseed/api-types";
 import { AuthService } from "./auth.service";
 import { ZodBody } from "src/common/pipes/zod-validation.decorator";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
-import { UnAuthenticated } from "./decorators/auth.decorators";
+import {
+  Authenticated,
+  CurrentUser,
+  UnAuthenticated,
+  UserOnly,
+} from "./decorators/auth.decorators";
+import { User } from "src/user/entities/user.entity";
 
 @Controller("/auth")
 export class AuthController {
@@ -104,5 +112,14 @@ export class AuthController {
     const refreshToken = authorization?.replace(/^Bearer\s+/i, "");
     const tokens = await this.authService.refreshTokens(refreshToken);
     return { success: true, data: tokens };
+  }
+
+  @Post("/logout")
+  @HttpCode(HttpStatus.OK)
+  @Authenticated()
+  @ZodEncodeResponse(LogoutResponseDtoSchema)
+  async logout(@CurrentUser() user: User): Promise<LogoutSuccessResponseDto> {
+    await this.authService.logout(user.id);
+    return { success: true, data: null };
   }
 }

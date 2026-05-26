@@ -65,6 +65,13 @@ export class RefreshTokenService {
     return refreshToken.token;
   }
 
+  /*
+   * userId에 대한 모든 refresh token을 삭제한다.
+   */
+  async revoke(userId: number): Promise<void> {
+    await this.refreshTokenRepository.delete({ userId });
+  }
+
   @Cron(CronExpression.EVERY_HOUR)
   async deleteExpired(): Promise<void> {
     await this.refreshTokenRepository.delete({

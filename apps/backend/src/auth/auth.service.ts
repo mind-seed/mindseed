@@ -141,6 +141,13 @@ export class AuthService {
   }
 
   /**
+   * userId에 해당하는 사용자의 로그아웃을 처리한다.
+   */
+  async logout(userId: number): Promise<void> {
+    await this.refreshTokenService.revoke(userId);
+  }
+
+  /**
    * refreshToken을 이용하여 새로운 access token 및 refresh token을 발급한다.
    * @returns access token 및 refresh token
    */
