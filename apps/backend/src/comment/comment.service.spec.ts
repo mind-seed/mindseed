@@ -166,25 +166,6 @@ describe("CommentService", () => {
       // Then: throws handled error
       await expect(result).rejects.toThrow(PostNotFoundError);
     });
-
-    it("탈퇴한 owner의 글 처리 (null authorId)", async () => {
-      // Given: hard-deleted owner의 글인 경우 (authorId = null)
-      const postOwner = await saveTestUser();
-      const post = await saveTestPost(postOwner.id);
-      await postRepository.update({ id: post.id }, { authorId: null });
-
-      // When: 댓글 생성 시도
-      const user = await saveTestUser();
-      const result = commentService.createComment({
-        postId: post.id,
-        userId: user.id,
-        content: "hello",
-        nickname: "nick",
-      });
-
-      // Then: throws handled error
-      await expect(result).rejects.toThrow(PostNotFoundError);
-    });
   });
 
   describe("updateComment", () => {
@@ -235,26 +216,6 @@ describe("CommentService", () => {
       const postOwner = await saveTestUser();
       const post = await saveTestPost(postOwner.id);
       await userRepository.softDelete({ id: postOwner.id });
-
-      // When: 댓글 업데이트 시도
-      const user = await saveTestUser();
-      const comment = await saveTestComment(post.id, user.id);
-      const result = commentService.updateComment({
-        postId: post.id,
-        commentId: comment.id,
-        userId: user.id,
-        content: "new content",
-      });
-
-      // Then: throws handled error
-      await expect(result).rejects.toThrow(PostNotFoundError);
-    });
-
-    it("탈퇴한 owner의 글 처리 (null authorId)", async () => {
-      // Given: hard-deleted owner의 글인 경우 (authorId = null)
-      const postOwner = await saveTestUser();
-      const post = await saveTestPost(postOwner.id);
-      await postRepository.update({ id: post.id }, { authorId: null });
 
       // When: 댓글 업데이트 시도
       const user = await saveTestUser();
@@ -437,25 +398,6 @@ describe("CommentService", () => {
       const postOwner = await saveTestUser();
       const post = await saveTestPost(postOwner.id);
       await userRepository.softDelete({ id: postOwner.id });
-
-      // When: 다른 사용자가 댓글 삭제 시도
-      const otherUser = await saveTestUser();
-      const comment = await saveTestComment(post.id, otherUser.id);
-      const result = commentService.deleteComment(
-        post.id,
-        comment.id,
-        otherUser.id,
-      );
-
-      // Then: throws handled error
-      await expect(result).rejects.toThrow(PostNotFoundError);
-    });
-
-    it("탈퇴한 owner의 글 처리 (null authorId)", async () => {
-      // Given: hard-deleted owner의 글인 경우 (authorId = null)
-      const postOwner = await saveTestUser();
-      const post = await saveTestPost(postOwner.id);
-      await postRepository.update({ id: post.id }, { authorId: null });
 
       // When: 다른 사용자가 댓글 삭제 시도
       const otherUser = await saveTestUser();

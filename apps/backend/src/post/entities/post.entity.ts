@@ -35,12 +35,12 @@ export class Post {
   @Column()
   nickname: string;
 
-  @Column({ nullable: true })
-  authorId: number | null;
+  @Column()
+  authorId: number;
 
-  @ManyToOne(() => User, { nullable: true, onDelete: "SET NULL" })
+  @ManyToOne(() => User, { onDelete: "CASCADE" })
   @JoinColumn()
-  author: User | null;
+  author: User;
 
   @CreateTimestampColumn()
   createdAt: Temporal.Instant;
