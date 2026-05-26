@@ -83,7 +83,7 @@ export class PostQueryService {
   ): Promise<ListPostsResult> {
     const qb = this.postRepository
       .createQueryBuilder("post")
-      .leftJoinAndSelect("post.author", "author")
+      .innerJoinAndSelect("post.author", "author")
       .leftJoinAndSelect("post.attachments", "attachment");
 
     if (category) {
@@ -140,7 +140,8 @@ export class PostQueryService {
         comments: { author: true },
       },
     });
-    if (!post) {
+
+    if (!post || !post.isActive()) {
       throw new PostNotFoundError();
     }
 
