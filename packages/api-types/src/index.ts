@@ -14,6 +14,7 @@ export * from "./common/error-codes";
 
 export * from "./auth/complete-signup";
 export * from "./auth/login";
+export * from "./auth/logout";
 export * from "./auth/refresh-tokens";
 export * from "./auth/send-mail";
 export * from "./auth/verify-mail";
