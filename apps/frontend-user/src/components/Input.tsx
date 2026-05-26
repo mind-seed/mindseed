@@ -4,17 +4,27 @@ import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
 
 type InputProps = {
+  name: string;
+  value: string;
   status: "normal" | "error";
-  iconOn: boolean;
   placeholder: string;
+  disabled?: boolean;
   description?: string;
+  adornmentType?: "icon" | "text" | "none";
+  adornmentText?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 export const Input = ({
+  name,
+  value,
   status,
-  iconOn,
   placeholder,
+  disabled = false,
   description,
+  adornmentType = "none",
+  adornmentText,
+  onChange,
 }: InputProps) => {
   const [isVisible, setIsVisible] = useState(true);
   const handleClick = () => {
@@ -23,12 +33,16 @@ export const Input = ({
 
   return (
     <InputContainer>
-      <InputWrapper $status={status}>
+      <InputWrapper $status={status} $disabled={disabled}>
         <StyledInput
           type={isVisible ? "text" : "password"}
+          name={name}
+          value={value}
           placeholder={placeholder}
+          disabled={disabled}
+          onChange={onChange}
         />
-        {iconOn && (
+        {adornmentType === "icon" && (
           <InputButton onClick={handleClick}>
             <svg
               width="100%"
@@ -61,6 +75,10 @@ export const Input = ({
             </svg>
           </InputButton>
         )}
+
+        {adornmentType === "text" && adornmentText && (
+          <InputText>{adornmentText}</InputText>
+        )}
       </InputWrapper>
       {description?.trim() && (
         <InputMessage $status={status}>{description}</InputMessage>
@@ -70,6 +88,7 @@ export const Input = ({
 };
 
 const InputContainer = styled.div`
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -78,17 +97,20 @@ const InputContainer = styled.div`
 
 const InputWrapper = styled.div<{
   $status: "normal" | "error";
+  $disabled?: boolean;
 }>`
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.25rem;
   border-radius: 12px;
 
-  ${({ $status }) =>
+  ${({ $status, $disabled }) =>
     $status === "normal"
       ? css`
           border: 1px ${COLORS.gray.gray400} solid;
+          background: ${$disabled ? COLORS.gray.gray150 : "none"};
         `
       : css`
           border: 1px ${COLORS.state.error} solid;
@@ -117,6 +139,11 @@ const InputButton = styled.button`
   border: none;
   background: none;
   cursor: pointer;
+`;
+
+const InputText = styled.span`
+  color: ${COLORS.gray.gray400};
+  ${TEXT_STYLE.label.md};
 `;
 
 const InputMessage = styled.span<{

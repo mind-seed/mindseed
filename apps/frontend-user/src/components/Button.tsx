@@ -5,9 +5,11 @@ import { TEXT_STYLE } from "../style/typography";
 type ButtonProps = {
   variant: "contained" | "outlined";
   size: "normal" | "mini";
-  showIcon?: boolean;
-  disabled: boolean;
   label: string;
+  type?: "button" | "submit";
+  showIcon?: boolean;
+  disabled?: boolean;
+  onClick?: () => void;
 };
 
 export const Button = ({
@@ -15,14 +17,18 @@ export const Button = ({
   size,
   showIcon,
   disabled,
+  type,
   label,
+  onClick,
 }: ButtonProps) => {
   return (
     <StyledButton
+      type={type}
+      disabled={disabled}
+      onClick={onClick}
       $variant={variant}
       $size={size}
       $showIcon={showIcon}
-      disabled={disabled}
     >
       {label}
       {showIcon && (
