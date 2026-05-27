@@ -71,6 +71,13 @@ export class UserService {
     );
   }
 
+  async updatePassword(userId: number, hashedPassword: string): Promise<void> {
+    await this.userRepository.update(
+      { id: userId },
+      { password: hashedPassword },
+    );
+  }
+
   async softDelete(userId: number): Promise<void> {
     await this.userRepository.softDelete({ id: userId });
   }

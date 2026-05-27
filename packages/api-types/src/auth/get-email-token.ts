@@ -1,5 +1,5 @@
 /*
- POST /auth/verify-mail
+ POST /auth/email/token
  */
 
 import z from "zod";
@@ -16,7 +16,7 @@ export type VerifyMailRequestDto = z.output<typeof VerifyMailRequestDtoSchema>;
 
 export const VerifyMailResponseDtoSchema = responseDtoSchema(
   z.object({
-    signUpToken: z.string(),
+    token: z.string(),
   }),
   z.enum([AuthErrorCode.INVALID_VERIFICATION_CODE]),
 );

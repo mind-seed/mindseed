@@ -8,8 +8,10 @@ import IORedisMock from "ioredis-mock";
 import { AuthService } from "./auth.service";
 import {
   EmailAlreadyExistsError,
+  EmailNotExistsError,
   EmailRateLimitedError,
   InvalidCredentialsError,
+  InvalidPasswordResetTokenError,
   InvalidRefreshTokenError,
   InvalidSignUpTokenError,
   InvalidVerificationCodeError,
@@ -26,7 +28,7 @@ import { EmailRateLimitStore } from "./email-rate-limit/email-rate-limit.store";
 import { REDIS_CLIENT } from "../redis/redis.module";
 import { User, UserRole } from "../user/entities/user.entity";
 import { UserProfile } from "../user/entities/user-profile.entity";
-import { SignUpTokenService } from "./sign-up-token/sign-up-token.service";
+import { EmailTokenService } from "./email-token/email-token.service";
 import {
   AccessTokenPayload,
   AccessTokenService,
@@ -34,6 +36,7 @@ import {
 import { RefreshTokenService } from "./refresh-token/refresh-token.service";
 import { RefreshToken } from "./refresh-token/refresh-token.entity";
 import { bcryptHash } from "./bcrypt.helper";
+import { EmailUsageType } from "./email-usage.types";
 
 // dependent 한 order
 const entities = [RefreshToken, UserProfile, User];
@@ -44,7 +47,7 @@ describe("AuthService", () => {
   let authService: AuthService;
 
   let jwtService: JwtService;
-  let signUpTokenService: SignUpTokenService;
+  let emailTokenService: EmailTokenService;
   let verificationCodeStore: VerificationCodeStore;
   let emailRateLimitService: EmailRateLimitService;
   let mailService: FakeMailService;
@@ -98,7 +101,7 @@ describe("AuthService", () => {
 
         AccessTokenService,
         RefreshTokenService,
-        SignUpTokenService,
+        EmailTokenService,
         VerificationCodeStore,
         EmailRateLimitStore,
         { provide: MailService, useValue: mailService },
@@ -116,7 +119,7 @@ describe("AuthService", () => {
     jwtService = module.get(JwtService);
     verificationCodeStore = module.get(VerificationCodeStore);
     emailRateLimitService = module.get(EmailRateLimitService);
-    signUpTokenService = module.get(SignUpTokenService);
+    emailTokenService = module.get(EmailTokenService);
     refreshTokenRepository = dataSource.getRepository(RefreshToken);
     userRepository = dataSource.getRepository(User);
     refreshTokenService = module.get(RefreshTokenService);
@@ -135,14 +138,14 @@ describe("AuthService", () => {
     await module.close();
   });
 
-  describe("sendVerificationMail", () => {
+  describe("sendSignUpVerificationMail", () => {
     it("success: 이메일 전송, 인증 코드 저장", async () => {
       // Given: 새로운 이메일인 경우
       const email = "test@example.com";
 
       // When
       await expect(
-        authService.sendVerificationMail(email),
+        authService.sendSignUpVerificationMail(email),
       ).resolves.not.toThrow();
 
       // Then: 이메일 전송, 인증 코드 저장
@@ -156,7 +159,7 @@ describe("AuthService", () => {
       await saveTestUser(email, "password");
 
       // When
-      const result = authService.sendVerificationMail(email);
+      const result = authService.sendSignUpVerificationMail(email);
 
       // Then: throws handled error, 이메일 전송 안됨, 인증 코드 저장 안됨
       await expect(result).rejects.toThrow(EmailAlreadyExistsError);
@@ -168,10 +171,15 @@ describe("AuthService", () => {
       // Given: cooldown 중인 이메일이 존재하는 경우
       const email = "test@example.com";
       const existingHashedCode = hashVerificationCode("123456");
-      await verificationCodeStore.save(email, existingHashedCode, 30);
+      await verificationCodeStore.save(
+        email,
+        existingHashedCode,
+        EmailUsageType.SIGN_UP,
+        30,
+      );
 
       // When
-      const result = authService.sendVerificationMail(email);
+      const result = authService.sendSignUpVerificationMail(email);
 
       // Then: throws handled error, 이메일 전송 안됨, 인증 코드 저장 안됨 (기존 코드 유지됨)
       await expect(result).rejects.toThrow(VerificationCooldownError);
@@ -187,7 +195,7 @@ describe("AuthService", () => {
       }
 
       // When
-      const result = authService.sendVerificationMail(email);
+      const result = authService.sendSignUpVerificationMail(email);
 
       // Then: throws handled error, 이메일 전송 안됨, 인증 코드 저장 안됨
       await expect(result).rejects.toThrow(EmailRateLimitedError);
@@ -201,7 +209,7 @@ describe("AuthService", () => {
       mailService.shouldFail = true;
 
       // When
-      const result = authService.sendVerificationMail(email);
+      const result = authService.sendSignUpVerificationMail(email);
 
       // Then: 이메일 전송 안됨, 인증 코드 저장 안됨
       await expect(result).rejects.toThrow();
@@ -217,11 +225,41 @@ describe("AuthService", () => {
       });
 
       // When
-      const result = authService.sendVerificationMail(email);
+      const result = authService.sendSignUpVerificationMail(email);
 
       // Then: 이메일 전송 안됨
       await expect(result).rejects.toThrow();
       expect(mailService.lastSentTo(email)).toBeNull();
+    });
+  });
+
+  describe("sendPasswordResetVerificationMail", () => {
+    it("success: 이메일 전송, 인증 코드 저장", async () => {
+      // Given: 가입된 이메일인 경우
+      const email = "test@example.com";
+      await saveTestUser(email, "password");
+
+      // When
+      await expect(
+        authService.sendPasswordResetVerificationMail(email),
+      ).resolves.not.toThrow();
+
+      // Then: 이메일 전송, 인증 코드 저장
+      expect(mailService.lastSentTo(email)).not.toBeNull();
+      expect(await verificationCodeStore.find(email)).not.toBeNull();
+    });
+
+    it("존재하지 않는 이메일 처리", async () => {
+      // Given: 가입되지 않은 이메일인 경우
+      const email = "test@example.com";
+
+      // When
+      const result = authService.sendPasswordResetVerificationMail(email);
+
+      // Then: throws handled error, 이메일 전송 안됨, 인증 코드 저장 안됨
+      await expect(result).rejects.toThrow(EmailNotExistsError);
+      expect(mailService.lastSentTo(email)).toBeNull();
+      expect(await verificationCodeStore.find(email)).toBeNull();
     });
   });
 
@@ -230,13 +268,18 @@ describe("AuthService", () => {
       // Given: 검증을 시도하는 인증 코드 및 이메일이 존재하는 경우
       const email = "test@example.com";
       const code = "123456";
-      await verificationCodeStore.save(email, hashVerificationCode(code), 30);
+      await verificationCodeStore.save(
+        email,
+        hashVerificationCode(code),
+        EmailUsageType.SIGN_UP,
+        30,
+      );
 
       // When: 저장된 인증 코드로 검증 시도
       const token = await authService.verifyMail(email, code);
 
       // Then: 올바른 JWT 반환, 인증 코드 삭제됨
-      expect(signUpTokenService.decode(token).email).toBe(email);
+      expect(emailTokenService.decode(token).email).toBe(email);
       expect(await verificationCodeStore.find(email)).toBeNull();
     });
 
@@ -248,6 +291,7 @@ describe("AuthService", () => {
       await verificationCodeStore.save(
         storedEmail,
         hashVerificationCode(code),
+        EmailUsageType.SIGN_UP,
         30,
       );
 
@@ -266,6 +310,7 @@ describe("AuthService", () => {
       await verificationCodeStore.save(
         email,
         hashVerificationCode("654321"),
+        EmailUsageType.SIGN_UP,
         30,
       );
 
@@ -281,8 +326,13 @@ describe("AuthService", () => {
       // Given: JWT signing이 실패하는 경우
       const email = "test@example.com";
       const code = "123456";
-      await verificationCodeStore.save(email, hashVerificationCode(code), 30);
-      jest.spyOn(signUpTokenService, "sign").mockImplementationOnce(() => {
+      await verificationCodeStore.save(
+        email,
+        hashVerificationCode(code),
+        EmailUsageType.SIGN_UP,
+        30,
+      );
+      jest.spyOn(emailTokenService, "sign").mockImplementationOnce(() => {
         throw new Error("JWT failure");
       });
 
@@ -298,7 +348,12 @@ describe("AuthService", () => {
       // Given: Redis 삭제가 실패하는 경우
       const email = "test@example.com";
       const code = "123456";
-      await verificationCodeStore.save(email, hashVerificationCode(code), 30);
+      await verificationCodeStore.save(
+        email,
+        hashVerificationCode(code),
+        EmailUsageType.SIGN_UP,
+        30,
+      );
       jest.spyOn(verificationCodeStore, "remove").mockImplementationOnce(() => {
         throw new Error("Redis failure");
       });
@@ -311,17 +366,17 @@ describe("AuthService", () => {
     });
   });
 
-  describe("completeSignup", () => {
+  describe("signUp", () => {
     it("success: 유저 및 토큰 저장, 토큰 반환", async () => {
       // Given: 올바른 회원가입 토큰
       const email = "test@example.com";
       const password = "password";
       const nickname = "John Doe";
       const age = 20;
-      const signUpToken = signUpTokenService.sign(email);
+      const signUpToken = emailTokenService.sign(email, EmailUsageType.SIGN_UP);
 
       // When: 회원가입 시도
-      const result = await authService.completeSignup(
+      const result = await authService.signUp(
         signUpToken,
         password,
         nickname,
@@ -354,7 +409,7 @@ describe("AuthService", () => {
       const invalidSignUpToken = "invaild-random-token";
 
       // When: 회원가입 시도
-      const result = authService.completeSignup(
+      const result = authService.signUp(
         invalidSignUpToken,
         password,
         nickname,
@@ -373,20 +428,34 @@ describe("AuthService", () => {
       const password = "password";
       const nickname = "John Doe";
       const age = 20;
-      const signUpToken = signUpTokenService.sign(email);
+      const signUpToken = emailTokenService.sign(email, EmailUsageType.SIGN_UP);
 
       await saveTestUser(email, "password");
 
       // When: 회원가입 시도
-      const result = authService.completeSignup(
-        signUpToken,
-        password,
-        nickname,
-        age,
-      );
+      const result = authService.signUp(signUpToken, password, nickname, age);
 
       // Then: throws handled error
       await expect(result).rejects.toThrow(EmailAlreadyExistsError);
+    });
+
+    it("올바르지 않은 토큰 타입 처리", async () => {
+      // Given: 다른 타입의 email token 경우
+      const email = "test@example.com";
+      const password = "password";
+      const nickname = "John Doe";
+      const age = 20;
+      const wrongToken = emailTokenService.sign(
+        email,
+        EmailUsageType.PASSWORD_RESET,
+      );
+
+      // When: 회원가입 시도
+      const result = authService.signUp(wrongToken, password, nickname, age);
+
+      // Then: throws handled error, 유저 저장하지 않음
+      await expect(result).rejects.toThrow(InvalidSignUpTokenError);
+      expect(await userRepository.findOneBy({ email })).toBeNull();
     });
   });
 
@@ -427,7 +496,6 @@ describe("AuthService", () => {
       const email = "test@example.com";
       const expectedPassword = "password";
       const incorrectPassword = "invalid";
-      const user = await saveTestUser(email, expectedPassword);
 
       // When: 로그인 시도
       const result = authService.login(email, incorrectPassword);
@@ -477,6 +545,65 @@ describe("AuthService", () => {
       // Then: throws handled error, 토큰 저장하지 않음
       await expect(result).rejects.toThrow(InvalidRefreshTokenError);
       expect(await refreshTokenRepository.find()).toHaveLength(0);
+    });
+  });
+
+  describe("resetPassword", () => {
+    it("success: 비밀번호 변경", async () => {
+      // Given: 올바른 이메일 토큰, 유저 존재
+      const email = "test@example.com";
+      const user = await saveTestUser(email, "OldPassword1@");
+      const token = emailTokenService.sign(
+        email,
+        EmailUsageType.PASSWORD_RESET,
+      );
+
+      // When
+      await expect(
+        authService.resetPassword(token, "NewPassword1@"),
+      ).resolves.not.toThrow();
+
+      // Then: 비밀번호가 변경됨
+      const updated = await userRepository.findOneBy({ email });
+      expect(updated!.password).not.toBe(user.password);
+    });
+
+    it("올바르지 않은 토큰 처리", async () => {
+      // Given: 올바르지 않은 토큰인 경우
+      const result = authService.resetPassword(
+        "invalid-token",
+        "NewPassword1@",
+      );
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(InvalidPasswordResetTokenError);
+    });
+
+    it("올바르지 않은 토큰 타입 처리", async () => {
+      // Given: 다른 타입의 토큰인 경우
+      const email = "test@example.com";
+      const wrongToken = emailTokenService.sign(email, EmailUsageType.SIGN_UP);
+
+      // When
+      const result = authService.resetPassword(wrongToken, "NewPassword1@");
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(InvalidPasswordResetTokenError);
+    });
+
+    it("존재하지 않는 유저 처리", async () => {
+      // Given: 유효한 토큰이지만 해당 유저가 존재하지 않는 경우
+      const email = "deleted@example.com";
+      const token = emailTokenService.sign(
+        email,
+        EmailUsageType.PASSWORD_RESET,
+      );
+
+      // When
+      const result = authService.resetPassword(token, "NewPassword1@");
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(InvalidPasswordResetTokenError);
     });
   });
 });

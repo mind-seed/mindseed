@@ -1,10 +1,15 @@
 import { Injectable } from "@nestjs/common";
 import { VerificationCodeStore } from "./verification-code.store";
 import { hashVerificationCode } from "./hash-verification-code.helper";
+import { EmailUsageType } from "../email-usage.types";
 
 const COOLDOWN_SECONDS = 30;
 const TTL_SECONDS = 3 * 60; // 3 minutes
 const CODE_LENGTH = 6;
+
+export type VerificationCodePayload = {
+  type: EmailUsageType;
+};
 
 export class VerificationCodeServiceError extends Error {}
 
@@ -20,7 +25,10 @@ export class VerificationCodeService {
    * cooldown 중일 시 throw 한다.
    * @returns 생성된 code
    */
-  async issue(email: string): Promise<string> {
+  async issue(
+    email: string,
+    payload: VerificationCodePayload,
+  ): Promise<string> {
     if (await this.isInCooldown(email)) {
       throw new VerificationCodeServiceError();
     }
@@ -30,23 +38,37 @@ export class VerificationCodeService {
       .padStart(CODE_LENGTH, "0");
     const hashedCode = hashVerificationCode(code);
 
-    await this.verificationCodeStore.save(email, hashedCode, TTL_SECONDS);
+    await this.verificationCodeStore.save(
+      email,
+      hashedCode,
+      payload.type,
+      TTL_SECONDS,
+    );
 
     return code;
   }
 
   /**
-   * email에 대한 code의 존재 및 일치 여부를 반환한다.
+   * email에 대한 code가 일치하는지 확인하고, 일치할 경우 payload를 리턴한다.
    */
-  async validate(email: string, code: string): Promise<boolean> {
+  async verify(
+    email: string,
+    code: string,
+  ): Promise<VerificationCodePayload | null> {
     // SHA-256은 deterministic 하므로, 바로 비교해도 된다.
     const entry = await this.verificationCodeStore.find(email);
     if (!entry) {
-      return false;
+      return null;
     }
 
     const hashedCode = hashVerificationCode(code);
-    return hashedCode === entry.hashedCode;
+    if (hashedCode !== entry.hashedCode) {
+      return null;
+    }
+
+    return {
+      type: entry.type,
+    };
   }
 
   /**

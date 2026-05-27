@@ -1,5 +1,5 @@
 /*
- POST /auth/send-mail
+ POST /auth/email/sign-up
  */
 
 import z from "zod";
