@@ -15,10 +15,10 @@ type ButtonProps = {
 export const Button = ({
   variant,
   size,
-  showIcon,
-  disabled,
-  type,
   label,
+  type = "button",
+  showIcon = false,
+  disabled = false,
   onClick,
 }: ButtonProps) => {
   return (
