@@ -13,7 +13,6 @@ import { JsonWebTokenError } from "@nestjs/jwt";
 import { bcryptHash, bcryptCompare } from "./bcrypt.helper";
 import {
   EmailAlreadyExistsError,
-  EmailNotExistsError,
   EmailRateLimitedError,
   InvalidCredentialsError,
   InvalidPasswordResetTokenError,
@@ -61,7 +60,7 @@ export class AuthService {
    */
   async sendPasswordResetVerificationMail(email: string): Promise<void> {
     if (!(await this.userService.findByEmail(email))) {
-      throw new EmailNotExistsError();
+      return;
     }
 
     await this.sendVerificationMail(email, EmailUsageType.PASSWORD_RESET);
@@ -197,6 +196,8 @@ export class AuthService {
     if (!user) {
       throw new InvalidPasswordResetTokenError();
     }
+
+    await this.refreshTokenService.revoke(user.id);
 
     const hashedPassword = await bcryptHash(password);
     await this.userService.updatePassword(user.id, hashedPassword);

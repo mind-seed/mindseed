@@ -8,7 +8,6 @@ import IORedisMock from "ioredis-mock";
 import { AuthService } from "./auth.service";
 import {
   EmailAlreadyExistsError,
-  EmailNotExistsError,
   EmailRateLimitedError,
   InvalidCredentialsError,
   InvalidPasswordResetTokenError,
@@ -249,15 +248,15 @@ describe("AuthService", () => {
       expect(await verificationCodeStore.find(email)).not.toBeNull();
     });
 
-    it("존재하지 않는 이메일 처리", async () => {
+    it("존재하지 않는 이메일 처리 (이메일 열거 방지)", async () => {
       // Given: 가입되지 않은 이메일인 경우
       const email = "test@example.com";
 
       // When
       const result = authService.sendPasswordResetVerificationMail(email);
 
-      // Then: throws handled error, 이메일 전송 안됨, 인증 코드 저장 안됨
-      await expect(result).rejects.toThrow(EmailNotExistsError);
+      // Then: 성공 응답, 이메일 전송 안됨, 인증 코드 저장 안됨
+      await expect(result).resolves.not.toThrow();
       expect(mailService.lastSentTo(email)).toBeNull();
       expect(await verificationCodeStore.find(email)).toBeNull();
     });
@@ -549,10 +548,11 @@ describe("AuthService", () => {
   });
 
   describe("resetPassword", () => {
-    it("success: 비밀번호 변경", async () => {
-      // Given: 올바른 이메일 토큰, 유저 존재
+    it("success: 비밀번호 변경, 기존 세션 만료", async () => {
+      // Given: 올바른 이메일 토큰, 유저 존재, 기존 refresh token 발급됨
       const email = "test@example.com";
       const user = await saveTestUser(email, "OldPassword1@");
+      await refreshTokenService.issue(user.id);
       const token = emailTokenService.sign(
         email,
         EmailUsageType.PASSWORD_RESET,
@@ -563,9 +563,12 @@ describe("AuthService", () => {
         authService.resetPassword(token, "NewPassword1@"),
       ).resolves.not.toThrow();
 
-      // Then: 비밀번호가 변경됨
+      // Then: 비밀번호가 변경됨, refresh token 삭제됨
       const updated = await userRepository.findOneBy({ email });
       expect(updated!.password).not.toBe(user.password);
+      expect(
+        await refreshTokenRepository.findOneBy({ user: { id: user.id } }),
+      ).toBeNull();
     });
 
     it("올바르지 않은 토큰 처리", async () => {
