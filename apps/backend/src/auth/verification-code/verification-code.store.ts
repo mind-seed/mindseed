@@ -9,6 +9,11 @@ export interface VerificationEntry {
   type: EmailUsageType;
 }
 
+const validUsageTypes: EmailUsageType[] = [
+  EmailUsageType.SIGN_UP,
+  EmailUsageType.PASSWORD_RESET,
+];
+
 /**
  * hashed verification code의 storing을 담당하는 Redis wrapper class
  */
@@ -38,6 +43,10 @@ export class VerificationCodeStore {
   async find(email: string): Promise<VerificationEntry | null> {
     const result = await this.redis.hgetall(VerificationCodeStore.key(email));
     if (!result || !result.hashedCode) {
+      return null;
+    }
+
+    if (!validUsageTypes.includes(result.type as any)) {
       return null;
     }
 
