@@ -17,7 +17,6 @@ export type EmailPasswordResetRequestDto = z.output<
 export const EmailPasswordResetResponseDtoSchema = responseDtoSchema(
   z.null(),
   z.enum([
-    AuthErrorCode.EMAIL_NOT_EXISTS,
     AuthErrorCode.EMAIL_RATE_LIMITED,
     AuthErrorCode.VERIFICATION_COOLDOWN,
   ]),

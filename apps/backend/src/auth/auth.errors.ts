@@ -46,12 +46,6 @@ export class InvalidRefreshTokenError extends AuthServiceError {
   }
 }
 
-export class EmailNotExistsError extends AuthServiceError {
-  constructor() {
-    super(HttpStatus.BAD_REQUEST, AuthErrorCode.EMAIL_NOT_EXISTS);
-  }
-}
-
 export class InvalidPasswordResetTokenError extends AuthServiceError {
   constructor() {
     super(HttpStatus.UNAUTHORIZED, AuthErrorCode.INVALID_PASSWORD_RESET_TOKEN);
