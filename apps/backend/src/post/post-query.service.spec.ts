@@ -13,7 +13,11 @@ import { UserProfile } from "../user/entities/user-profile.entity";
 import { initializePgMem } from "src/test/pg-mem.helper";
 import { S3StorageService } from "src/s3-storage/s3-storage.service";
 import { FakeS3StorageService } from "src/s3-storage/s3-storage.service.fake";
-import { PostComment } from "src/comment/entities/post-comment.entity";
+import {
+  DeletionType,
+  PostComment,
+} from "src/comment/entities/post-comment.entity";
+import { Temporal } from "@js-temporal/polyfill";
 
 const entities = [UserProfile, User, PostComment, Post, PostLike, Attachment];
 
@@ -23,6 +27,7 @@ describe("PostQueryService", () => {
   let postRepository: Repository<Post>;
   let postLikeRepository: Repository<PostLike>;
   let attachmentRepository: Repository<Attachment>;
+  let commentRepository: Repository<PostComment>;
   let userRepository: Repository<User>;
   let fakeS3: FakeS3StorageService;
   let dataSource: DataSource;
@@ -67,6 +72,24 @@ describe("PostQueryService", () => {
     return ids;
   }
 
+  async function saveTestComment(
+    postId: number,
+    userId: number,
+    overrides?: Partial<PostComment>,
+  ): Promise<PostComment> {
+    return commentRepository.save(
+      commentRepository.create({
+        nickname: "testnick",
+        content: "test comment",
+        post: { id: postId } as Post,
+        author: { id: userId } as User,
+        deletedAt: null,
+        deletionType: null,
+        ...overrides,
+      }),
+    );
+  }
+
   beforeAll(async () => {
     const { dataSource: ds, backup } = await initializePgMem(entities);
     dataSource = ds;
@@ -97,6 +120,7 @@ describe("PostQueryService", () => {
     postRepository = dataSource.getRepository(Post);
     postLikeRepository = dataSource.getRepository(PostLike);
     attachmentRepository = dataSource.getRepository(Attachment);
+    commentRepository = dataSource.getRepository(PostComment);
     userRepository = dataSource.getRepository(User);
   });
 
@@ -176,6 +200,23 @@ describe("PostQueryService", () => {
         // Then: 삭제된 글 다음부터 올바르게 반환
         expect(result.items.map((p) => p.post.id)).toEqual([ids[1], ids[2]]);
       });
+
+      it("올바르지 않은 형식의 cursor인 경우 처리", async () => {
+        // Given: 올바르지 않은 형식의 cursor
+        const user = await saveTestUser();
+        const malformedCursor = "arst";
+
+        // When: 글 목록 조회 시도
+        const result = postQueryService.listPosts(user.id, {
+          limit: 1,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+          cursor: malformedCursor,
+        });
+
+        // Then: throws handled error
+        await expect(result).rejects.toThrow(InvalidCursorError);
+      });
     });
 
     describe("relation fields", () => {
@@ -251,6 +292,27 @@ describe("PostQueryService", () => {
       });
     });
 
+    describe("탈퇴한 author 처리", () => {
+      it("soft-deleted author의 글 제외 처리", async () => {
+        // Given
+        const user = await saveTestUser();
+        const deletedUser = await saveTestUser();
+        const activePost = await saveTestPost(user.id);
+        await saveTestPost(deletedUser.id);
+        await userRepository.softDelete({ id: deletedUser.id });
+
+        // When: 글 목록 조회 시도
+        const result = await postQueryService.listPosts(user.id, {
+          limit: 10,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+
+        // Then: 탈퇴한 author 글 제외
+        expect(result.items.map((p) => p.post.id)).toEqual([activePost.id]);
+      });
+    });
+
     it("success: 올바른 attachments URL 맵 반환", async () => {
       // Given: attachment가 있는 글
       const user = await saveTestUser();
@@ -276,23 +338,6 @@ describe("PostQueryService", () => {
         fakeS3.getPublicUrl(attachment.s3Key),
       );
     });
-
-    it("올바르지 않은 형식의 cursor인 경우 처리", async () => {
-      // Given: 올바르지 않은 형식의 cursor
-      const user = await saveTestUser();
-      const malformedCursor = "arst";
-
-      // When: 글 목록 조회 시도
-      const result = postQueryService.listPosts(user.id, {
-        limit: 1,
-        orderBy: "createdAt",
-        orderDirection: "asc",
-        cursor: malformedCursor,
-      });
-
-      // Then: throws handled error
-      await expect(result).rejects.toThrow(InvalidCursorError);
-    });
   });
 
   describe("getPost", () => {
@@ -312,7 +357,7 @@ describe("PostQueryService", () => {
       const result = await postQueryService.getPost(user.id, post.id);
 
       // Then: 올바른 글 반환
-      expect(result.entry.post).toMatchObject({
+      expect(result.post).toMatchObject({
         id: post.id,
         content: "hello world",
         category: PostCategory.DUMMY1,
@@ -329,7 +374,7 @@ describe("PostQueryService", () => {
         const result = await postQueryService.getPost(user.id, post.id);
 
         // Then: isOwner === true
-        expect(result.entry.withUser.isOwner).toBe(true);
+        expect(result.withUser.isOwner).toBe(true);
       });
 
       it("success: user가 owner 아님 -> isOwner false", async () => {
@@ -342,7 +387,7 @@ describe("PostQueryService", () => {
         const result = await postQueryService.getPost(viewer.id, post.id);
 
         // Then: isOwner === false
-        expect(result.entry.withUser.isOwner).toBe(false);
+        expect(result.withUser.isOwner).toBe(false);
       });
 
       it("success: user가 like한 글 -> isLiked true", async () => {
@@ -360,7 +405,7 @@ describe("PostQueryService", () => {
         const result = await postQueryService.getPost(user.id, post.id);
 
         // Then: isLiked === true
-        expect(result.entry.withUser.isLiked).toBe(true);
+        expect(result.withUser.isLiked).toBe(true);
       });
 
       it("success: user가 like 하지 않은 글 -> isLiked false", async () => {
@@ -372,7 +417,7 @@ describe("PostQueryService", () => {
         const result = await postQueryService.getPost(user.id, post.id);
 
         // Then: isLiked === false
-        expect(result.entry.withUser.isLiked).toBe(false);
+        expect(result.withUser.isLiked).toBe(false);
       });
     });
 
@@ -396,6 +441,100 @@ describe("PostQueryService", () => {
       expect(result.attachmentToUrl[attachment.id]).toBe(
         fakeS3.getPublicUrl(attachment.s3Key),
       );
+    });
+
+    describe("comments", () => {
+      it("success: active comment -> type active", async () => {
+        // Given: 일반 댓글
+        const user = await saveTestUser();
+        const post = await saveTestPost(user.id);
+        const comment = await saveTestComment(post.id, user.id);
+
+        // When: 글 조회 시도
+        const result = await postQueryService.getPost(user.id, post.id);
+
+        // Then: active type의 댓글
+        expect(result.comments).toHaveLength(1);
+        expect(result.comments[0].comment.id).toBe(comment.id);
+        expect(result.comments[0].type).toBe("active");
+      });
+
+      it("success: author가 삭제한 comment -> type deleted", async () => {
+        // Given: author가 삭제한 댓글
+        const user = await saveTestUser();
+        const post = await saveTestPost(user.id);
+        await saveTestComment(post.id, user.id, {
+          deletedAt: Temporal.Now.instant(),
+          deletionType: DeletionType.AUTHOR,
+        });
+
+        // When: 글 조회 시도
+        const result = await postQueryService.getPost(user.id, post.id);
+
+        // Then: deleted type의 댓글
+        expect(result.comments[0].type).toBe("deleted");
+      });
+
+      it("success: admin이 삭제한 comment -> type deleted", async () => {
+        // Given: admin이 삭제한 댓글
+        const user = await saveTestUser();
+        const post = await saveTestPost(user.id);
+        await saveTestComment(post.id, user.id, {
+          deletedAt: Temporal.Now.instant(),
+          deletionType: DeletionType.ADMIN,
+        });
+
+        // When: 글 조회 시도
+        const result = await postQueryService.getPost(user.id, post.id);
+
+        // Then: deleted type의 댓글
+        expect(result.comments[0].type).toBe("deleted");
+      });
+
+      it("success: soft-deleted author의 comment -> type authorDeleted", async () => {
+        // Given: 탈퇴된 author의 댓글
+        const author = await saveTestUser();
+        const user = await saveTestUser();
+        const post = await saveTestPost(user.id);
+        await saveTestComment(post.id, author.id);
+        await userRepository.softDelete({ id: author.id });
+
+        // When: 글 조회 시도
+        const result = await postQueryService.getPost(user.id, post.id);
+
+        // Then: authorDeleted type의 댓글
+        expect(result.comments[0].type).toBe("authorDeleted");
+      });
+
+      it("success: hard-deleted author의 comment -> type authorDeleted", async () => {
+        // Given: authorId null인 댓글
+        const user = await saveTestUser();
+        const post = await saveTestPost(user.id);
+        const comment = await saveTestComment(post.id, user.id);
+        await commentRepository.update({ id: comment.id }, { authorId: null });
+
+        // When: 글 조회 시도
+        const result = await postQueryService.getPost(user.id, post.id);
+
+        // Then: authorDeleted type의 댓글
+        expect(result.comments[0].type).toBe("authorDeleted");
+      });
+    });
+
+    describe("탈퇴한 author 처리", () => {
+      it("soft-deleted author의 글 조회 시 PostNotFoundError", async () => {
+        // Given: soft-deleted author의 글
+        const author = await saveTestUser();
+        const viewer = await saveTestUser();
+        const post = await saveTestPost(author.id);
+        await userRepository.softDelete({ id: author.id });
+
+        // When: 글 조회 시도
+        const result = postQueryService.getPost(viewer.id, post.id);
+
+        // Then: throws handled error
+        await expect(result).rejects.toThrow(PostNotFoundError);
+      });
     });
 
     it("존재하지 않는 글 처리", async () => {

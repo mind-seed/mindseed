@@ -12,13 +12,18 @@ export * from "./common/counsel";
 export * from "./common/pagination";
 export * from "./common/error-codes";
 
-export * from "./auth/complete-signup";
+export * from "./auth/get-email-token";
 export * from "./auth/login";
+export * from "./auth/logout";
 export * from "./auth/refresh-tokens";
-export * from "./auth/send-mail";
-export * from "./auth/verify-mail";
+export * from "./auth/reset-password";
+export * from "./auth/send-password-reset-mail";
+export * from "./auth/send-sign-up-mail";
+export * from "./auth/sign-up";
 
-export * from "./users/current";
+export * from "./users/get-current";
+export * from "./users/update-current-profile";
+export * from "./users/delete-current";
 
 export * from "./attachments/begin";
 export * from "./attachments/confirm";

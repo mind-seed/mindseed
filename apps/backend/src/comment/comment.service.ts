@@ -43,9 +43,12 @@ export class CommentService {
     nickname,
     content,
   }: CreateCommentOptions): Promise<PostComment> {
-    const postExists = await this.postRepository.existsBy({ id: postId });
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+      relations: { author: true },
+    });
 
-    if (!postExists) {
+    if (!post || !post.isActive()) {
       throw new PostNotFoundError();
     }
 
@@ -71,17 +74,21 @@ export class CommentService {
     userId,
     content,
   }: UpdateCommentOptions): Promise<void> {
-    const postExists = await this.postRepository.existsBy({ id: postId });
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+      relations: { author: true },
+    });
 
-    if (!postExists) {
+    if (!post || !post.isActive()) {
       throw new PostNotFoundError();
     }
 
     const comment = await this.commentRepository.findOne({
       where: { id: commentId, postId, deletedAt: IsNull() },
+      relations: { author: true },
     });
 
-    if (!comment) {
+    if (!comment || !comment.isActive()) {
       throw new CommentNotFoundError();
     }
 
@@ -100,17 +107,21 @@ export class CommentService {
     commentId: number,
     userId: number,
   ): Promise<void> {
-    const postExists = await this.postRepository.existsBy({ id: postId });
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+      relations: { author: true },
+    });
 
-    if (!postExists) {
+    if (!post || !post.isActive()) {
       throw new PostNotFoundError();
     }
 
     const comment = await this.commentRepository.findOne({
       where: { id: commentId, postId, deletedAt: IsNull() },
+      relations: { author: true },
     });
 
-    if (!comment) {
+    if (!comment || !comment.isActive()) {
       throw new CommentNotFoundError();
     }
 

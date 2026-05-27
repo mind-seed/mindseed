@@ -8,7 +8,7 @@ import { EmailRateLimitService } from "./email-rate-limit/email-rate-limit.servi
 import { EmailRateLimitStore } from "./email-rate-limit/email-rate-limit.store";
 import { VerificationCodeService } from "./verification-code/verification-code.service";
 import { VerificationCodeStore } from "./verification-code/verification-code.store";
-import { SignUpTokenService } from "./sign-up-token/sign-up-token.service";
+import { EmailTokenService } from "./email-token/email-token.service";
 import { AccessTokenService } from "./access-token/access-token.service";
 import { RefreshTokenService } from "./refresh-token/refresh-token.service";
 import { RefreshToken } from "./refresh-token/refresh-token.entity";
@@ -38,7 +38,7 @@ import { jwtConfig } from "src/config";
     EmailRateLimitStore,
     VerificationCodeService,
     VerificationCodeStore,
-    SignUpTokenService,
+    EmailTokenService,
     AccessTokenService,
     RefreshTokenService,
     AuthGuard,

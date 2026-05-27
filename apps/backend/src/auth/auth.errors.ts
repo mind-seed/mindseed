@@ -45,3 +45,9 @@ export class InvalidRefreshTokenError extends AuthServiceError {
     super(HttpStatus.BAD_REQUEST, AuthErrorCode.INVALID_REFRESH_TOKEN);
   }
 }
+
+export class InvalidPasswordResetTokenError extends AuthServiceError {
+  constructor() {
+    super(HttpStatus.UNAUTHORIZED, AuthErrorCode.INVALID_PASSWORD_RESET_TOKEN);
+  }
+}

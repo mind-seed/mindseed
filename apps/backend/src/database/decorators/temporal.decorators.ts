@@ -3,6 +3,7 @@ import {
   Column,
   ColumnOptions,
   CreateDateColumn,
+  DeleteDateColumn,
   UpdateDateColumn,
 } from "typeorm";
 
@@ -49,6 +50,16 @@ export function UpdateTimestampColumn(
   options?: ColumnOptions,
 ): PropertyDecorator {
   return UpdateDateColumn({
+    type: "timestamptz",
+    ...options,
+    transformer: temporalInstantTransformer,
+  });
+}
+
+export function DeleteTimestampColumn(
+  options?: ColumnOptions,
+): PropertyDecorator {
+  return DeleteDateColumn({
     type: "timestamptz",
     ...options,
     transformer: temporalInstantTransformer,

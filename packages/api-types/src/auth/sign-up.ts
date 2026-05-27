@@ -1,6 +1,6 @@
 /*
- POST /auth/complete-signup
- Authorization: Bearer <signUpToken from /auth/verify-mail>
+ POST /auth/sign-up
+ Authorization: Bearer <token from /auth/email/token>
  */
 
 import z from "zod";

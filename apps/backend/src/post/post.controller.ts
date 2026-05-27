@@ -18,7 +18,6 @@ import {
   idParamSchema,
   ListPostsQueryDtoSchema,
   ListPostsResponseDtoSchema,
-  PostCategorySchema,
   SetPostLikeRequestDtoSchema,
   SetPostLikeResponseDtoSchema,
   UpdatePostRequestDtoSchema,
@@ -41,24 +40,13 @@ import {
   ZodQuery,
 } from "src/common/pipes/zod-validation.decorator";
 import { User } from "src/user/entities/user.entity";
-import z from "zod";
-import { PostCategory } from "./entities/post.entity";
 import { PostMutationService } from "./post-mutation.service";
 import { PostQueryService } from "./post-query.service";
-
-type ApiPostCategory = z.output<typeof PostCategorySchema>;
-
-const apiToEntityCategory: Record<ApiPostCategory, PostCategory> = {
-  dummy1: PostCategory.DUMMY1,
-  dummy2: PostCategory.DUMMY2,
-  dummy3: PostCategory.DUMMY3,
-};
-
-const entityToApiCategory: Record<PostCategory, ApiPostCategory> = {
-  [PostCategory.DUMMY1]: "dummy1",
-  [PostCategory.DUMMY2]: "dummy2",
-  [PostCategory.DUMMY3]: "dummy3",
-};
+import {
+  apiToEntityCategory,
+  entityToApiCategory,
+  entityToApiDeletionType,
+} from "./post.mappers";
 
 @Controller("/posts")
 export class PostController {
@@ -138,35 +126,54 @@ export class PostController {
     @CurrentUser() user: User,
     @ZodParam("id", idParamSchema) id: number,
   ): Promise<GetPostSuccessResponseDto> {
-    const { entry, attachmentToUrl } = await this.postQueryService.getPost(
-      user.id,
-      id,
-    );
+    const { post, withUser, attachmentToUrl, comments } =
+      await this.postQueryService.getPost(user.id, id);
+
     return {
       success: true,
       data: {
-        id: entry.post.id,
-        content: entry.post.content,
-        category: entityToApiCategory[entry.post.category],
-        author: { nickname: entry.post.nickname },
-        attachments: entry.post.attachments.map((a) => ({
+        id: post.id,
+        content: post.content,
+        category: entityToApiCategory[post.category],
+        author: { nickname: post.nickname },
+        attachments: post.attachments.map((a) => ({
           id: a.id,
           url: attachmentToUrl[a.id],
         })),
-        comments: entry.post.comments.map((c) => ({
-          id: c.id,
-          content: c.content,
-          author: {
-            nickname: c.nickname,
-          },
-          createdAt: c.createdAt,
-          updatedAt: c.updatedAt,
-        })),
-        likeCount: entry.post.likeCount,
-        isOwner: entry.withUser.isOwner,
-        isLiked: entry.withUser.isLiked,
-        createdAt: entry.post.createdAt,
-        updatedAt: entry.post.updatedAt,
+        comments: comments.map(({ comment: c, type }) => {
+          const common = {
+            id: c.id,
+            createdAt: c.createdAt,
+            updatedAt: c.updatedAt,
+          };
+
+          switch (type) {
+            case "deleted":
+              return {
+                ...common,
+                type,
+                deletionType: entityToApiDeletionType[c.deletionType!],
+              };
+            case "authorDeleted":
+              return {
+                ...common,
+                type,
+                content: c.content,
+              };
+            case "active":
+              return {
+                ...common,
+                type,
+                content: c.content,
+                author: { nickname: c.nickname },
+              };
+          }
+        }),
+        likeCount: post.likeCount,
+        isOwner: withUser.isOwner,
+        isLiked: withUser.isLiked,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
       },
     };
   }

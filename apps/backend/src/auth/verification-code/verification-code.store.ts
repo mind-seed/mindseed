@@ -1,11 +1,18 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { Redis } from "ioredis";
 import { REDIS_CLIENT } from "src/redis/redis.module";
+import { EmailUsageType } from "../email-usage.types";
 
 export interface VerificationEntry {
   hashedCode: string;
   issuedAt: number;
+  type: EmailUsageType;
 }
+
+const validUsageTypes: EmailUsageType[] = [
+  EmailUsageType.SIGN_UP,
+  EmailUsageType.PASSWORD_RESET,
+];
 
 /**
  * hashed verification code의 storing을 담당하는 Redis wrapper class
@@ -21,22 +28,32 @@ export class VerificationCodeStore {
   async save(
     email: string,
     hashedCode: string,
+    type: EmailUsageType,
     ttlSeconds: number,
   ): Promise<void> {
     const key = VerificationCodeStore.key(email);
+
     await this.redis
       .pipeline()
-      .hset(key, { hashedCode, issuedAt: Date.now() })
+      .hset(key, { hashedCode, issuedAt: Date.now(), type })
       .expire(key, ttlSeconds)
       .exec();
   }
 
   async find(email: string): Promise<VerificationEntry | null> {
     const result = await this.redis.hgetall(VerificationCodeStore.key(email));
-    if (!result || !result.hashedCode) return null;
+    if (!result || !result.hashedCode) {
+      return null;
+    }
+
+    if (!validUsageTypes.includes(result.type as any)) {
+      return null;
+    }
+
     return {
       hashedCode: result.hashedCode,
       issuedAt: Number(result.issuedAt),
+      type: result.type as EmailUsageType,
     };
   }
 

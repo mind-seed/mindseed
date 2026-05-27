@@ -1,6 +1,9 @@
 import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Temporal } from "@js-temporal/polyfill";
-import { CreateTimestampColumn } from "src/database/decorators/temporal.decorators";
+import {
+  CreateTimestampColumn,
+  DeleteTimestampColumn,
+} from "src/database/decorators/temporal.decorators";
 import { UserProfile } from "./user-profile.entity";
 import assert from "node:assert";
 
@@ -33,6 +36,9 @@ export class User {
 
   @CreateTimestampColumn()
   createdAt: Temporal.Instant;
+
+  @DeleteTimestampColumn()
+  deletedAt: Temporal.Instant | null;
 
   @OneToOne(() => UserProfile, (profile) => profile.user, { cascade: true })
   profile: UserProfile | null;
