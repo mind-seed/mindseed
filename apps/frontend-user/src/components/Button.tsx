@@ -3,8 +3,8 @@ import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
 
 type ButtonProps = {
-  variant: "contained" | "outlined";
-  size: "normal" | "mini";
+  variant: "primary" | "outlined";
+  size: "medium" | "small";
   label: string;
   type?: "button" | "submit";
   showIcon?: boolean;
@@ -42,9 +42,9 @@ export const Button = ({
           <path
             d="M6 12L10 8L6 4"
             stroke="currentColor"
-            stroke-width="1.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
       )}
@@ -53,9 +53,9 @@ export const Button = ({
 };
 
 const StyledButton = styled.button<{
-  $variant: "contained" | "outlined";
+  $variant: "primary" | "outlined";
   $showIcon?: boolean;
-  $size: "normal" | "mini";
+  $size: "medium" | "small";
 }>`
   display: flex;
   justify-content: center;
@@ -64,7 +64,7 @@ const StyledButton = styled.button<{
   cursor: pointer;
 
   ${({ $size }) =>
-    $size === "normal"
+    $size === "medium"
       ? css`
           padding: 1rem 1.25rem;
           border-radius: 12px;
@@ -79,7 +79,7 @@ const StyledButton = styled.button<{
   }
 
   ${({ $variant }) =>
-    $variant === "contained"
+    $variant === "primary"
       ? css`
           background: ${COLORS.main.main};
           border: none;
