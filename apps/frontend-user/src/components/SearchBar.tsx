@@ -1,4 +1,4 @@
-import { styled, css } from "styled-components";
+import { styled } from "styled-components";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
 
@@ -7,7 +7,7 @@ type SearchBarProps = {
   value: string;
   placeholder?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSearch?: (value: string) => void;
+  onSearch: (value: string) => void;
 };
 
 export const SearchBar = ({
@@ -19,7 +19,7 @@ export const SearchBar = ({
 }: SearchBarProps) => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSearch?.(value);
+    onSearch(value);
   };
 
   return (
@@ -31,7 +31,7 @@ export const SearchBar = ({
           placeholder={placeholder}
           onChange={onChange}
         />
-        <SearchButton type="submit" onClick={() => onSearch?.(value)}>
+        <SearchButton type="submit">
           <svg
             width="100%"
             height="100%"

@@ -27,7 +27,7 @@ Mindseed 프로젝트의 Monorepo 입니다.
 
 ### Initialization
 
-``` shell
+```shell
 # package installation
 # also sets up git hooks
 $ pnpm install
@@ -37,7 +37,7 @@ $ pnpm install
 
 Git hook에 따라 unformatted 파일이 존재할 경우 커밋이 진행되지 않습니다.
 
-``` shell
+```shell
 # check only
 $ pnpm --workspace-root format:check
 

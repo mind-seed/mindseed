@@ -7,7 +7,7 @@ type InputProps = {
   name: string;
   value: string;
   status: "normal" | "error";
-  placeholder: string;
+  placeholder?: string;
   disabled?: boolean;
   description?: string;
   adornmentType?: "icon" | "text" | "none";
@@ -43,7 +43,7 @@ export const TextInput = ({
           onChange={onChange}
         />
         {adornmentType === "icon" && (
-          <InputButton onClick={handleClick}>
+          <InputButton type="button" onClick={handleClick}>
             {isVisible ? (
               <svg
                 width="100%"

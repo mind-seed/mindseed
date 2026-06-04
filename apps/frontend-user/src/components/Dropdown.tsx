@@ -41,16 +41,16 @@ export const Dropdown = ({ activeMenu, onClick }: DropdownProps) => {
         <span>{activeMenu}</span>
         <ArrowIcon
           $isOpen={isOpen}
-          viewBox="0 0 24 24"
+          viewBox="0 0 16 16"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
           <path
-            d="M7 14l5-5 5 5"
+            d="M12 10L8 6L4 10"
             stroke="black"
-            strokeWidth="1.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            stroke-width="1.4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
           />
         </ArrowIcon>
       </DropdownTrigger>
@@ -72,7 +72,7 @@ export const Dropdown = ({ activeMenu, onClick }: DropdownProps) => {
 };
 
 const DropdownWrapper = styled.div`
-  width: 89px;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -95,6 +95,8 @@ const DropdownTrigger = styled.button`
 const ArrowIcon = styled.svg<{ $isOpen: boolean }>`
   width: 1rem;
   height: 1rem;
+
+  transform: ${({ $isOpen }) => $isOpen && `rotate(180deg)`};
 `;
 
 const Menu = styled.div`

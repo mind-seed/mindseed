@@ -3,29 +3,29 @@ import { useState } from "react";
 import { COLORS } from "../style/colors";
 
 type PictureProps = {
-  urls: string[];
+  imageUrls: string[];
 };
 
-export const Picture = ({ urls }: PictureProps) => {
+export const Picture = ({ imageUrls }: PictureProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!urls || urls.length === 0) {
+  if (!imageUrls || imageUrls.length === 0) {
     return null;
   }
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? urls.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? imageUrls.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === urls.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev === imageUrls.length - 1 ? 0 : prev + 1));
   };
 
   const handleClick = (index: number) => {
     setCurrentIndex(index);
   };
   return (
-    <PictureWrapper $currentUrl={urls[currentIndex]}>
+    <PictureWrapper $currentUrl={imageUrls[currentIndex]}>
       <Pagination>
         <ArrowButton type="button" onClick={handlePrev}>
           <svg
@@ -45,7 +45,7 @@ export const Picture = ({ urls }: PictureProps) => {
           </svg>
         </ArrowButton>
         <DotWrapper>
-          {urls.map((_, index) => (
+          {imageUrls.map((_, index) => (
             <DotButton
               type="button"
               key={index}
@@ -77,7 +77,7 @@ export const Picture = ({ urls }: PictureProps) => {
 };
 
 const PictureWrapper = styled.div<{ $currentUrl: string }>`
-  width: 353px;
+  width: 100%;
   display: flex;
   align-items: flex-end;
   aspect-ratio: 1 / 1;
