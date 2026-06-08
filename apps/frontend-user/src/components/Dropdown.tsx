@@ -3,21 +3,23 @@ import { useState, useRef, useEffect } from "react";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
 
-export type MenuType = "최신순" | "추천순" | "인기순";
-
-type DropdownProps = {
-  activeMenu: MenuType;
-  onClick: (menu: MenuType) => void;
+type DropdownProps<T> = {
+  menuList: T[];
+  activeMenu: T;
+  onClick: (menu: T) => void;
 };
 
-export const Dropdown = ({ activeMenu, onClick }: DropdownProps) => {
+export const Dropdown = <T extends string>({
+  menuList,
+  activeMenu,
+  onClick,
+}: DropdownProps<T>) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const menuList: MenuType[] = ["최신순", "추천순", "인기순"];
 
   const toggleDropdown = () => setIsOpen((prev) => !prev);
 
-  const handleMenuClick = (menu: MenuType) => {
+  const handleMenuClick = (menu: T) => {
     onClick(menu);
     setIsOpen(false);
   };

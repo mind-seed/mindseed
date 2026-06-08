@@ -5,21 +5,11 @@ import { TEXT_STYLE } from "../style/typography";
 
 type NavListType = "홈" | "미션" | "커뮤니티" | "콘텐츠" | "마이페이지";
 
-const NAV_LIST: NavListType[] = [
-  "홈",
-  "미션",
-  "커뮤니티",
-  "콘텐츠",
-  "마이페이지",
-];
-
-const nameToIconLink: Record<
-  NavListType,
-  { link: string; Icon: React.ReactNode }
-> = {
-  홈: {
+const NavList = [
+  {
+    label: "홈",
     link: "",
-    Icon: (
+    icon: (
       <svg
         width="24"
         height="24"
@@ -44,9 +34,10 @@ const nameToIconLink: Record<
       </svg>
     ),
   },
-  미션: {
+  {
+    label: "미션",
     link: "mission",
-    Icon: (
+    icon: (
       <svg
         width="24"
         height="24"
@@ -78,9 +69,10 @@ const nameToIconLink: Record<
       </svg>
     ),
   },
-  커뮤니티: {
+  {
+    label: "커뮤니티",
     link: "community",
-    Icon: (
+    icon: (
       <svg
         width="24"
         height="24"
@@ -98,9 +90,10 @@ const nameToIconLink: Record<
       </svg>
     ),
   },
-  콘텐츠: {
+  {
+    label: "콘텐츠",
     link: "contents",
-    Icon: (
+    icon: (
       <svg
         width="24"
         height="24"
@@ -125,9 +118,10 @@ const nameToIconLink: Record<
       </svg>
     ),
   },
-  마이페이지: {
+  {
+    label: "마이페이지",
     link: "mypage",
-    Icon: (
+    icon: (
       <svg
         width="24"
         height="24"
@@ -152,22 +146,22 @@ const nameToIconLink: Record<
       </svg>
     ),
   },
-};
+];
 
 export const BottomNav = () => {
   const location = useLocation();
   return (
     <Nav>
-      {NAV_LIST.map((name) => {
-        const { link, Icon } = nameToIconLink[name];
+      {NavList.map((item) => {
+        const { label, link, icon } = item;
         const isActive =
           location.pathname === `/${link}` ||
           (link === "" && location.pathname === "/");
 
         return (
           <NavItem key={link} to={`/${link}`} $isActive={isActive}>
-            {Icon}
-            {name}
+            {icon}
+            {label}
           </NavItem>
         );
       })}
