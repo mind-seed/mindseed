@@ -50,9 +50,9 @@ export const Dropdown = <T extends string>({
           <path
             d="M12 10L8 6L4 10"
             stroke="black"
-            stroke-width="1.4"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </ArrowIcon>
       </DropdownTrigger>
