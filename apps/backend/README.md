@@ -10,7 +10,7 @@ $ pnpm install
 
 `api-types` package에 수정사항이 발생했을 경우, 선행 빌드가 필요합니다.
 
-``` shell
+```shell
 $ pnpm --filter=api-types build
 ```
 
@@ -31,4 +31,3 @@ $ pnpm start:prod
 # unit tests
 $ pnpm test
 ```
-

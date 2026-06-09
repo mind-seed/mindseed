@@ -5,7 +5,7 @@ import { TEXT_STYLE } from "../style/typography";
 type OptionProps = {
   $label: string;
   $isSelected: boolean;
-  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
 };
 
 export const Option = styled.button.attrs<OptionProps>((props) => ({
