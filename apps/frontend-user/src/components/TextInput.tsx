@@ -138,12 +138,12 @@ const InputWrapper = styled.div<{
   gap: 10px;
   padding: 1rem 1.25rem;
   border-radius: 12px;
+  background: ${COLORS.gray.gray100};
 
   ${({ $status, $disabled }) =>
     $status === "normal"
       ? css`
-          border: 1px ${COLORS.gray.gray400} solid;
-          background: ${$disabled ? COLORS.gray.gray150 : "none"};
+          background: ${$disabled && COLORS.gray.gray150};
         `
       : css`
           border: 1px ${COLORS.state.error} solid;
