@@ -40,8 +40,8 @@ export const TopBar = ({
       </LeftArea>
       <CenterArea> {title && <Title>{title}</Title>}</CenterArea>
       <RightArea>
-        {rightType === "icon" && (
-          <RightButton type="button" onClick={onRightClick}>
+        {rightType === "icon" && onRightClick && (
+          <RightButton type="button" onClick={onRightClick} aria-label="More options">
             <svg
               width="24"
               height="24"
