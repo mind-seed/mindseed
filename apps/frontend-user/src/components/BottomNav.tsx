@@ -172,7 +172,7 @@ export const BottomNav = () => {
 const Nav = styled.nav`
   display: flex;
   align-items: center;
-  padding: 0.75rem 1.25rem;
+  padding: 0 1.25rem;
 `;
 
 const NavItem = styled(Link)<{ $isActive: boolean }>`
@@ -182,7 +182,7 @@ const NavItem = styled(Link)<{ $isActive: boolean }>`
   justify-content: center;
   align-items: center;
   gap: 0.1875rem;
-  padding: 10px 0;
+  padding: 0.625rem 0;
   border: none;
   background: none;
   ${TEXT_STYLE.body.ti};

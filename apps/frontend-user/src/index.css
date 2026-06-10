@@ -1,3 +1,5 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css");
+
 *,
 *::before,
 *::after {
@@ -8,4 +10,12 @@
 
 body {
   min-height: 100vh;
+  font-family: "Pretendard Variable", Pretendard;
+}
+
+input,
+textarea,
+button,
+select {
+  font-family: inherit;
 }

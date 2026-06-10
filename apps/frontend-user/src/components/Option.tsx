@@ -18,6 +18,7 @@ export const Option = styled.button.attrs<OptionProps>((props) => ({
   justify-content: flex-start;
   padding: 1rem 1.25rem;
   border-radius: 12px;
+  background: none;
   ${TEXT_STYLE.label.md};
 
   ${({ $isSelected }) =>
@@ -30,5 +31,9 @@ export const Option = styled.button.attrs<OptionProps>((props) => ({
       : css`
           border: 1px solid ${COLORS.gray.gray400};
           color: ${COLORS.gray.gray400};
+
+          &:hover {
+            background: ${COLORS.gray.gray100};
+          }
         `}
 `;
