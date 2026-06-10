@@ -41,7 +41,7 @@ export const TopBar = ({
       <CenterArea> {title && <Title>{title}</Title>}</CenterArea>
       <RightArea>
         {rightType === "icon" && (
-          <RightButton>
+          <RightButton type="button" onClick={onRightClick}>
             <svg
               width="24"
               height="24"
