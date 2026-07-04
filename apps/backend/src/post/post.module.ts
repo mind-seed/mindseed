@@ -19,5 +19,6 @@ import { UserModule } from "src/user/user.module";
   ],
   controllers: [PostController],
   providers: [PostQueryService, PostMutationService],
+  exports: [PostQueryService],
 })
 export class PostModule {}

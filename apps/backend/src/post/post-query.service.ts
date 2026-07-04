@@ -128,6 +128,14 @@ export class PostQueryService {
   }
 
   /**
+   * postId에 대응하는 글이 존재하는지 확인한다.
+   * @returns 존재하는 경우 true, 존재하지 않는 경우 false
+   */
+  async existsPost(postId: number): Promise<boolean> {
+    return this.postRepository.existsBy({ id: postId });
+  }
+
+  /**
    * postId에 대응하는 글 하나를 조회한다.
    * @returns 해당 글, userId에 대응하는 user와의 관계, attachment들의 url 맵
    */

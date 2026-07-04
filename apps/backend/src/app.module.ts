@@ -23,6 +23,7 @@ import { ResourceModule } from "./resource/resource.module";
 import { MissionModule } from "./mission/mission.module";
 import { DiagnosisModule } from "./diagnosis/diagnosis.module";
 import { CounselModule } from "./counsel/counsel.module";
+import { ReportModule } from "./report/report.module";
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { CounselModule } from "./counsel/counsel.module";
     MissionModule,
     DiagnosisModule,
     CounselModule,
+    ReportModule,
   ],
   // 2026-03-18: AuthGuard -- UserService circular dependency 문제를 해결하기
   // 위해 다음과 같이 배치하였습니다.
