@@ -35,11 +35,4 @@ export class ReportController {
       },
     };
   }
-
-  @Get()
-  @HttpCode(HttpStatus.OK)
-  @UserOnly()
-  async listReports() {
-    // TODO
-  }
 }
