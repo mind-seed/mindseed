@@ -84,10 +84,17 @@ export class PostQueryService {
     const qb = this.postRepository
       .createQueryBuilder("post")
       .innerJoinAndSelect("post.author", "author")
-      .leftJoinAndSelect("post.attachments", "attachment");
+      .leftJoinAndSelect("post.attachments", "attachment")
+      .leftJoin(
+        "report",
+        "report",
+        '"report"."post_id" = "post"."id" AND "report"."user_id" = :reportingUserId',
+        { reportingUserId: userId },
+      )
+      .andWhere("report.id IS NULL");
 
     if (category) {
-      qb.where("post.category = :category", { category });
+      qb.andWhere("post.category = :category", { category });
     }
 
     const { items: posts, nextCursor } = await executeCursorPagination(qb, {

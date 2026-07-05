@@ -18,8 +18,9 @@ import {
   PostComment,
 } from "src/comment/entities/post-comment.entity";
 import { Temporal } from "@js-temporal/polyfill";
+import { Report } from "src/report/entities/report.entity";
 
-const entities = [UserProfile, User, PostComment, Post, PostLike, Attachment];
+const entities = [UserProfile, User, PostComment, Post, PostLike, Attachment, Report];
 
 describe("PostQueryService", () => {
   let module: TestingModule;
@@ -90,6 +91,8 @@ describe("PostQueryService", () => {
     );
   }
 
+  let reportRepository: Repository<Report>;
+
   beforeAll(async () => {
     const { dataSource: ds, backup } = await initializePgMem(entities);
     dataSource = ds;
@@ -113,6 +116,10 @@ describe("PostQueryService", () => {
           useValue: dataSource.getRepository(Attachment),
         },
         { provide: S3StorageService, useValue: fakeS3 },
+        {
+          provide: getRepositoryToken(Report),
+          useValue: dataSource.getRepository(Report),
+        },
       ],
     }).compile();
 
@@ -122,6 +129,7 @@ describe("PostQueryService", () => {
     attachmentRepository = dataSource.getRepository(Attachment);
     commentRepository = dataSource.getRepository(PostComment);
     userRepository = dataSource.getRepository(User);
+    reportRepository = dataSource.getRepository(Report);
   });
 
   beforeEach(() => {
@@ -310,6 +318,99 @@ describe("PostQueryService", () => {
 
         // Then: 탈퇴한 author 글 제외
         expect(result.items.map((p) => p.post.id)).toEqual([activePost.id]);
+      });
+    });
+
+    describe("신고한 글 필터링", () => {
+      it("신고한 글은 목록에서 제외", async () => {
+        // Given: 사용자가 특정 글을 신고한 경우
+        const user = await saveTestUser();
+        const [post1, post2] = await saveTestPosts(user.id, [{}, {}]);
+        await reportRepository.save(
+          reportRepository.create({
+            reason: "부적절한 내용",
+            post: { id: post1 },
+            user: { id: user.id },
+          }),
+        );
+
+        // When: 글 목록 조회 시도
+        const result = await postQueryService.listPosts(user.id, {
+          limit: 10,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+
+        // Then: 신고한 글 제외
+        expect(result.items.map((p) => p.post.id)).toEqual([post2]);
+      });
+
+      it("다른 사용자가 신고한 글은 그대로 노출", async () => {
+        // Given: 다른 사용자가 특정 글을 신고한 경우
+        const user = await saveTestUser();
+        const otherUser = await saveTestUser();
+        const [post1, post2] = await saveTestPosts(user.id, [{}, {}]);
+        await reportRepository.save(
+          reportRepository.create({
+            reason: "부적절한 내용",
+            post: { id: post1 },
+            user: { id: otherUser.id },
+          }),
+        );
+
+        // When: user로 글 목록 조회 시도
+        const result = await postQueryService.listPosts(user.id, {
+          limit: 10,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+
+        // Then: 모든 글 노출
+        expect(result.items.map((p) => p.post.id)).toEqual([post1, post2]);
+      });
+
+      it("신고 후 페이지네이션 커서 정상 동작", async () => {
+        // Given: 여러 글 중 일부 신고
+        const user = await saveTestUser();
+        const ids = await saveTestPosts(user.id, [{}, {}, {}, {}, {}]);
+        // 가운데 글들 신고
+        await reportRepository.save(
+          reportRepository.create({
+            reason: "신고",
+            post: { id: ids[1] },
+            user: { id: user.id },
+          }),
+        );
+        await reportRepository.save(
+          reportRepository.create({
+            reason: "신고",
+            post: { id: ids[3] },
+            user: { id: user.id },
+          }),
+        );
+
+        // When: limit=2로 1페이지 조회
+        const page1 = await postQueryService.listPosts(user.id, {
+          limit: 2,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+
+        // Then: 신고된 글 제외, limit만큼 정상 반환
+        expect(page1.items.map((p) => p.post.id)).toEqual([ids[0], ids[2]]);
+        expect(page1.nextCursor).toBeDefined();
+
+        // When: 2페이지 조회
+        const page2 = await postQueryService.listPosts(user.id, {
+          cursor: page1.nextCursor,
+          limit: 2,
+          orderBy: "createdAt",
+          orderDirection: "asc",
+        });
+
+        // Then: 나머지 글 정상 반환
+        expect(page2.items.map((p) => p.post.id)).toEqual([ids[4]]);
+        expect(page2.nextCursor).toBeUndefined();
       });
     });
 
