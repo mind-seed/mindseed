@@ -10,7 +10,7 @@ export class ReportService {
   constructor(
     @InjectRepository(Report)
     private readonly reportRepository: Repository<Report>,
-    private readonly postRepository: PostQueryService,
+    private readonly PostQueryService: PostQueryService,
   ) {}
 
   /**
@@ -26,7 +26,7 @@ export class ReportService {
     reason: string,
   ): Promise<Report> {
     // postId에 대응하는 글이 존재하는지 확인
-    const postExists = await this.postRepository.existsPost(postId);
+    const postExists = await this.PostQueryService.existsPost(postId);
     if (!postExists) {
       throw new PostNotFoundError();
     }

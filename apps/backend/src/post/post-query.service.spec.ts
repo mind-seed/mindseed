@@ -20,7 +20,15 @@ import {
 import { Temporal } from "@js-temporal/polyfill";
 import { Report } from "src/report/entities/report.entity";
 
-const entities = [UserProfile, User, PostComment, Post, PostLike, Attachment, Report];
+const entities = [
+  UserProfile,
+  User,
+  PostComment,
+  Post,
+  PostLike,
+  Attachment,
+  Report,
+];
 
 describe("PostQueryService", () => {
   let module: TestingModule;
