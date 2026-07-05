@@ -1,4 +1,9 @@
 packages:
   - "packages/*"
   - "apps/*"
+allowBuilds:
+  '@nestjs/core': false
+  bcrypt: false
+  esbuild: false
+  unrs-resolver: false
 linkWorkspacePackages: true

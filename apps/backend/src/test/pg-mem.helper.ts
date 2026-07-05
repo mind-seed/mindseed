@@ -1,5 +1,6 @@
 import { DataSource } from "typeorm";
 import PGMem, { DataType } from "pg-mem";
+import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { EntityClassOrSchema } from "@nestjs/typeorm/dist/interfaces/entity-class-or-schema.type";
 
 export async function initializePgMem(entities: EntityClassOrSchema[]) {
@@ -19,6 +20,7 @@ export async function initializePgMem(entities: EntityClassOrSchema[]) {
   const dataSource = (await db.adapters.createTypeormDataSource({
     type: "postgres",
     entities,
+    namingStrategy: new SnakeNamingStrategy(),
     synchronize: true,
   })) as DataSource;
 
