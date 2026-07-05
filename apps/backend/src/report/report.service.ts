@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm/dist/common/typeorm.decorators";
-import { Repository } from "typeorm/repository/Repository.js";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 import { Report } from "./entities/report.entity";
 import { PostQueryService } from "src/post/post-query.service";
 import { PostNotFoundError } from "src/post/post.errors";

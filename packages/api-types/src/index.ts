@@ -11,6 +11,7 @@ export * from "./common/mission";
 export * from "./common/counsel";
 export * from "./common/pagination";
 export * from "./common/error-codes";
+export * from "./common/report";
 
 export * from "./auth/get-email-token";
 export * from "./auth/login";
@@ -63,3 +64,5 @@ export * from "./counsels/delete-counsel";
 export * from "./counsels/admin/list-counsels";
 export * from "./counsels/admin/get-counsel";
 export * from "./counsels/admin/respond-to-counsel";
+
+export * from "./reports/create-report";
