@@ -45,7 +45,7 @@ export class Report {
   result: string | null;
 
   // 신고 처리자 (관리자)
-  @ManyToOne(() => User, { nullable: true })
+  @ManyToOne(() => User, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn()
   processedBy: User | null;
 
