@@ -10,6 +10,7 @@ export * from "./common/resource";
 export * from "./common/mission";
 export * from "./common/counsel";
 export * from "./common/pagination";
+export * from "./common/report";
 export * from "./common/error-codes";
 
 export * from "./auth/get-email-token";
@@ -54,6 +55,8 @@ export * from "./resources/admin/list-resources";
 export * from "./resources/admin/create-resource";
 export * from "./resources/admin/update-resource";
 export * from "./resources/admin/delete-resource";
+
+export * from "./reports/create-report";
 
 export * from "./counsels/list-counsels";
 export * from "./counsels/get-counsel";
