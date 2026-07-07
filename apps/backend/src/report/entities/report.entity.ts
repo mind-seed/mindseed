@@ -44,7 +44,7 @@ export class Report {
   // 신고한 사용자 (회원 탈퇴 시 user_id를 null로 설정)
   @ManyToOne(() => User, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn() // user_id
-  user: User;
+  user: User | null;
 
   // 처리 완료 여부
   @Column({ default: false })

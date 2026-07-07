@@ -48,12 +48,14 @@ export class ReportAdminController {
       postId: report.post?.id ?? null,
       commentId: report.comment?.id ?? null,
       range: report.range,
-      user: {
-        id: report.user.id,
-        email: report.user.email,
-        nickname:
-          report.user.profile?.nickname ?? report.user.email.split("@")[0],
-      },
+      user: report.user
+        ? {
+            id: report.user.id,
+            email: report.user.email,
+            nickname:
+              report.user.profile?.nickname ?? report.user.email.split("@")[0],
+          }
+        : null,
     }));
 
     return {

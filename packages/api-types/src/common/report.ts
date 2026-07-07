@@ -11,5 +11,5 @@ export const ReportDtoSchema = z.object({
   postId: z.int().nullable(),
   commentId: z.int().nullable(),
   range: z.enum(["POST", "COMMENT"]),
-  user: AuthorDtoSchema,
+  user: AuthorDtoSchema.nullable(),
 });

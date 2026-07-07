@@ -271,7 +271,7 @@ describe("ReportService", () => {
 
       // Then: user 관계가 로딩되어야 함
       expect(result.report[0].user).toBeDefined();
-      expect(result.report[0].user.id).toBe(user.id);
+      expect(result.report[0].user!.id).toBe(user.id);
     });
   });
 
