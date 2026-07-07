@@ -1,5 +1,5 @@
 /*
- POST /reports
+ POST /reports/post
  Auth: USER role
 */
 

@@ -100,6 +100,14 @@ export class CommentService {
   }
 
   /**
+   * commentId에 대응하는 글이 존재하는지 확인한다.
+   * @returns 존재하는 경우 true, 존재하지 않는 경우 false
+   */
+  async existsComment(commentId: number): Promise<boolean> {
+    return this.commentRepository.existsBy({ id: commentId });
+  }
+
+  /**
    * options.commentId가 가리키는 댓글을 삭제한다.
    */
   async deleteComment(

@@ -46,6 +46,7 @@ export const MissionAssignmentErrorCode = {
 
 export const ReportErrorCode = {
   REPORT_NOT_FOUND: "REPORT_NOT_FOUND",
+  REPORT_REASON_EMPTY: "REPORT_REASON_EMPTY",
 } as const;
 
 export const CounselErrorCode = {
