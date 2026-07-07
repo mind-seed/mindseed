@@ -4,6 +4,7 @@ import { Repository } from "typeorm";
 import { Report } from "./entities/report.entity";
 import { PostQueryService } from "src/post/post-query.service";
 import { PostNotFoundError } from "src/post/post.errors";
+import { ReportRange } from "./entities/report.entity";
 
 @Injectable()
 export class ReportService {
@@ -14,13 +15,13 @@ export class ReportService {
   ) {}
 
   /**
-   * 신고를 생성한다.
+   * 게시글 신고를 생성한다.
    * @param userId 신고한 사용자 id
    * @param postId 신고 대상 게시글 id
    * @param reason 신고 사유
    * @returns 생성된 신고
    */
-  async createReport(
+  async createPostReport(
     userId: number,
     postId: number,
     reason: string,
@@ -33,6 +34,7 @@ export class ReportService {
 
     const report = this.reportRepository.create({
       reason,
+      range: ReportRange.POST,
       post: { id: postId },
       user: { id: userId },
     });

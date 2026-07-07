@@ -2,11 +2,11 @@ import { Controller, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import { CurrentUser, UserOnly } from "src/auth/decorators/auth.decorators";
 import { User } from "src/user/entities/user.entity";
 import { ReportService } from "src/report/report.service";
-import type { CreateReportRequestDto } from "@mindseed/api-types";
+import type { CreatePostReportRequestDto } from "@mindseed/api-types";
 import {
-  CreateReportRequestDtoSchema,
-  CreateReportResponseDtoSchema,
-  CreateReportSuccessResponseDto,
+  CreatePostReportRequestDtoSchema,
+  CreatePostReportResponseDtoSchema,
+  CreatePostReportSuccessResponseDto,
 } from "@mindseed/api-types";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 import { ZodBody } from "src/common/pipes/zod-validation.decorator";
@@ -18,12 +18,12 @@ export class ReportAdminController {
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @UserOnly()
-  @ZodEncodeResponse(CreateReportResponseDtoSchema)
+  @ZodEncodeResponse(CreatePostReportResponseDtoSchema)
   async createReport(
     @CurrentUser() user: User,
-    @ZodBody(CreateReportRequestDtoSchema) body: CreateReportRequestDto,
-  ): Promise<CreateReportSuccessResponseDto> {
-    const report = await this.reportService.createReport(
+    @ZodBody(CreatePostReportRequestDtoSchema) body: CreatePostReportRequestDto,
+  ): Promise<CreatePostReportSuccessResponseDto> {
+    const report = await this.reportService.createPostReport(
       user.id,
       body.postId,
       body.reason,

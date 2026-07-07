@@ -92,7 +92,7 @@ describe("ReportService", () => {
     await module.close();
   });
 
-  describe("createReport", () => {
+  describe("createPostReport", () => {
     it("success: 신고 생성", async () => {
       // Given: 글이 존재하는 경우
       const user = await saveTestUser();
@@ -100,7 +100,7 @@ describe("ReportService", () => {
       postQueryService.existsPost.mockResolvedValue(true);
 
       // When: 신고 생성 시도
-      const report = await reportService.createReport(
+      const report = await reportService.createPostReport(
         user.id,
         post.id,
         "부적절한 내용",
@@ -121,7 +121,7 @@ describe("ReportService", () => {
       postQueryService.existsPost.mockResolvedValue(false);
 
       // When: 신고 생성 시도
-      const result = reportService.createReport(
+      const result = reportService.createPostReport(
         user.id,
         nonExistentPostId,
         "사유",

@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Report } from "./entities/report.entity";
-import { ReportController } from "./report.controller";
+import { ReportPostController } from "./report.post.controller";
 import { ReportService } from "./report.service";
 import { AuthModule } from "src/auth/auth.module";
 import { UserModule } from "src/user/user.module";
@@ -15,10 +15,7 @@ import { ReportAdminController } from "./report.admin.controller";
     UserModule,
     PostModule,
   ],
-  controllers: [
-    ReportController, 
-    ReportAdminController
-  ],
+  controllers: [ReportPostController, ReportAdminController],
   providers: [ReportService],
 })
 export class ReportModule {}

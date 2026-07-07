@@ -11,7 +11,9 @@ export const ReportDtoSchema = z.object({
   processedAt: dateSerializerCodec.nullable(),
   result: z.string().nullable(),
   createdAt: dateSerializerCodec,
-  postId: z.int(),
+  postId: z.int().nullable(),
+  commentId: z.int().nullable(),
+  range: z.enum(["POST", "COMMENT"]),
   user: AuthorDtoSchema,
   processedBy: AuthorDtoSchema.nullable(),
 });

@@ -8,28 +8,28 @@ import { responseDtoSchema } from "../helpers";
 import { ReportReasonSchema } from "../common/report";
 import { PostErrorCode } from "../common/error-codes";
 
-export const CreateReportRequestDtoSchema = z.object({
+export const CreatePostReportRequestDtoSchema = z.object({
   postId: z.int(),
   reason: ReportReasonSchema,
 });
 
-export type CreateReportRequestDto = z.output<
-  typeof CreateReportRequestDtoSchema
+export type CreatePostReportRequestDto = z.output<
+  typeof CreatePostReportRequestDtoSchema
 >;
 
-export const CreateReportResponseDtoSchema = responseDtoSchema(
+export const CreatePostReportResponseDtoSchema = responseDtoSchema(
   z.object({ id: z.int() }),
   z.enum([PostErrorCode.POST_NOT_FOUND]),
 );
 
-export type CreateReportResponseDto = z.output<
-  typeof CreateReportResponseDtoSchema
+export type CreatePostReportResponseDto = z.output<
+  typeof CreatePostReportResponseDtoSchema
 >;
-export type CreateReportSuccessResponseDto = Extract<
-  CreateReportResponseDto,
+export type CreatePostReportSuccessResponseDto = Extract<
+  CreatePostReportResponseDto,
   { success: true }
 >;
-export type CreateReportErrorResponseDto = Extract<
-  CreateReportResponseDto,
+export type CreatePostReportErrorResponseDto = Extract<
+  CreatePostReportResponseDto,
   { success: false }
 >;
