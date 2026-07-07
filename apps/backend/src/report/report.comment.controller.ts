@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import { Controller, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import { CurrentUser, UserOnly } from "src/auth/decorators/auth.decorators";
 import { User } from "src/user/entities/user.entity";
 import { ReportService } from "src/report/report.service";

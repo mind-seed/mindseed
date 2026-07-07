@@ -6,7 +6,6 @@
 import z from "zod";
 import { responseDtoSchema } from "../../helpers";
 import { ReportReasonSchema, ReportDtoSchema } from "../../common/report";
-import { CommentErrorCode } from "../../common/error-codes";
 
 export const GetReportListRequestDtoSchema = z.object({
   page: z.number().optional().default(1),
@@ -23,7 +22,7 @@ export const GetReportListResponseDtoSchema = responseDtoSchema(
     reports: z.array(ReportDtoSchema),
     totalCount: z.number(),
   }),
-  z.enum([]),
+  z.never(),
 );
 
 export type GetReportListResponseDto = z.output<
