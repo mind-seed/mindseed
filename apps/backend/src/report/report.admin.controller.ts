@@ -1,37 +1,66 @@
-import { Controller, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
-import { CurrentUser, UserOnly } from "src/auth/decorators/auth.decorators";
+import { Controller, Get, HttpCode, HttpStatus } from "@nestjs/common";
+import { CurrentUser, AdminOnly } from "src/auth/decorators/auth.decorators";
 import { User } from "src/user/entities/user.entity";
 import { ReportService } from "src/report/report.service";
-import type { CreatePostReportRequestDto } from "@mindseed/api-types";
+import type { GetReportListRequestDto } from "@mindseed/api-types";
 import {
-  CreatePostReportRequestDtoSchema,
-  CreatePostReportResponseDtoSchema,
-  CreatePostReportSuccessResponseDto,
+  GetReportListRequestDtoSchema,
+  GetReportListResponseDtoSchema,
+  GetReportListSuccessResponseDto,
 } from "@mindseed/api-types";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 import { ZodBody } from "src/common/pipes/zod-validation.decorator";
+import type { getReportResult } from "src/report/report.service";
 
-@Controller("/reports")
+@Controller("/admin/reports")
 export class ReportAdminController {
   constructor(private readonly reportService: ReportService) {}
 
-  @Post()
-  @HttpCode(HttpStatus.CREATED)
-  @UserOnly()
-  @ZodEncodeResponse(CreatePostReportResponseDtoSchema)
-  async createReport(
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @AdminOnly()
+  @ZodEncodeResponse(GetReportListResponseDtoSchema)
+  async getReports(
     @CurrentUser() user: User,
-    @ZodBody(CreatePostReportRequestDtoSchema) body: CreatePostReportRequestDto,
-  ): Promise<CreatePostReportSuccessResponseDto> {
-    const report = await this.reportService.createPostReport(
-      user.id,
-      body.postId,
-      body.reason,
+    @ZodBody(GetReportListRequestDtoSchema) body: GetReportListRequestDto,
+  ): Promise<GetReportListSuccessResponseDto> {
+    const result: getReportResult = await this.reportService.getReports(
+      body.page,
+      body.limit,
+      body.orderDirection,
     );
+    /**
+    export const ReportDtoSchema = z.object({
+      id: z.int(),
+      reason: ReportReasonSchema,
+      createdAt: dateSerializerCodec,
+      postId: z.int().nullable(),
+      commentId: z.int().nullable(),
+      range: z.enum(["POST", "COMMENT"]),
+      user: AuthorDtoSchema,
+    });
+     */
+
+    const reports = result.report.map((report) => ({
+      id: report.id,
+      reason: report.reason,
+      createdAt: report.createdAt,
+      postId: report.post?.id ?? null,
+      commentId: report.comment?.id ?? null,
+      range: report.range,
+      user: {
+        id: report.user.id,
+        email: report.user.email,
+        nickname:
+          report.user.profile?.nickname ?? report.user.email.split("@")[0],
+      },
+    }));
+
     return {
       success: true,
       data: {
-        id: report.id,
+        reports,
+        totalCount: result.totalCount,
       },
     };
   }

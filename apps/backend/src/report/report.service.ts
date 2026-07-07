@@ -9,6 +9,11 @@ import { ReportReasonEmptyError } from "./report.errors";
 import { ReportRange } from "./entities/report.entity";
 import { CommentService } from "src/comment/comment.service";
 
+export type getReportResult = {
+  report: Report[];
+  totalCount: number;
+};
+
 @Injectable()
 export class ReportService {
   constructor(
@@ -78,5 +83,36 @@ export class ReportService {
       user: { id: userId },
     });
     return this.reportRepository.save(report);
+  }
+
+  /**
+   * 신고 내역을 조회한다.
+   * @param page 페이지 번호
+   * @param limit 페이지당 항목 수
+   * @param orderDirection 정렬 기준
+   * @returns 신고 내역
+   */
+  async getReports(
+    page: number,
+    limit: number,
+    orderDirection: "ASC" | "DESC",
+  ): Promise<getReportResult> {
+    const reports = await this.reportRepository
+      .createQueryBuilder("report")
+      .leftJoinAndSelect("report.user", "user")
+      .leftJoinAndSelect("user.profile", "profile")
+      .leftJoinAndSelect("report.post", "post")
+      .leftJoinAndSelect("report.comment", "comment")
+      .orderBy("report.createdAt", orderDirection)
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getMany();
+
+    const totalCount = await this.reportRepository.count();
+
+    return {
+      report: reports,
+      totalCount,
+    };
   }
 }

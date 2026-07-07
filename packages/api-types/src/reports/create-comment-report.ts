@@ -6,7 +6,7 @@
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
 import { ReportReasonSchema } from "../common/report";
-import { CommentErrorCode } from "../common/error-codes";
+import { CommentErrorCode, ReportErrorCode } from "../common/error-codes";
 
 export const CreateCommentReportRequestDtoSchema = z.object({
   commentId: z.int(),
@@ -19,7 +19,11 @@ export type CreateCommentReportRequestDto = z.output<
 
 export const CreateCommentReportResponseDtoSchema = responseDtoSchema(
   z.object({ id: z.int() }),
-  z.enum([CommentErrorCode.COMMENT_NOT_FOUND]),
+  z.enum([
+    CommentErrorCode.COMMENT_NOT_FOUND,
+    ReportErrorCode.REPORT_REASON_EMPTY,
+    ReportErrorCode.REPORT_NOT_FOUND,
+  ]),
 );
 
 export type CreateCommentReportResponseDto = z.output<

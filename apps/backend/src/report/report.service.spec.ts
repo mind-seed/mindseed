@@ -191,6 +191,90 @@ describe("ReportService", () => {
     });
   });
 
+  describe("getReports", () => {
+    it("success: 신고 목록 조회 (기본 페이지네이션)", async () => {
+      // Given: 여러 신고 데이터 생성
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, user.id);
+      postQueryService.existsPost.mockResolvedValue(true);
+      commentService.existsComment.mockResolvedValue(true);
+
+      await reportService.createPostReport(user.id, post.id, "신고1");
+      await reportService.createPostReport(user.id, post.id, "신고2");
+      await reportService.createCommentReport(user.id, comment.id, "신고3");
+
+      // When: 신고 목록 조회
+      const result = await reportService.getReports(1, 10, "DESC");
+
+      // Then
+      expect(result.totalCount).toBe(3);
+      expect(result.report).toHaveLength(3);
+      expect(result.report[0].reason).toBe("신고3"); // DESC 정렬
+    });
+
+    it("success: ASC 정렬", async () => {
+      // Given
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      postQueryService.existsPost.mockResolvedValue(true);
+
+      await reportService.createPostReport(user.id, post.id, "첫번째");
+      await reportService.createPostReport(user.id, post.id, "두번째");
+
+      // When: ASC 정렬 조회
+      const result = await reportService.getReports(1, 10, "ASC");
+
+      // Then
+      expect(result.report).toHaveLength(2);
+      expect(result.report[0].reason).toBe("첫번째");
+      expect(result.report[1].reason).toBe("두번째");
+    });
+
+    it("success: 페이지네이션 (page 2)", async () => {
+      // Given: 5개 신고 생성 후 2개씩 page 2 조회
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      postQueryService.existsPost.mockResolvedValue(true);
+
+      for (let i = 1; i <= 5; i++) {
+        await reportService.createPostReport(user.id, post.id, `신고${i}`);
+      }
+
+      // When: 2개씩 2페이지 조회 (DESC)
+      const result = await reportService.getReports(2, 2, "DESC");
+
+      // Then: 5개 중 3,4번째 (DESC 기준: 신고3, 신고2)
+      expect(result.totalCount).toBe(5);
+      expect(result.report).toHaveLength(2);
+      expect(result.report[0].reason).toBe("신고3");
+      expect(result.report[1].reason).toBe("신고2");
+    });
+
+    it("신고가 없을 때 빈 배열 반환", async () => {
+      // When: 신고가 없는 상태에서 조회
+      const result = await reportService.getReports(1, 10, "DESC");
+
+      // Then
+      expect(result.totalCount).toBe(0);
+      expect(result.report).toHaveLength(0);
+    });
+
+    it("success: user 관계 로딩", async () => {
+      // Given: 신고 생성
+      const user = await saveTestUser({ nickname: "testnick" });
+      const post = await saveTestPost(user.id);
+      postQueryService.existsPost.mockResolvedValue(true);
+      await reportService.createPostReport(user.id, post.id, "신고");
+      // user 엔티티에 nickname 필드가 없으므로... email만 확인
+      const result = await reportService.getReports(1, 10, "DESC");
+
+      // Then: user 관계가 로딩되어야 함
+      expect(result.report[0].user).toBeDefined();
+      expect(result.report[0].user.id).toBe(user.id);
+    });
+  });
+
   describe("createCommentReport", () => {
     it("success: 댓글 신고 생성", async () => {
       // Given: 댓글이 존재하는 경우

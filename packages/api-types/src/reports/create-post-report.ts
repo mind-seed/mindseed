@@ -6,7 +6,7 @@
 import z from "zod";
 import { responseDtoSchema } from "../helpers";
 import { ReportReasonSchema } from "../common/report";
-import { PostErrorCode } from "../common/error-codes";
+import { PostErrorCode, ReportErrorCode } from "../common/error-codes";
 
 export const CreatePostReportRequestDtoSchema = z.object({
   postId: z.int(),
@@ -19,7 +19,11 @@ export type CreatePostReportRequestDto = z.output<
 
 export const CreatePostReportResponseDtoSchema = responseDtoSchema(
   z.object({ id: z.int() }),
-  z.enum([PostErrorCode.POST_NOT_FOUND]),
+  z.enum([
+    PostErrorCode.POST_NOT_FOUND,
+    ReportErrorCode.REPORT_REASON_EMPTY,
+    ReportErrorCode.REPORT_NOT_FOUND,
+  ]),
 );
 
 export type CreatePostReportResponseDto = z.output<

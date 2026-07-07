@@ -7,13 +7,9 @@ export const ReportReasonSchema = z.string().min(1).max(200);
 export const ReportDtoSchema = z.object({
   id: z.int(),
   reason: ReportReasonSchema,
-  isProcessed: z.boolean(),
-  processedAt: dateSerializerCodec.nullable(),
-  result: z.string().nullable(),
   createdAt: dateSerializerCodec,
   postId: z.int().nullable(),
   commentId: z.int().nullable(),
   range: z.enum(["POST", "COMMENT"]),
   user: AuthorDtoSchema,
-  processedBy: AuthorDtoSchema.nullable(),
 });
