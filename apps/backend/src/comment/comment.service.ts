@@ -104,7 +104,10 @@ export class CommentService {
    * @returns 존재하는 경우 true, 존재하지 않는 경우 false
    */
   async existsComment(commentId: number): Promise<boolean> {
-    return this.commentRepository.existsBy({ id: commentId });
+    return this.commentRepository.existsBy({
+      id: commentId,
+      deletedAt: IsNull(),
+    });
   }
 
   /**

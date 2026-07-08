@@ -514,4 +514,47 @@ describe("CommentService", () => {
       await expect(result).rejects.toThrow(NotCommentAuthorError);
     });
   });
+
+  describe("existsComment", () => {
+    it("success: 존재하는 댓글 확인", async () => {
+      // Given: 댓글이 존재하는 경우
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, user.id);
+
+      // When: existsComment 호출
+      const result = await commentService.existsComment(comment.id);
+
+      // Then: true 반환
+      expect(result).toBe(true);
+    });
+
+    it("삭제된 댓글은 존재하지 않는 것으로 처리", async () => {
+      // Given: 댓글이 삭제된 경우
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, user.id, {
+        deletedAt: Temporal.Now.instant(),
+        deletedBy: user,
+        deletionType: DeletionType.AUTHOR,
+      });
+
+      // When: existsComment 호출
+      const result = await commentService.existsComment(comment.id);
+
+      // Then: false 반환
+      expect(result).toBe(false);
+    });
+
+    it("존재하지 않는 commentId 처리", async () => {
+      // Given: DB에 존재하지 않는 commentId
+      const nonExistentCommentId = 0;
+
+      // When: existsComment 호출
+      const result = await commentService.existsComment(nonExistentCommentId);
+
+      // Then: false 반환
+      expect(result).toBe(false);
+    });
+  });
 });
