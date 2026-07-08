@@ -18,7 +18,7 @@ import {
   PostComment,
 } from "src/comment/entities/post-comment.entity";
 import { Temporal } from "@js-temporal/polyfill";
-import { Report } from "src/report/entities/report.entity";
+import { Report, ReportRange } from "src/report/entities/report.entity";
 
 const entities = [
   UserProfile,
@@ -120,8 +120,8 @@ describe("PostQueryService", () => {
           useValue: dataSource.getRepository(PostLike),
         },
         {
-          provide: getRepositoryToken(Attachment),
-          useValue: dataSource.getRepository(Attachment),
+          provide: getRepositoryToken(PostComment),
+          useValue: dataSource.getRepository(PostComment),
         },
         { provide: S3StorageService, useValue: fakeS3 },
         {
@@ -337,6 +337,7 @@ describe("PostQueryService", () => {
         await reportRepository.save(
           reportRepository.create({
             reason: "부적절한 내용",
+            range: ReportRange.POST,
             post: { id: post1 },
             user: { id: user.id },
           }),
@@ -361,6 +362,7 @@ describe("PostQueryService", () => {
         await reportRepository.save(
           reportRepository.create({
             reason: "부적절한 내용",
+            range: ReportRange.POST,
             post: { id: post1 },
             user: { id: otherUser.id },
           }),
@@ -385,6 +387,7 @@ describe("PostQueryService", () => {
         await reportRepository.save(
           reportRepository.create({
             reason: "신고",
+            range: ReportRange.POST,
             post: { id: ids[1] },
             user: { id: user.id },
           }),
@@ -392,6 +395,7 @@ describe("PostQueryService", () => {
         await reportRepository.save(
           reportRepository.create({
             reason: "신고",
+            range: ReportRange.POST,
             post: { id: ids[3] },
             user: { id: user.id },
           }),

@@ -15,5 +15,6 @@ import { UserModule } from "src/user/user.module";
   ],
   controllers: [CommentController],
   providers: [CommentService],
+  exports: [CommentService],
 })
 export class CommentModule {}

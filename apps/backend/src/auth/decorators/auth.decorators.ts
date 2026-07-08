@@ -43,6 +43,7 @@ export const CurrentUser = createParamDecorator(
     if (!req.user) {
       throw new Error("CurrentUser decorator requires @Authenticated()");
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return req.user;
   },
 );

@@ -44,6 +44,11 @@ export const MissionAssignmentErrorCode = {
   MISSION_ASSIGNMENT_ALREADY_COMPLETED: "MISSION_ASSIGNMENT_ALREADY_COMPLETED",
 } as const;
 
+export const ReportErrorCode = {
+  REPORT_NOT_FOUND: "REPORT_NOT_FOUND",
+  REPORT_REASON_EMPTY: "REPORT_REASON_EMPTY",
+} as const;
+
 export const CounselErrorCode = {
   COUNSEL_NOT_FOUND: "COUNSEL_NOT_FOUND",
   NOT_COUNSEL_AUTHOR: "NOT_COUNSEL_AUTHOR",

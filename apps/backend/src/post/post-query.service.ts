@@ -70,6 +70,8 @@ export class PostQueryService {
     private readonly postRepository: Repository<Post>,
     @InjectRepository(PostLike)
     private readonly postLikeRepository: Repository<PostLike>,
+    @InjectRepository(PostComment)
+    private readonly postCommentRepository: Repository<PostComment>,
     private readonly s3StorageService: S3StorageService,
   ) {}
 
@@ -152,7 +154,7 @@ export class PostQueryService {
       relations: {
         author: true,
         attachments: true,
-        comments: { author: true },
+        // comments: { author: true },
       },
     });
 
@@ -167,6 +169,22 @@ export class PostQueryService {
 
     const attachmentToUrl = this.buildAttachmentToUrl(post.attachments);
 
+    // 미신고 댓글만 따로 조회
+    const comments = await this.postCommentRepository
+      .createQueryBuilder("post_comment")
+      .leftJoinAndSelect("post_comment.author", "author")
+      .leftJoin(
+        "report",
+        "report",
+        `report.comment_id = post_comment.id
+        AND report.user_id = :userId`,
+        { userId },
+      )
+      .where("post_comment.postId = :postId", { postId })
+      .andWhere("report.id IS NULL")
+      .orderBy("post_comment.createdAt", "ASC")
+      .getMany();
+
     return {
       post,
       withUser: {
@@ -174,7 +192,7 @@ export class PostQueryService {
         isLiked,
       },
       attachmentToUrl,
-      comments: post.comments.map((comment) => ({
+      comments: comments.map((comment) => ({
         comment,
         type: this.computeCommentType(comment),
       })),

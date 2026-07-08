@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { Post } from "./entities/post.entity";
 import { PostLike } from "./entities/post-like.entity";
+import { PostComment } from "src/comment/entities/post-comment.entity";
 import { Attachment } from "../attachment/entities/attachment.entity";
 import { PostQueryService } from "./post-query.service";
 import { PostMutationService } from "./post-mutation.service";
@@ -12,7 +13,7 @@ import { UserModule } from "src/user/user.module";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Post, PostLike, Attachment]),
+    TypeOrmModule.forFeature([Post, PostLike, PostComment, Attachment]),
     S3StorageModule,
     AuthModule,
     UserModule,
