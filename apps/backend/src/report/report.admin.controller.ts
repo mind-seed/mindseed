@@ -9,7 +9,7 @@ import {
   GetReportListSuccessResponseDto,
 } from "@mindseed/api-types";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
-import { ZodBody } from "src/common/pipes/zod-validation.decorator";
+import { ZodQuery } from "src/common/pipes/zod-validation.decorator";
 import type { getReportResult } from "src/report/report.service";
 
 @Controller("/admin/reports")
@@ -22,12 +22,12 @@ export class ReportAdminController {
   @ZodEncodeResponse(GetReportListResponseDtoSchema)
   async getReports(
     @CurrentUser() user: User,
-    @ZodBody(GetReportListRequestDtoSchema) body: GetReportListRequestDto,
+    @ZodQuery(GetReportListRequestDtoSchema) query: GetReportListRequestDto,
   ): Promise<GetReportListSuccessResponseDto> {
     const result: getReportResult = await this.reportService.getReports(
-      body.page,
-      body.limit,
-      body.orderDirection,
+      query.page,
+      query.limit,
+      query.orderDirection,
     );
     /**
     export const ReportDtoSchema = z.object({
@@ -45,13 +45,12 @@ export class ReportAdminController {
       id: report.id,
       reason: report.reason,
       createdAt: report.createdAt,
-      postId: report.post?.id ?? null,
-      commentId: report.comment?.id ?? null,
+      postId: report.postId ?? null,
+      commentId: report.commentId ?? null,
       range: report.range,
-      user: report.user
+      user: report.user?.profile
         ? {
-            nickname:
-              report.user.profile?.nickname ?? report.user.email.split("@")[0],
+            nickname: report.user.profile.nickname,
           }
         : null,
     }));

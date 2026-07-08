@@ -6,10 +6,11 @@
 import z from "zod";
 import { responseDtoSchema } from "../../helpers";
 import { ReportReasonSchema, ReportDtoSchema } from "../../common/report";
+import { numberSerializerCodec } from "../../common/codecs";
 
 export const GetReportListRequestDtoSchema = z.object({
-  page: z.number().optional().default(1),
-  limit: z.number().optional().default(10),
+  page: numberSerializerCodec.pipe(z.int().min(1)).default(1),
+  limit: numberSerializerCodec.pipe(z.int().min(1)).default(10),
   orderDirection: z.enum(["ASC", "DESC"]).optional().default("DESC"),
 });
 

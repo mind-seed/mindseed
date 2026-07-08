@@ -49,7 +49,9 @@ export class ReportService {
       reason,
       range: ReportRange.POST,
       post: { id: postId },
+      postId: postId,
       user: { id: userId },
+      userId: userId,
     });
     return this.reportRepository.save(report);
   }
@@ -80,7 +82,9 @@ export class ReportService {
       reason,
       range: ReportRange.COMMENT,
       comment: { id: commentId },
+      commentId: commentId,
       user: { id: userId },
+      userId: userId,
     });
     return this.reportRepository.save(report);
   }
