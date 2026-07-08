@@ -19,10 +19,7 @@ export type CreatePostReportRequestDto = z.output<
 
 export const CreatePostReportResponseDtoSchema = responseDtoSchema(
   z.object({ id: z.int() }),
-  z.enum([
-    PostErrorCode.POST_NOT_FOUND,
-    ReportErrorCode.REPORT_REASON_EMPTY,
-  ]),
+  z.enum([PostErrorCode.POST_NOT_FOUND, ReportErrorCode.REPORT_REASON_EMPTY]),
 );
 
 export type CreatePostReportResponseDto = z.output<

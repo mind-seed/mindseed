@@ -50,8 +50,6 @@ export class ReportAdminController {
       range: report.range,
       user: report.user
         ? {
-            id: report.user.id,
-            email: report.user.email,
             nickname:
               report.user.profile?.nickname ?? report.user.email.split("@")[0],
           }
