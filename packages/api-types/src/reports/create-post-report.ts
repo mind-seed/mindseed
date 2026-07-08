@@ -22,7 +22,6 @@ export const CreatePostReportResponseDtoSchema = responseDtoSchema(
   z.enum([
     PostErrorCode.POST_NOT_FOUND,
     ReportErrorCode.REPORT_REASON_EMPTY,
-    ReportErrorCode.REPORT_NOT_FOUND,
   ]),
 );
 

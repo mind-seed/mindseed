@@ -22,7 +22,6 @@ export const CreateCommentReportResponseDtoSchema = responseDtoSchema(
   z.enum([
     CommentErrorCode.COMMENT_NOT_FOUND,
     ReportErrorCode.REPORT_REASON_EMPTY,
-    ReportErrorCode.REPORT_NOT_FOUND,
   ]),
 );
 
