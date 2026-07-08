@@ -1,5 +1,5 @@
 /*
- POST /admin/reports
+ GET /admin/reports
  Auth: ADMIN role
 */
 
