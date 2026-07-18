@@ -27,6 +27,18 @@ export const PostDtoSchema = z.object({
   updatedAt: dateSerializerCodec,
 });
 
+export const AdminPostDtoSchema = z.object({
+  id: z.int(),
+  content: PostContentSchema,
+  category: PostCategorySchema,
+  author: AuthorDtoSchema,
+  likeCount: z.int(),
+  reportCount: z.int(),
+  commentCount: z.int(),
+  createdAt: dateSerializerCodec,
+  updatedAt: dateSerializerCodec,
+});
+
 export const PostWithCommentsSchema = PostDtoSchema.extend({
   comments: z.array(CommentDtoSchema),
 });
