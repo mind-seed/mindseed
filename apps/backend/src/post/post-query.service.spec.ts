@@ -453,6 +453,110 @@ describe("PostQueryService", () => {
     });
   });
 
+  describe("adminListPosts", () => {
+    async function saveReport(postId: number, userId: number) {
+      return reportRepository.save(
+        reportRepository.create({
+          reason: "신고",
+          range: ReportRange.POST,
+          post: { id: postId } as Post,
+          user: { id: userId } as User,
+        }),
+      );
+    }
+
+    it("success: latest 정렬과 page/limit 페이지네이션", async () => {
+      const user = await saveTestUser();
+      const ids = await saveTestPosts(user.id, [{}, {}, {}]);
+
+      const result = await postQueryService.adminListPosts({
+        page: 1,
+        limit: 2,
+        orderBy: "latest",
+        isReported: false,
+      });
+
+      expect(result.items.map((p) => p.post.id)).toEqual([ids[2], ids[1]]);
+      expect(result.totalCount).toBe(3);
+    });
+
+    it("success: oldest 정렬의 2페이지 반환", async () => {
+      const user = await saveTestUser();
+      const ids = await saveTestPosts(user.id, [{}, {}, {}]);
+
+      const result = await postQueryService.adminListPosts({
+        page: 2,
+        limit: 2,
+        orderBy: "oldest",
+        isReported: false,
+      });
+
+      expect(result.items.map((p) => p.post.id)).toEqual([ids[2]]);
+      expect(result.totalCount).toBe(3);
+    });
+
+    it("success: mostReported 정렬과 신고 수 반환", async () => {
+      const author = await saveTestUser();
+      const reporter1 = await saveTestUser();
+      const reporter2 = await saveTestUser();
+      const ids = await saveTestPosts(author.id, [{}, {}, {}]);
+      await saveReport(ids[0], reporter1.id);
+      await saveReport(ids[2], reporter1.id);
+      await saveReport(ids[2], reporter2.id);
+
+      const result = await postQueryService.adminListPosts({
+        page: 1,
+        limit: 10,
+        orderBy: "mostReported",
+        isReported: false,
+      });
+
+      expect(result.items.map((p) => p.post.id)).toEqual([
+        ids[2],
+        ids[0],
+        ids[1],
+      ]);
+      expect(result.items.map((p) => p.additional.reportCount)).toEqual([
+        2, 1, 0,
+      ]);
+      expect(result.totalCount).toBe(3);
+    });
+
+    it("success: category, isReported, query 필터와 totalCount", async () => {
+      const author = await saveTestUser();
+      const reporter = await saveTestUser();
+      const [post1, post2, post3] = await Promise.all([
+        saveTestPost(author.id, {
+          content: "alpha content",
+          category: PostCategory.DUMMY1,
+        }),
+        saveTestPost(author.id, {
+          content: "beta content",
+          category: PostCategory.DUMMY1,
+        }),
+        saveTestPost(author.id, {
+          content: "alpha hidden",
+          category: PostCategory.DUMMY2,
+        }),
+      ]);
+      await saveReport(post1.id, reporter.id);
+      await saveReport(post3.id, reporter.id);
+
+      const result = await postQueryService.adminListPosts({
+        page: 1,
+        limit: 10,
+        orderBy: "latest",
+        category: "dummy1",
+        isReported: true,
+        query: "alpha",
+      });
+
+      expect(result.items.map((p) => p.post.id)).toEqual([post1.id]);
+      expect(result.totalCount).toBe(1);
+      expect(post2.id).toBeDefined();
+    });
+  });
+
   describe("getPost", () => {
     it("success: 올바른 fields 반환", async () => {
       // Given: 글이 존재하는 경우

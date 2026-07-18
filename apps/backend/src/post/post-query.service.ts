@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { In, Repository } from "typeorm";
+import { Brackets, In, Repository } from "typeorm";
 import { Post, PostCategory } from "./entities/post.entity";
 import { PostLike } from "./entities/post-like.entity";
 import { Attachment } from "../attachment/entities/attachment.entity";
@@ -12,6 +12,9 @@ import {
   CursorPaginationResult,
 } from "src/common/helpers/pagination";
 import { executeCursorPagination } from "src/common/helpers/cursor";
+import { AdminListPostsQueryDtoSchema } from "@mindseed/api-types";
+import { z } from "zod";
+import { apiToEntityCategory } from "./post.mappers";
 
 /* shared types */
 
@@ -20,6 +23,15 @@ export type PostWithRelations = {
   withUser: {
     isOwner: boolean;
     isLiked: boolean;
+  };
+};
+
+export type PostWithAdminRelations = {
+  post: Post;
+  additional: {
+    likeCount: number;
+    commentCount: number;
+    reportCount: number;
   };
 };
 
@@ -35,6 +47,15 @@ export type ListPostsOptions = CursorPaginationOptions<ListPostsOrderBy> & {
 
 export type ListPostsResult = CursorPaginationResult<PostWithRelations> & {
   attachmentToUrl: AttachmentToUrlMap;
+};
+
+export type AdminListPostsOptions = z.output<
+  typeof AdminListPostsQueryDtoSchema
+>;
+
+export type AdminListPostsResult = {
+  items: PostWithAdminRelations[];
+  totalCount: number;
 };
 
 /* getPost */
@@ -135,6 +156,128 @@ export class PostQueryService {
       attachmentToUrl,
     };
   }
+
+  /*
+   * pagination을 적용하여 전체 글 목록을 조회한다.
+   * @returns 해당 글 리스트, url 빌더
+   */
+  async adminListPosts({
+    page,
+    limit,
+    orderBy,
+    category,
+    isReported,
+    query,
+  }: AdminListPostsOptions): Promise<AdminListPostsResult> {
+    const qb = this.postRepository
+      .createQueryBuilder("post")
+      .innerJoin("post.author", "author");
+
+    if (category) {
+      const entityCategory = apiToEntityCategory[category];
+      if (entityCategory !== undefined) {
+        qb.andWhere("post.category = :category", { category: entityCategory });
+      }
+    }
+
+    if (isReported) {
+      qb.andWhere(
+        "post.id IN (SELECT reported_post.post_id FROM report reported_post)",
+      );
+    }
+
+    if (query) {
+      qb.andWhere(
+        new Brackets((qb) => {
+          qb.where("post.content ILIKE :query", {
+            query: `%${query}%`,
+          }).orWhere("post.nickname ILIKE :query", { query: `%${query}%` });
+        }),
+      );
+    }
+
+    const totalCount = await qb.clone().getCount();
+    const skip = (page - 1) * limit;
+
+    let posts: Post[];
+    if (orderBy === "mostReported") {
+      const rows = await qb
+        .clone()
+        .select("post.id", "id")
+        .leftJoin("report", "order_report", "order_report.post_id = post.id")
+        .groupBy("post.id")
+        .orderBy('COUNT("order_report"."id")', "DESC")
+        .addOrderBy("post.id", "DESC")
+        .offset(skip)
+        .limit(limit)
+        .getRawMany<{ id: number }>();
+      const orderedIds = rows.map((row) => Number(row.id));
+      const postsById = new Map(
+        orderedIds.length > 0
+          ? (
+              await this.postRepository.find({
+                where: { id: In(orderedIds) },
+              })
+            ).map((post) => [post.id, post])
+          : [],
+      );
+      posts = orderedIds
+        .map((id) => postsById.get(id))
+        .filter((post): post is Post => post !== undefined);
+    } else {
+      if (orderBy === "latest") {
+        qb.orderBy("post.createdAt", "DESC").addOrderBy("post.id", "DESC");
+      } else {
+        qb.orderBy("post.createdAt", "ASC").addOrderBy("post.id", "ASC");
+      }
+      posts = await qb.offset(skip).limit(limit).getMany();
+    }
+
+    const postIds = posts.map((post) => post.id);
+
+    const [reportCounts, commentCounts] = await Promise.all([
+      this.getPostRelatedCounts("report", postIds),
+      this.getPostRelatedCounts("post_comment", postIds),
+    ]);
+
+    const result = posts.map((post) => ({
+      post: post,
+      additional: {
+        likeCount: post.likeCount,
+        commentCount: commentCounts[post.id] ?? 0,
+        reportCount: reportCounts[post.id] ?? 0,
+      },
+    }));
+
+    return {
+      items: result,
+      totalCount,
+    };
+  }
+
+  private async getPostRelatedCounts(
+    tableName: "report" | "post_comment",
+    postIds: number[],
+  ): Promise<Record<number, number>> {
+    if (postIds.length === 0) {
+      return {};
+    }
+
+    const rows = await this.postRepository.manager
+      .createQueryBuilder()
+      .select(`${tableName}.post_id`, "postId")
+      .addSelect("COUNT(*)", "count")
+      .from(tableName, tableName)
+      .where(`${tableName}.post_id IN (:...postIds)`, { postIds })
+      .groupBy(`${tableName}.post_id`)
+      .getRawMany<{ postId?: number; postid?: number; count: string }>();
+
+    return Object.fromEntries(
+      rows.map((row) => [Number(row.postId ?? row.postid), Number(row.count)]),
+    );
+  }
+
+  /* getPost */
 
   /**
    * postId에 대응하는 글이 존재하는지 확인한다.
