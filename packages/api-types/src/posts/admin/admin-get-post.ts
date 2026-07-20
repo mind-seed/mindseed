@@ -1,24 +1,29 @@
 /*
  GET /posts/:id
- Auth: USER role
+ Auth: ADMIN role
  */
 
 import z from "zod";
 import { responseDtoSchema } from "../../helpers";
-import { PostWithCommentsSchema } from "../../common/post";
+import {
+  AdminPostWithCommentsSchema,
+  PostWithCommentsSchema,
+} from "../../common/post";
 import { PostErrorCode } from "../../common/error-codes";
 
-export const GetPostResponseDtoSchema = responseDtoSchema(
-  PostWithCommentsSchema,
+export const AdminGetPostResponseDtoSchema = responseDtoSchema(
+  AdminPostWithCommentsSchema,
   z.enum([PostErrorCode.POST_NOT_FOUND]),
 );
 
-export type GetPostResponseDto = z.output<typeof GetPostResponseDtoSchema>;
-export type GetPostSuccessResponseDto = Extract<
-  GetPostResponseDto,
+export type AdminGetPostResponseDto = z.output<
+  typeof AdminGetPostResponseDtoSchema
+>;
+export type AdminGetPostSuccessResponseDto = Extract<
+  AdminGetPostResponseDto,
   { success: true }
 >;
-export type GetPostErrorResponseDto = Extract<
-  GetPostResponseDto,
+export type AdminGetPostErrorResponseDto = Extract<
+  AdminGetPostResponseDto,
   { success: false }
 >;
