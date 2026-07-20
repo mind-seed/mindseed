@@ -326,7 +326,8 @@ export class PostQueryService {
 
     const reports = await this.reportRepository
       .createQueryBuilder("report")
-      .leftJoinAndSelect("report.author", "author")
+      .leftJoinAndSelect("report.user", "user")
+      .leftJoinAndSelect("user.profile", "profile")
       .where("report.postId = :postId", { postId })
       .orderBy("report.createdAt", "ASC")
       .getMany();

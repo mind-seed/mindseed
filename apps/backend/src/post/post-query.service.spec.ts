@@ -123,11 +123,15 @@ describe("PostQueryService", () => {
           provide: getRepositoryToken(PostComment),
           useValue: dataSource.getRepository(PostComment),
         },
-        { provide: S3StorageService, useValue: fakeS3 },
         {
           provide: getRepositoryToken(Report),
           useValue: dataSource.getRepository(Report),
         },
+        {
+          provide: getRepositoryToken(Attachment),
+          useValue: dataSource.getRepository(Attachment),
+        },
+        { provide: S3StorageService, useValue: fakeS3 },
       ],
     }).compile();
 

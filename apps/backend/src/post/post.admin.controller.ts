@@ -109,6 +109,10 @@ export class PostAdminController {
           }
         }),
         reports: reports.map((report) => {
+          const user = report.user?.profile
+            ? { nickname: report.user.profile.nickname }
+            : null;
+
           return {
             id: report.id,
             reason: report.reason,
@@ -116,9 +120,7 @@ export class PostAdminController {
             postId: report.postId,
             commentId: report.commentId,
             range: report.range,
-            user: {
-              nickname: report.user?.profile?.nickname ?? "",
-            },
+            user,
           };
         }),
         likeCount: post.likeCount,

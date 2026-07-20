@@ -11,10 +11,11 @@ import { PostAdminController } from "./post.admin.controller";
 import { S3StorageModule } from "src/s3-storage/s3-storage.module";
 import { AuthModule } from "src/auth/auth.module";
 import { UserModule } from "src/user/user.module";
+import { Report } from "src/report/entities/report.entity";
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Post, PostLike, PostComment, Attachment]),
+    TypeOrmModule.forFeature([Post, PostLike, PostComment, Attachment, Report]),
     S3StorageModule,
     AuthModule,
     UserModule,
