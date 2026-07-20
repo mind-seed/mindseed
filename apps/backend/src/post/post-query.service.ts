@@ -15,6 +15,7 @@ import { executeCursorPagination } from "src/common/helpers/cursor";
 import { AdminListPostsQueryDtoSchema } from "@mindseed/api-types";
 import { z } from "zod";
 import { apiToEntityCategory } from "./post.mappers";
+import { Report } from "src/report/entities/report.entity";
 
 /* shared types */
 
@@ -72,6 +73,13 @@ export type GetPostResult = PostWithRelations & {
   comments: PostCommentWithType[];
 };
 
+export type AdminGetPostResult = {
+  post: Post;
+  attachmentToUrl: AttachmentToUrlMap;
+  comments: PostCommentWithType[];
+  reports: Report[];
+};
+
 const orderByMap = {
   createdAt: {
     sqlPath: "post.createdAt",
@@ -93,6 +101,10 @@ export class PostQueryService {
     private readonly postLikeRepository: Repository<PostLike>,
     @InjectRepository(PostComment)
     private readonly postCommentRepository: Repository<PostComment>,
+    @InjectRepository(Report)
+    private readonly reportRepository: Repository<Report>,
+    @InjectRepository(Attachment)
+    private readonly attachmentRepository: Repository<Attachment>,
     private readonly s3StorageService: S3StorageService,
   ) {}
 
@@ -159,7 +171,7 @@ export class PostQueryService {
 
   /*
    * pagination을 적용하여 전체 글 목록을 조회한다.
-   * @returns 해당 글 리스트, url 빌더
+   * @returns 해당 글 리스트, 글 총 개수
    */
   async adminListPosts({
     page,
@@ -277,14 +289,57 @@ export class PostQueryService {
     );
   }
 
-  /* getPost */
-
   /**
    * postId에 대응하는 글이 존재하는지 확인한다.
    * @returns 존재하는 경우 true, 존재하지 않는 경우 false
    */
   async existsPost(postId: number): Promise<boolean> {
     return this.postRepository.existsBy({ id: postId });
+  }
+
+  /**
+   * postId에 대응하는 글 하나를 조회한다.
+   * @returns 해당 글, 카테고리, 내용, 작성 시각, 작성자 (익명), 이미지 빌더, 댓글, 신고 내역
+   */
+  async adminGetPost(postId: number): Promise<AdminGetPostResult> {
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+      relations: {
+        author: true,
+        attachments: true,
+        // comments: { author: true },
+      },
+    });
+
+    if (!post || !post.isActive()) {
+      throw new PostNotFoundError();
+    }
+
+    const attachmentToUrl = this.buildAttachmentToUrl(post.attachments);
+
+    const comments = await this.postCommentRepository
+      .createQueryBuilder("post_comment")
+      .leftJoinAndSelect("post_comment.author", "author")
+      .where("post_comment.postId = :postId", { postId })
+      .orderBy("post_comment.createdAt", "ASC")
+      .getMany();
+
+    const reports = await this.reportRepository
+      .createQueryBuilder("report")
+      .leftJoinAndSelect("report.author", "author")
+      .where("report.postId = :postId", { postId })
+      .orderBy("report.createdAt", "ASC")
+      .getMany();
+
+    return {
+      post,
+      attachmentToUrl,
+      comments: comments.map((comment) => ({
+        comment,
+        type: this.computeCommentType(comment),
+      })),
+      reports,
+    };
   }
 
   /**
