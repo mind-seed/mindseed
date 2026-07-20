@@ -1,8 +1,10 @@
 import type {
+  AdminGetPostSuccessResponseDto,
   AdminListPostsQueryDto,
   AdminListPostsSuccessResponseDto,
 } from "@mindseed/api-types";
 import {
+  AdminGetPostResponseDtoSchema,
   AdminListPostsQueryDtoSchema,
   AdminListPostsResponseDtoSchema,
   idParamSchema,
@@ -59,10 +61,10 @@ export class PostAdminController {
   @Get(":id")
   @HttpCode(HttpStatus.OK)
   @AdminOnly()
-  @ZodEncodeResponse(GetPostResponseDtoSchema)
+  @ZodEncodeResponse(AdminGetPostResponseDtoSchema)
   async adminGetPost(
     @ZodParam("id", idParamSchema) id: number,
-  ): Promise<GetPostSuccessResponseDto> {
+  ): Promise<AdminGetPostSuccessResponseDto> {
     const { post, attachmentToUrl, comments, reports } =
       await this.postQueryService.adminGetPost(id);
 
@@ -105,6 +107,19 @@ export class PostAdminController {
                 author: { nickname: c.nickname },
               };
           }
+        }),
+        reports: reports.map((report) => {
+          return {
+            id: report.id,
+            reason: report.reason,
+            createdAt: report.createdAt,
+            postId: report.postId,
+            commentId: report.commentId,
+            range: report.range,
+            user: {
+              nickname: report.user?.profile?.nickname ?? "",
+            },
+          };
         }),
         likeCount: post.likeCount,
         createdAt: post.createdAt,
