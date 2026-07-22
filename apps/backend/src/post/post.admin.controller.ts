@@ -1,24 +1,30 @@
 import type {
+  AdminDeletePostSuccessResponseDto,
   AdminGetPostSuccessResponseDto,
   AdminListPostsQueryDto,
   AdminListPostsSuccessResponseDto,
 } from "@mindseed/api-types";
 import {
+  AdminDeletePostResponseDtoSchema,
   AdminGetPostResponseDtoSchema,
   AdminListPostsQueryDtoSchema,
   AdminListPostsResponseDtoSchema,
   idParamSchema,
 } from "@mindseed/api-types";
-import { Controller, Get, HttpCode, HttpStatus } from "@nestjs/common";
+import { Controller, Delete, Get, HttpCode, HttpStatus } from "@nestjs/common";
 import { AdminOnly } from "src/auth/decorators/auth.decorators";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 import { ZodParam, ZodQuery } from "src/common/pipes/zod-validation.decorator";
 import { PostQueryService } from "./post-query.service";
 import { entityToApiCategory, entityToApiDeletionType } from "./post.mappers";
+import { PostMutationService } from "./post-mutation.service";
 
 @Controller("/admin/posts")
 export class PostAdminController {
-  constructor(private readonly postQueryService: PostQueryService) {}
+  constructor(
+    private readonly postQueryService: PostQueryService,
+    private readonly postMutationService: PostMutationService,
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -128,5 +134,16 @@ export class PostAdminController {
         updatedAt: post.updatedAt,
       },
     };
+  }
+
+  @Delete(":id")
+  @HttpCode(HttpStatus.OK)
+  @AdminOnly()
+  @ZodEncodeResponse(AdminDeletePostResponseDtoSchema)
+  async deleteAdminPost(
+    @ZodParam("id", idParamSchema) id: number,
+  ): Promise<AdminDeletePostSuccessResponseDto> {
+    await this.postMutationService.deleteAdminPost(id);
+    return { success: true, data: null };
   }
 }

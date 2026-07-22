@@ -539,4 +539,66 @@ describe("PostMutationService", () => {
       await expect(result).rejects.toThrow(NotPostAuthorError);
     });
   });
+
+  describe("deleteAdminPost", () => {
+    it("success: 글 및 attachment 삭제", async () => {
+      // Given: 글이 존재하는 경우
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const attachment = await saveTestAttachment({ post });
+      fakeS3.put(attachment.s3Key);
+
+      // When: admin이 글 삭제 시도
+      await postMutationService.deleteAdminPost(post.id);
+
+      // Then: 글 및 attachments 삭제됨
+      expect(await postRepository.findOneBy({ id: post.id })).toBeNull();
+      expect(
+        await attachmentRepository.findOneBy({ id: attachment.id }),
+      ).toBeNull();
+      expect(await fakeS3.exists(attachment.s3Key)).toBe(false);
+    });
+
+    it("다른 사용자의 글도 삭제 가능", async () => {
+      // Given: 다른 사용자의 글이 존재하는 경우
+      const author = await saveTestUser();
+      const otherUser = await saveTestUser();
+      const post = await saveTestPost(author.id);
+      const attachment = await saveTestAttachment({ post });
+      fakeS3.put(attachment.s3Key);
+
+      // When: 다른 사용자가 admin 권한으로 글 삭제 시도
+      await postMutationService.deleteAdminPost(post.id);
+
+      // Then: 글 및 attachments 삭제됨
+      expect(await postRepository.findOneBy({ id: post.id })).toBeNull();
+      expect(
+        await attachmentRepository.findOneBy({ id: attachment.id }),
+      ).toBeNull();
+      expect(await fakeS3.exists(attachment.s3Key)).toBe(false);
+    });
+
+    it("존재하지 않는 글 처리", async () => {
+      // Given: 글이 존재하지 않는 경우
+
+      // When: admin이 글 삭제 시도
+      const result = postMutationService.deleteAdminPost(0);
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("탈퇴한 글 owner 처리 (soft-deleted)", async () => {
+      // Given: 탈퇴된 owner의 글인 경우
+      const author = await saveTestUser();
+      const post = await saveTestPost(author.id);
+      await userRepository.softDelete({ id: author.id });
+
+      // When: admin이 글 삭제 시도
+      const result = postMutationService.deleteAdminPost(post.id);
+
+      // Then: throws handled error
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+  });
 });
