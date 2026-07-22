@@ -5,10 +5,7 @@
 
 import z from "zod";
 import { responseDtoSchema } from "../../helpers";
-import {
-  AdminPostWithCommentsSchema,
-  PostWithCommentsSchema,
-} from "../../common/post";
+import { AdminPostWithCommentsSchema } from "../../common/post";
 import { PostErrorCode } from "../../common/error-codes";
 
 export const AdminGetPostResponseDtoSchema = responseDtoSchema(
