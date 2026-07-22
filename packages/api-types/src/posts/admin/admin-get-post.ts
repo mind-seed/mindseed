@@ -1,5 +1,5 @@
 /*
- GET /posts/:id
+ GET /admin/posts/:id
  Auth: ADMIN role
  */
 
