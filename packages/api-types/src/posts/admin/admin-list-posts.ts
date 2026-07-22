@@ -18,10 +18,8 @@ export const AdminListPostsOrderByFieldsSchema = z.enum([
 ]);
 
 export const AdminListPostsQueryDtoSchema = z.object({
-  page: numberSerializerCodec.pipe(z.number().int().min(1)).default(1),
-  limit: numberSerializerCodec
-    .pipe(z.number().int().min(1).max(100))
-    .default(10),
+  page: numberSerializerCodec.pipe(z.int().min(1)).default(1),
+  limit: numberSerializerCodec.pipe(z.int().min(1).max(100)).default(10),
   orderBy: AdminListPostsOrderByFieldsSchema.default("latest"),
   category: PostCategorySchema.optional(),
   isReported: booleanSerializerCodec.default(false),
@@ -35,7 +33,7 @@ export type AdminListPostsQueryDto = z.output<
 export const AdminListPostsResponseDtoSchema = responseDtoSchema(
   z.object({
     posts: z.array(AdminPostDtoSchema),
-    totalCount: numberSerializerCodec.pipe(z.number().int().min(0)),
+    totalCount: z.int().min(0),
   }),
   z.never(),
 );
