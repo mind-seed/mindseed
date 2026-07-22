@@ -200,7 +200,7 @@ export class PostMutationService {
   }
 
   /**
-   * Admin 전용으로, 어뜬 글이든 삭제한다.
+   * Admin 전용으로, 어떤 글이든 삭제한다.
    */
   async deleteAdminPost(postId: number): Promise<void> {
     const post = await this.postRepository.findOne({
