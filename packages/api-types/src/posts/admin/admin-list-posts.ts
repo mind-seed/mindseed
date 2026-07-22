@@ -23,7 +23,7 @@ export const AdminListPostsQueryDtoSchema = z.object({
   orderBy: AdminListPostsOrderByFieldsSchema.default("latest"),
   category: PostCategorySchema.optional(),
   isReported: booleanSerializerCodec.default(false),
-  query: z.string().optional(),
+  query: z.string().max(200).optional(),
 });
 
 export type AdminListPostsQueryDto = z.output<
