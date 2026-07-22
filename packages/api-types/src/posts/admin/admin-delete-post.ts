@@ -9,7 +9,7 @@ import { PostErrorCode } from "../../common/error-codes";
 
 export const AdminDeletePostResponseDtoSchema = responseDtoSchema(
   z.null(),
-  z.enum([PostErrorCode.POST_NOT_FOUND, PostErrorCode.NOT_POST_AUTHOR]),
+  z.enum([PostErrorCode.POST_NOT_FOUND]),
 );
 
 export type AdminDeletePostResponseDto = z.output<
