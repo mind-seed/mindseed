@@ -37,6 +37,7 @@ export * from "./posts/set-post-like";
 export * from "./posts/delete-post";
 export * from "./posts/admin/admin-list-posts";
 export * from "./posts/admin/admin-get-post";
+export * from "./posts/admin/admin-delete-post";
 
 export * from "./post-comments/create-comment";
 export * from "./post-comments/update-comment";
