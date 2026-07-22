@@ -103,8 +103,6 @@ export class PostQueryService {
     private readonly postCommentRepository: Repository<PostComment>,
     @InjectRepository(Report)
     private readonly reportRepository: Repository<Report>,
-    @InjectRepository(Attachment)
-    private readonly attachmentRepository: Repository<Attachment>,
     private readonly s3StorageService: S3StorageService,
   ) {}
 
