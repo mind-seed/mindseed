@@ -1,7 +1,6 @@
 import { Injectable, Inject } from "@nestjs/common";
 import type { ConfigType } from "@nestjs/config";
 import {
-  DeleteObjectsCommand,
   HeadObjectCommand,
   NotFound,
   PutObjectCommand,
@@ -11,6 +10,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3_CLIENT } from "./s3-client.di-token";
 import { s3Config } from "src/config";
 import { S3StorageService } from "./s3-storage.service";
+import { InjectRepository } from "@nestjs/typeorm";
+import { S3Queue } from "./entities/s3-queue";
+import { Repository } from "typeorm";
 
 // 2026-03-26 testability를 위해 wrapper class 작성
 
@@ -20,6 +22,8 @@ export class S3ClientStorageService extends S3StorageService {
     @Inject(S3_CLIENT) private readonly s3Client: S3Client,
     @Inject(s3Config.KEY)
     private readonly s3cfg: ConfigType<typeof s3Config>,
+    @InjectRepository(S3Queue)
+    private readonly s3QueueRepository: Repository<S3Queue>,
   ) {
     super();
   }
@@ -55,13 +59,21 @@ export class S3ClientStorageService extends S3StorageService {
       return;
     }
 
-    await this.s3Client.send(
-      new DeleteObjectsCommand({
-        Bucket: this.s3cfg.bucket,
-        Delete: {
-          Objects: keys.map((key) => ({ Key: key })),
-        },
-      }),
-    );
+    for (const key of keys) {
+      await this.s3QueueRepository.save(
+        this.s3QueueRepository.create({
+          attachmentKey: key,
+        }),
+      );
+    }
+
+    // await this.s3Client.send(
+    //   new DeleteObjectsCommand({
+    //     Bucket: this.s3cfg.bucket,
+    //     Delete: {
+    //       Objects: keys.map((key) => ({ Key: key })),
+    //     },
+    //   }),
+    // );
   }
 }
