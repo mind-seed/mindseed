@@ -80,8 +80,8 @@ export class S3DeleteCron {
       const queues = await repository
         .createQueryBuilder("queue")
         .where("queue.status = :status", { status: S3QueueStatus.PENDING })
-        .orderBy("queue.createdAt", "DESC")
-        .addOrderBy("queue.id", "DESC")
+        .orderBy("queue.attemptCount", "DESC")
+        .addOrderBy("queue.createdAt", "DESC")
         .take(BATCH_SIZE)
         .setLock("pessimistic_write")
         .setOnLocked("skip_locked")
