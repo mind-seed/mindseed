@@ -60,11 +60,15 @@ export class S3ClientStorageService extends S3StorageService {
     }
 
     for (const key of keys) {
-      await this.s3QueueRepository.save(
-        this.s3QueueRepository.create({
-          attachmentKey: key,
-        }),
-      );
+      try {
+        await this.s3QueueRepository.save(
+          this.s3QueueRepository.create({
+            attachmentKey: key,
+          }),
+        );
+      } catch (error) {
+        console.error(`[S3ClientStorageService] failed to enqueue key=${key}`);
+      }
     }
 
     // await this.s3Client.send(
