@@ -59,15 +59,26 @@ export class S3ClientStorageService extends S3StorageService {
       return;
     }
 
+    /**
+     * 일시적인 DB 장애가 있을 수 있으므로 재시도 로직을 구현함.
+     * 하나의 실패가 모든 큐를 실패로 만들 수 있으므로, 각 큐를 개별적으로 처리하도록 함.
+     * 실패한 항목에 대해서는 로그를 남겨 나중에 디버깅 가능하도록 수정
+     */
     for (const key of keys) {
       try {
-        await this.s3QueueRepository.save(
-          this.s3QueueRepository.create({
+        await this.s3QueueRepository.save({
+          attachmentKey: key,
+        });
+      } catch (e) {
+        try {
+          await this.s3QueueRepository.save({
             attachmentKey: key,
-          }),
-        );
-      } catch (error) {
-        console.error(`[S3ClientStorageService] failed to enqueue key=${key}`);
+          });
+        } catch (e) {
+          console.error(
+            `[S3ClientStorageService] failed to enqueue key=${key} for deletion, error=${e}`,
+          );
+        }
       }
     }
 
