@@ -58,6 +58,15 @@ export class S3DeleteCron {
           deletedQueueIds.push(queue.id);
           console.log(`[S3DeleteCron] deleted id=${queue.id}`);
         } catch (error) {
+          if (queue.attemptCount >= 5) {
+            console.error(
+              `[S3DeleteCron] failed id=${queue.id}, key=${queue.attachmentKey}, error=${this.formatError(
+                error,
+              )}, giving up after ${queue.attemptCount} attempts`,
+            );
+            deletedQueueIds.push(queue.id);
+            continue;
+          }
           await this.markAsPendingWithRetry(queue);
           console.log(
             `[S3DeleteCron] failed id=${queue.id}, key=${queue.attachmentKey}, error=${this.formatError(error)}`,
