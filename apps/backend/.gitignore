@@ -5,3 +5,6 @@
 # Tests
 /coverage
 /.nyc_output
+
+# Local API smoke test page
+/s3-smoke-test.html

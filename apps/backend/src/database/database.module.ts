@@ -16,6 +16,7 @@ import { DiagnosisEntry } from "src/diagnosis/entities/diagnosis-entry.entity";
 import { SnakeNamingStrategy } from "typeorm-naming-strategies";
 import { CounselEntry } from "src/counsel/entities/counsel-entry.entity";
 import { Report } from "src/report/entities/report.entity";
+import { S3Queue } from "src/s3-storage/entities/s3-queue";
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { Report } from "src/report/entities/report.entity";
           PostLike,
           RefreshToken,
           Resource,
+          S3Queue,
           User,
           UserProfile,
           Report,

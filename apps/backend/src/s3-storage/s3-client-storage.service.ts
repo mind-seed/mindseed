@@ -1,7 +1,6 @@
 import { Injectable, Inject } from "@nestjs/common";
 import type { ConfigType } from "@nestjs/config";
 import {
-  DeleteObjectsCommand,
   HeadObjectCommand,
   NotFound,
   PutObjectCommand,
@@ -11,6 +10,9 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { S3_CLIENT } from "./s3-client.di-token";
 import { s3Config } from "src/config";
 import { S3StorageService } from "./s3-storage.service";
+import { InjectRepository } from "@nestjs/typeorm";
+import { S3Queue } from "./entities/s3-queue";
+import { Repository } from "typeorm";
 
 // 2026-03-26 testability를 위해 wrapper class 작성
 
@@ -20,6 +22,8 @@ export class S3ClientStorageService extends S3StorageService {
     @Inject(S3_CLIENT) private readonly s3Client: S3Client,
     @Inject(s3Config.KEY)
     private readonly s3cfg: ConfigType<typeof s3Config>,
+    @InjectRepository(S3Queue)
+    private readonly s3QueueRepository: Repository<S3Queue>,
   ) {
     super();
   }
@@ -33,7 +37,12 @@ export class S3ClientStorageService extends S3StorageService {
   }
 
   getPublicUrl(key: string): string {
-    return `https://${this.s3cfg.endpoint}/${this.s3cfg.bucket}/${key}`;
+    const endpoint = this.s3cfg.endpoint!;
+    const baseUrl = endpoint.match(/^https?:\/\//)
+      ? endpoint
+      : `https://${endpoint}`;
+
+    return `${baseUrl.replace(/\/+$/, "")}/${this.s3cfg.bucket}/${key}`;
   }
 
   async exists(key: string): Promise<boolean> {
@@ -55,13 +64,36 @@ export class S3ClientStorageService extends S3StorageService {
       return;
     }
 
-    await this.s3Client.send(
-      new DeleteObjectsCommand({
-        Bucket: this.s3cfg.bucket,
-        Delete: {
-          Objects: keys.map((key) => ({ Key: key })),
-        },
-      }),
-    );
+    /**
+     * 일시적인 DB 장애가 있을 수 있으므로 재시도 로직을 구현함.
+     * 하나의 실패가 모든 큐를 실패로 만들 수 있으므로, 각 큐를 개별적으로 처리하도록 함.
+     * 실패한 항목에 대해서는 로그를 남겨 나중에 디버깅 가능하도록 수정
+     */
+    for (const key of keys) {
+      try {
+        await this.s3QueueRepository.save({
+          attachmentKey: key,
+        });
+      } catch (e) {
+        try {
+          await this.s3QueueRepository.save({
+            attachmentKey: key,
+          });
+        } catch (e) {
+          console.error(
+            `[S3ClientStorageService] failed to enqueue key=${key} for deletion, error=${e}`,
+          );
+        }
+      }
+    }
+
+    // await this.s3Client.send(
+    //   new DeleteObjectsCommand({
+    //     Bucket: this.s3cfg.bucket,
+    //     Delete: {
+    //       Objects: keys.map((key) => ({ Key: key })),
+    //     },
+    //   }),
+    // );
   }
 }

@@ -200,6 +200,28 @@ export class PostMutationService {
   }
 
   /**
+   * Admin 전용으로, 어떤 글이든 삭제한다.
+   */
+  async deleteAdminPost(postId: number): Promise<void> {
+    const post = await this.postRepository.findOne({
+      where: { id: postId },
+      relations: { attachments: true, author: true },
+    });
+
+    if (!post || !post.isActive()) {
+      throw new PostNotFoundError();
+    }
+
+    await this.postRepository.delete({
+      id: postId,
+    });
+
+    await this.s3StorageService.deleteMany(
+      post.attachments.map((a) => a.s3Key),
+    );
+  }
+
+  /**
    * attachmentIds가 가리키는 attachment가 모두 글과 연관될 수 있는지를
    * 확인한다.
    * 존재하지 않는 경우 / confirmed 되지 않은 경우 / 이미 다른 글과 연관되어 있으면
