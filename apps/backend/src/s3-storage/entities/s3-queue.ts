@@ -1,4 +1,7 @@
-import { CreateTimestampColumn } from "src/database/decorators/temporal.decorators";
+import {
+  CreateTimestampColumn,
+  TimestampColumn,
+} from "src/database/decorators/temporal.decorators";
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { Temporal } from "@js-temporal/polyfill";
 
@@ -25,4 +28,8 @@ export class S3Queue {
   // 생성 일시
   @CreateTimestampColumn()
   createdAt: Temporal.Instant;
+
+  // 처리 시작 일시
+  @TimestampColumn({ nullable: true })
+  processingStartedAt: Temporal.Instant | null;
 }

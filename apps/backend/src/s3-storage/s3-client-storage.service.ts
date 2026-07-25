@@ -37,7 +37,12 @@ export class S3ClientStorageService extends S3StorageService {
   }
 
   getPublicUrl(key: string): string {
-    return `https://${this.s3cfg.endpoint}/${this.s3cfg.bucket}/${key}`;
+    const endpoint = this.s3cfg.endpoint!;
+    const baseUrl = endpoint.match(/^https?:\/\//)
+      ? endpoint
+      : `https://${endpoint}`;
+
+    return `${baseUrl.replace(/\/+$/, "")}/${this.s3cfg.bucket}/${key}`;
   }
 
   async exists(key: string): Promise<boolean> {

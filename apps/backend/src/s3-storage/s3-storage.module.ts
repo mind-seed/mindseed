@@ -8,12 +8,14 @@ import { S3ClientStorageService } from "./s3-client-storage.service";
 import { S3_CLIENT } from "./s3-client.di-token";
 import { S3Queue } from "./entities/s3-queue";
 import { S3DeleteCron } from "./s3-delete.cron";
+import { S3ProcessingRecoveryCron } from "./s3-processing-recovery.cron";
 
 @Module({
   imports: [TypeOrmModule.forFeature([S3Queue])],
   providers: [
     { provide: S3StorageService, useClass: S3ClientStorageService },
     S3DeleteCron,
+    S3ProcessingRecoveryCron,
     {
       provide: S3_CLIENT,
       inject: [s3Config.KEY],

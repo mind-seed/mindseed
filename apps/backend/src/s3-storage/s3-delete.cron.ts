@@ -3,6 +3,7 @@ import type { ConfigType } from "@nestjs/config";
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { Cron, CronExpression } from "@nestjs/schedule";
 import { InjectRepository } from "@nestjs/typeorm";
+import { Temporal } from "@js-temporal/polyfill";
 import { s3Config } from "src/config";
 import { In, Repository } from "typeorm";
 import { S3_CLIENT } from "./s3-client.di-token";
@@ -102,7 +103,10 @@ export class S3DeleteCron {
 
       await repository.update(
         { id: In(queues.map((queue) => queue.id)) },
-        { status: S3QueueStatus.PROCESSING },
+        {
+          status: S3QueueStatus.PROCESSING,
+          processingStartedAt: Temporal.Now.instant(),
+        },
       );
 
       return queues;
@@ -115,6 +119,7 @@ export class S3DeleteCron {
       {
         status: S3QueueStatus.PENDING,
         attemptCount: queue.attemptCount + 1,
+        processingStartedAt: null,
       },
     );
   }
