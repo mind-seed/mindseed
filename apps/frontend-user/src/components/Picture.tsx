@@ -1,31 +1,34 @@
 import { styled, css } from "styled-components";
 import { useState } from "react";
 import { COLORS } from "../style/colors";
+import type { PictureDto } from "../type/index";
 
 type PictureProps = {
-  imageUrls: string[];
+  pictures: PictureDto[];
 };
 
-export const Picture = ({ imageUrls }: PictureProps) => {
+export const Picture = ({ pictures }: PictureProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  if (!imageUrls || imageUrls.length === 0) {
+  if (!pictures || pictures.length === 0) {
     return null;
   }
 
+  const safeIndex = Math.min(currentIndex, pictures.length - 1);
+
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? imageUrls.length - 1 : prev - 1));
+    setCurrentIndex(safeIndex === 0 ? pictures.length - 1 : safeIndex - 1);
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === imageUrls.length - 1 ? 0 : prev + 1));
+    setCurrentIndex(safeIndex === pictures.length - 1 ? 0 : safeIndex + 1);
   };
 
   const handleClick = (index: number) => {
     setCurrentIndex(index);
   };
   return (
-    <PictureWrapper $currentUrl={imageUrls[currentIndex]}>
+    <PictureWrapper $currentUrl={pictures[safeIndex].url}>
       <Pagination>
         <ArrowButton type="button" onClick={handlePrev}>
           <svg
@@ -45,11 +48,11 @@ export const Picture = ({ imageUrls }: PictureProps) => {
           </svg>
         </ArrowButton>
         <DotWrapper>
-          {imageUrls.map((_, index) => (
+          {pictures.map((picture, index) => (
             <DotButton
               type="button"
-              key={index}
-              $isActive={currentIndex === index}
+              key={picture.id}
+              $isActive={safeIndex === index}
               onClick={() => handleClick(index)}
             ></DotButton>
           ))}
@@ -73,6 +76,20 @@ export const Picture = ({ imageUrls }: PictureProps) => {
         </ArrowButton>
       </Pagination>
     </PictureWrapper>
+  );
+};
+
+export const PictureList = ({ pictures }: PictureProps) => {
+  if (!pictures || pictures.length === 0) {
+    return null;
+  }
+
+  return (
+    <PictureListContainer>
+      {pictures.map((picture) => (
+        <ThumbnailImage key={picture.id} src={picture.url} alt="" />
+      ))}
+    </PictureListContainer>
   );
 };
 
@@ -135,4 +152,24 @@ const ArrowButton = styled.button`
   background: none;
   color: ${COLORS.gray.gray0};
   cursor: pointer;
+`;
+
+const PictureListContainer = styled.div`
+  width: 100%;
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+`;
+
+const ThumbnailImage = styled.img`
+  width: 200px;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 0;
+  border-radius: 6px;
+  object-fit: cover;
 `;

@@ -3,8 +3,6 @@ import { useLocation, Link } from "react-router";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
 
-type NavListType = "홈" | "미션" | "커뮤니티" | "콘텐츠" | "마이페이지";
-
 const NavList = [
   {
     label: "홈",
@@ -170,9 +168,15 @@ export const BottomNav = () => {
 };
 
 const Nav = styled.nav`
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding: 0 1.25rem;
+  padding: 0 1.25rem env(safe-area-inset-bottom);
+  z-index: 10;
 `;
 
 const NavItem = styled(Link)<{ $isActive: boolean }>`
