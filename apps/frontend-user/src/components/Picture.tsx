@@ -87,7 +87,7 @@ export const PictureList = ({ pictures }: PictureProps) => {
   return (
     <PictureListContainer>
       {pictures.map((picture) => (
-        <PictureThumbnail key={picture.id} src={picture.url} alt="" />
+        <ThumbnailImage key={picture.id} src={picture.url} alt="" />
       ))}
     </PictureListContainer>
   );
@@ -166,9 +166,10 @@ const PictureListContainer = styled.div`
   }
 `;
 
-const PictureThumbnail = styled.img`
+const ThumbnailImage = styled.img`
   width: 200px;
   aspect-ratio: 1 / 1;
+  flex-shrink: 0;
   border-radius: 6px;
   object-fit: cover;
 `;

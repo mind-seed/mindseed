@@ -175,7 +175,7 @@ const Nav = styled.nav`
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  padding: env(safe-area-inset-bottom) 1.25rem 0 1.25rem;
+  padding: 0 1.25rem env(safe-area-inset-bottom);
   z-index: 10;
 `;
 
