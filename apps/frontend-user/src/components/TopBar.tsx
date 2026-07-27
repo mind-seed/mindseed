@@ -41,7 +41,11 @@ export const TopBar = ({
       <CenterArea> {title && <Title>{title}</Title>}</CenterArea>
       <RightArea>
         {rightType === "icon" && onRightClick && (
-          <RightButton type="button" onClick={onRightClick} aria-label="More options">
+          <RightButton
+            type="button"
+            onClick={onRightClick}
+            aria-label="More options"
+          >
             <svg
               width="24"
               height="24"
@@ -105,6 +109,7 @@ const RightArea = styled.div`
 `;
 
 const BackButton = styled.button`
+  margin-top: 3px;
   border: none;
   background: none;
   cursor: pointer;

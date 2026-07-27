@@ -2,8 +2,10 @@ import { styled, css } from "styled-components";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
 
+type ButtonVariant = "primary" | "outlined";
+
 type ButtonProps = {
-  variant: "primary" | "outlined";
+  variant: ButtonVariant;
   size: "medium" | "small";
   label: string;
   type?: "button" | "submit";
@@ -53,10 +55,11 @@ export const Button = ({
 };
 
 const StyledButton = styled.button<{
-  $variant: "primary" | "outlined";
+  $variant: ButtonVariant;
   $showIcon?: boolean;
   $size: "medium" | "small";
 }>`
+  width: 100%;
   display: flex;
   justify-content: center;
   gap: ${({ $showIcon }) => $showIcon && `0.625rem`};
