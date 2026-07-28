@@ -34,7 +34,18 @@ export const Post = ({
 }: PostProps) => {
   const createdTime = dayjs(createdAt.epochMilliseconds).fromNow();
   return (
-    <PostContainer $variant={variant} onClick={onClick}>
+    <PostContainer
+      $variant={variant}
+      onClick={onClick}
+      role={variant === "list" ? "button" : undefined}
+      tabIndex={variant === "list" ? 0 : undefined}
+      onKeyDown={(e) => {
+        if (variant === "list" && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+    >
       <Header>
         <Author>{author.nickname}</Author>
         <CreatedAt>{createdTime}</CreatedAt>

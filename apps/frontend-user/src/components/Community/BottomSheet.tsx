@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { styled } from "styled-components";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
@@ -42,23 +42,42 @@ type BottomSheetProps<T extends string> =
   | SortProps<T>;
 
 export const BottomSheet = <T extends string>(props: BottomSheetProps<T>) => {
-  const { onClose } = props;
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
-
   const title =
     props.variant === "manage"
       ? "글 관리"
       : props.variant === "more" || props.variant === "commentMore"
         ? "더보기"
         : "정렬기준";
+  const { isClose, onClose } = props;
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (isClose) return;
+
+    previousFocusRef.current = document.activeElement as HTMLElement;
+
+    const timer = setTimeout(() => {
+      sheetRef.current?.focus();
+    }, 10);
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("keydown", handleKeyDown);
+
+      if (previousFocusRef.current) {
+        previousFocusRef.current.focus();
+      }
+    };
+  }, [isClose, onClose]);
+
+  if (isClose) return null;
   return (
     <Overlay onClick={props.onClose}>
       <Sheet
