@@ -7,6 +7,7 @@ import { styled } from "styled-components";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
 import type { CommentDto } from "../../type/index";
+import { MoreHorizontalIcon } from "../Icons/MoreHorizontalIcon";
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
 
@@ -45,6 +46,7 @@ const getCommentMeta = (comment: CommentDto) => {
 type CommentInputProps = {
   value: string;
   buttonText: string;
+  disabled?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
   onFocus?: () => void;
@@ -74,32 +76,16 @@ export const Comment = (props: CommentProps) => {
         </Meta>
 
         {comment.type === "active" && props.variant === "user" && (
-          <MoreButton type="button" onClick={props.onMoreClick}>
-            <svg
+          <MoreButton
+            type="button"
+            onClick={props.onMoreClick}
+            aria-label="댓글 더보기"
+          >
+            <MoreHorizontalIcon
               width="16"
               height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <mask
-                id="mask0_2496_6541"
-                style={{ maskType: "alpha" }}
-                maskUnits="userSpaceOnUse"
-                x="0"
-                y="0"
-                width="16"
-                height="16"
-              >
-                <rect width="16" height="16" fill="#D9D9D9" />
-              </mask>
-              <g mask="url(#mask0_2496_6541)">
-                <path
-                  d="M4.00033 9.33329C3.63366 9.33329 3.31977 9.20274 3.05866 8.94163C2.79755 8.68052 2.66699 8.36663 2.66699 7.99996C2.66699 7.63329 2.79755 7.3194 3.05866 7.05829C3.31977 6.79718 3.63366 6.66663 4.00033 6.66663C4.36699 6.66663 4.68088 6.79718 4.94199 7.05829C5.2031 7.3194 5.33366 7.63329 5.33366 7.99996C5.33366 8.36663 5.2031 8.68052 4.94199 8.94163C4.68088 9.20274 4.36699 9.33329 4.00033 9.33329ZM8.00033 9.33329C7.63366 9.33329 7.31977 9.20274 7.05866 8.94163C6.79755 8.68052 6.66699 8.36663 6.66699 7.99996C6.66699 7.63329 6.79755 7.3194 7.05866 7.05829C7.31977 6.79718 7.63366 6.66663 8.00033 6.66663C8.36699 6.66663 8.68088 6.79718 8.94199 7.05829C9.2031 7.3194 9.33366 7.63329 9.33366 7.99996C9.33366 8.36663 9.2031 8.68052 8.94199 8.94163C8.68088 9.20274 8.36699 9.33329 8.00033 9.33329ZM12.0003 9.33329C11.6337 9.33329 11.3198 9.20274 11.0587 8.94163C10.7975 8.68052 10.667 8.36663 10.667 7.99996C10.667 7.63329 10.7975 7.3194 11.0587 7.05829C11.3198 6.79718 11.6337 6.66663 12.0003 6.66663C12.367 6.66663 12.6809 6.79718 12.942 7.05829C13.2031 7.3194 13.3337 7.63329 13.3337 7.99996C13.3337 8.36663 13.2031 8.68052 12.942 8.94163C12.6809 9.20274 12.367 9.33329 12.0003 9.33329Z"
-                  fill="#919191"
-                />
-              </g>
-            </svg>
+              color={COLORS.gray.gray500}
+            />
           </MoreButton>
         )}
 
@@ -227,6 +213,7 @@ const Arrow = styled.svg`
 export const CommentInput = ({
   value,
   buttonText,
+  disabled = false,
   onChange,
   onSubmit,
   onFocus,
@@ -244,7 +231,7 @@ export const CommentInput = ({
 
   return (
     <InputWrapper>
-      <Form action="submit" onSubmit={onSubmit}>
+      <Form onSubmit={onSubmit}>
         <TextArea
           ref={textAreaRef}
           value={value}
@@ -255,7 +242,9 @@ export const CommentInput = ({
           onFocus={onFocus}
           autoFocus={autoFocus}
         ></TextArea>
-        <SubmitButton type="submit">{buttonText}</SubmitButton>
+        <SubmitButton type="submit" disabled={disabled}>
+          {buttonText}
+        </SubmitButton>
       </Form>
     </InputWrapper>
   );
@@ -296,4 +285,9 @@ const SubmitButton = styled.button`
   color: ${COLORS.main["main+"]};
   ${TEXT_STYLE.title.ti};
   cursor: pointer;
+
+  &:disabled {
+    color: ${COLORS.gray.gray400};
+    cursor: default;
+  }
 `;

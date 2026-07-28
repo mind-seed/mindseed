@@ -1,23 +1,115 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { styled } from "styled-components";
-import { Comment, CommentInput } from "../../components/Community/Comment";
-import { BottomSheet } from "../../components/Community/BottomSheet";
-import { CommentButton } from "../../components/Community/CommentButton";
-import { LikeButton } from "../../components/Community/LikeButton";
-import { Post } from "../../components/Community/Post";
+import { Comment, CommentInput } from "../../components/community/Comment";
+import { BottomSheet } from "../../components/community/BottomSheet";
+import { CommentButton } from "../../components/community/CommentButton";
+import { LikeButton } from "../../components/community/LikeButton";
+import { Post } from "../../components/community/Post";
 import { TopBar } from "../../components/TopBar";
+import { DeleteModal } from "../../components/community/DeleteModal";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import { ActiveCommentDtoSchema } from "../../type/index";
+import {
+  ActiveCommentDtoSchema,
+  PostWithCommentsSchema,
+} from "../../type/index";
 import type { CommunityPost } from "../../type/index";
 
 const COMMUNITY_AUTHOR_NICKNAME = "마음지기";
 
+type DeleteTarget = { type: "post" } | { type: "comment"; commentId: number };
+
+const COMMUNITY_POSTS: CommunityPost[] = [
+  {
+    id: 1,
+    content: "요즘 마음이 복잡한데 어떻게 정리하면 좋을까요?",
+    category: "dummy1",
+    author: { nickname: COMMUNITY_AUTHOR_NICKNAME },
+    attachments: [],
+    likeCount: 12,
+    isOwner: true,
+    isLiked: false,
+    createdAt: "2026-07-28T09:00:00.000Z",
+    updatedAt: "2026-07-28T09:00:00.000Z",
+    comments: [
+      {
+        type: "active",
+        id: 1,
+        content: "작성자 댓글입니다.",
+        author: { nickname: COMMUNITY_AUTHOR_NICKNAME },
+        createdAt: "2026-07-28T09:10:00.000Z",
+        updatedAt: "2026-07-28T09:10:00.000Z",
+      },
+      {
+        type: "active",
+        id: 2,
+        content: "천천히 하나씩 적어보는 건 어떨까요?",
+        author: { nickname: "새싹이" },
+        createdAt: "2026-07-28T09:20:00.000Z",
+        updatedAt: "2026-07-28T09:20:00.000Z",
+      },
+    ],
+  },
+  {
+    id: 2,
+    content: "오늘은 산책하면서 기분 전환을 했어요.",
+    category: "dummy2",
+    author: { nickname: "초록이" },
+    attachments: [],
+    likeCount: 8,
+    isOwner: false,
+    isLiked: true,
+    createdAt: "2026-07-27T10:00:00.000Z",
+    updatedAt: "2026-07-27T10:00:00.000Z",
+    comments: [],
+  },
+  {
+    id: 3,
+    content: "자가진단 결과는 어디에서 다시 확인할 수 있나요?",
+    category: "dummy3",
+    author: { nickname: "푸른콩" },
+    attachments: [],
+    likeCount: 5,
+    isOwner: false,
+    isLiked: false,
+    createdAt: "2026-07-26T11:00:00.000Z",
+    updatedAt: "2026-07-26T11:00:00.000Z",
+    comments: [],
+  },
+  {
+    id: 4,
+    content: "잠들기 전에 어떤 생각을 하면 마음이 편해질까요?",
+    category: "dummy1",
+    author: { nickname: "나무늘보" },
+    attachments: [],
+    likeCount: 18,
+    isOwner: false,
+    isLiked: false,
+    createdAt: "2026-07-25T12:00:00.000Z",
+    updatedAt: "2026-07-25T12:00:00.000Z",
+    comments: [],
+  },
+  {
+    id: 5,
+    content: "작은 화분에 새싹이 올라왔어요!",
+    category: "dummy2",
+    author: { nickname: "햇살이" },
+    attachments: [],
+    likeCount: 21,
+    isOwner: false,
+    isLiked: true,
+    createdAt: "2026-07-24T13:00:00.000Z",
+    updatedAt: "2026-07-24T13:00:00.000Z",
+    comments: [],
+  },
+].map((post) => PostWithCommentsSchema.parse(post));
+
 export const PostDetailPage = () => {
   const { postId } = useParams();
+  const post = COMMUNITY_POSTS.find((item) => String(item.id) === postId);
 
-  return <PostDetailContent key={postId} />;
+  return <PostDetailContent key={postId} post={post} />;
 };
 
 const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
@@ -32,20 +124,31 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
   const [comments, setComments] = useState(post?.comments ?? []);
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingComment, setEditingComment] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const originalEditingComment = comments.find(
+    (item) => item.id === editingCommentId && item.type === "active",
+  );
+  const trimmedEditingComment = editingComment.trim();
+  const isEditingCommentUnchanged =
+    originalEditingComment?.type === "active" &&
+    trimmedEditingComment === originalEditingComment.content.trim();
+  const isEditDisabled = !trimmedEditingComment || isEditingCommentUnchanged;
 
   useEffect(() => {
-    if (!isCommentMode) return;
+    if (!isCommentMode && editingCommentId === null) return;
 
     const handlePointerDown = (event: PointerEvent) => {
       if (!commentInputRef.current?.contains(event.target as Node)) {
         setIsCommentMode(false);
+        setEditingCommentId(null);
+        setEditingComment("");
       }
     };
 
     document.addEventListener("pointerdown", handlePointerDown);
 
     return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [isCommentMode]);
+  }, [editingCommentId, isCommentMode]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -76,18 +179,34 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
 
   const handleEditSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const trimmedComment = editingComment.trim();
-    if (!trimmedComment || editingCommentId === null) return;
+    if (isEditDisabled || editingCommentId === null) return;
 
     setComments((items) =>
       items.map((item) =>
         item.id === editingCommentId && item.type === "active"
-          ? { ...item, content: trimmedComment }
+          ? { ...item, content: trimmedEditingComment }
           : item,
       ),
     );
     setEditingCommentId(null);
     setEditingComment("");
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!deleteTarget) return;
+
+    if (deleteTarget.type === "comment") {
+      setComments((items) =>
+        items.filter((item) => item.id !== deleteTarget.commentId),
+      );
+      setEditingCommentId(null);
+      setEditingComment("");
+      setDeleteTarget(null);
+      return;
+    }
+
+    setDeleteTarget(null);
+    navigate("/community", { replace: true });
   };
 
   if (!post) {
@@ -137,6 +256,7 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
             <CommentInput
               value={comment}
               buttonText="등록"
+              disabled={!comment.trim()}
               onChange={(event) => setComment(event.target.value)}
               onSubmit={handleSubmit}
               autoFocus
@@ -146,10 +266,11 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
 
         {comments.map((item) =>
           item.id === editingCommentId && item.type === "active" ? (
-            <CommentInputArea key={item.id}>
+            <CommentInputArea key={item.id} ref={commentInputRef}>
               <CommentInput
                 value={editingComment}
                 buttonText="수정"
+                disabled={isEditDisabled}
                 onChange={(event) => setEditingComment(event.target.value)}
                 onSubmit={handleEditSubmit}
                 autoFocus
@@ -166,7 +287,9 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
                 setEditingCommentId(item.id);
                 setEditingComment(item.content);
               }}
-              onDeleteClick={() => undefined}
+              onDeleteClick={() =>
+                setDeleteTarget({ type: "comment", commentId: item.id })
+              }
             />
           ) : (
             <Comment
@@ -198,6 +321,10 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
             if (menu === "edit") {
               navigate(`/community/${post.id}/edit`);
             }
+
+            if (menu === "delete") {
+              setDeleteTarget({ type: "post" });
+            }
           }}
           onClose={() => setIsPostMenuOpen(false)}
         />
@@ -217,6 +344,12 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
           onClose={() => setIsPostMenuOpen(false)}
         />
       )}
+
+      <DeleteModal
+        isOpen={deleteTarget !== null}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </Page>
   );
 };
