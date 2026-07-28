@@ -55,6 +55,8 @@ export {
 export { UpdateCurrentUserRequestDtoSchema };
 export { PasswordSchema } from "../../../../packages/api-types/src/common/user";
 
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export type PictureDto = z.infer<typeof AttachmentDtoSchema>;
 export type CommunityPostFixture = z.input<typeof PostWithCommentsSchema>;
 export type CommunityPost = z.infer<typeof PostWithCommentsSchema>;
