@@ -1,6 +1,7 @@
 import { styled, css } from "styled-components";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
+import { SmallChevronRightIcon } from "./Icons/SmallChevronRightIcon";
 
 type ButtonVariant = "primary" | "outlined";
 
@@ -33,23 +34,7 @@ export const Button = ({
       $showIcon={showIcon}
     >
       {label}
-      {showIcon && (
-        <svg
-          width="1em"
-          height="1em"
-          viewBox="0 0 16 16"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            d="M6 12L10 8L6 4"
-            stroke="currentColor"
-            strokeWidth="1.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      )}
+      {showIcon && <SmallChevronRightIcon width="1em" height="1em" />}
     </StyledButton>
   );
 };

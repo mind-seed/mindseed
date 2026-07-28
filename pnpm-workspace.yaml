@@ -2,7 +2,7 @@ packages:
   - "packages/*"
   - "apps/*"
 allowBuilds:
-  '@nestjs/core': false
+  "@nestjs/core": false
   bcrypt: false
   esbuild: false
   unrs-resolver: false

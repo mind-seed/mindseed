@@ -1,6 +1,7 @@
 import { styled } from "styled-components";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
+import { SearchIcon } from "./Icons/SearchIcon";
 
 type SearchBarProps = {
   name?: string;
@@ -31,29 +32,8 @@ export const SearchBar = ({
           placeholder={placeholder}
           onChange={onChange}
         />
-        <SearchButton type="submit">
-          <svg
-            width="100%"
-            height="100%"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M6.66667 11.6667C9.244 11.6667 11.3333 9.57737 11.3333 7.00004C11.3333 4.42271 9.244 2.33337 6.66667 2.33337C4.08934 2.33337 2 4.42271 2 7.00004C2 9.57737 4.08934 11.6667 6.66667 11.6667Z"
-              stroke="black"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M14 14L10.6667 10.6666"
-              stroke="black"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+        <SearchButton type="submit" aria-label="검색">
+          <SearchIcon width="100%" height="100%" />
         </SearchButton>
       </SearchForm>
     </SearchBox>

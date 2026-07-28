@@ -2,6 +2,8 @@ import { styled, css } from "styled-components";
 import { useState } from "react";
 import { COLORS } from "../style/colors";
 import type { PictureDto } from "../type/index";
+import { ChevronLeftIcon } from "./Icons/ChevronLeftIcon";
+import { ChevronRightIcon } from "./Icons/ChevronRightIcon";
 
 type PictureProps = {
   pictures: PictureDto[];
@@ -30,22 +32,12 @@ export const Picture = ({ pictures }: PictureProps) => {
   return (
     <PictureWrapper $currentUrl={pictures[safeIndex].url}>
       <Pagination>
-        <ArrowButton type="button" onClick={handlePrev}>
-          <svg
-            width="100%"
-            height="100%"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M15 18L9 12L15 6"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+        <ArrowButton
+          type="button"
+          onClick={handlePrev}
+          aria-label="이전 이미지"
+        >
+          <ChevronLeftIcon width="100%" height="100%" />
         </ArrowButton>
         <DotWrapper>
           {pictures.map((picture, index) => (
@@ -57,22 +49,12 @@ export const Picture = ({ pictures }: PictureProps) => {
             ></DotButton>
           ))}
         </DotWrapper>
-        <ArrowButton type="button" onClick={handleNext}>
-          <svg
-            width="100%"
-            height="100%"
-            viewBox="0 0 24 24"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M9 18L15 12L9 6"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+        <ArrowButton
+          type="button"
+          onClick={handleNext}
+          aria-label="다음 이미지"
+        >
+          <ChevronRightIcon width="100%" height="100%" />
         </ArrowButton>
       </Pagination>
     </PictureWrapper>
