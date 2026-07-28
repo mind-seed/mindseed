@@ -1,10 +1,10 @@
 import { createBrowserRouter } from "react-router";
 import { Layout } from "./components/Layout";
 import { Home } from "./pages/Home";
-import { Login } from "./pages/Login";
+import { Login } from "./pages/Auth/Login";
 import { Onboarding } from "./pages/Onboarding";
-import { PasswordReset } from "./pages/PasswordReset";
-import { SignUp } from "./pages/SignUp";
+import { PasswordReset } from "./pages/Auth/PasswordReset";
+import { SignUp } from "./pages/Auth/SignUp";
 import { CommunityMainPage } from "./pages/Community/Community";
 import { PostDetailPage } from "./pages/Community/PostDetail";
 import { PostWritePage } from "./pages/Community/PostWrite";
@@ -31,7 +31,6 @@ export const router = createBrowserRouter([
       },
       {
         path: "/",
-        element: <Home />,
       },
       {
         path: "/community",

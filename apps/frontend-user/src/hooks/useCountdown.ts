@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export const useCountdown = (initialSeconds: number) => {
-  const [expiresAt, setExpiresAt] = useState<number | null>(null);
-  const [remainingSeconds, setRemainingSeconds] = useState(0);
-  const [isExpired, setIsExpired] = useState(false);
+  const initialDuration = Math.max(0, Math.floor(initialSeconds));
+  const [expiresAt, setExpiresAt] = useState<number | null>(() =>
+    initialDuration > 0 ? Date.now() + initialDuration * 1000 : null,
+  );
+  const [remainingSeconds, setRemainingSeconds] = useState(initialDuration);
+  const [isExpired, setIsExpired] = useState(initialDuration === 0);
 
   const reset = useCallback(
     (seconds = initialSeconds) => {
