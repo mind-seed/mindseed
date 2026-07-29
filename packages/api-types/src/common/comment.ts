@@ -1,6 +1,7 @@
 import z from "zod";
 import { dateSerializerCodec } from "./codecs";
 import { AuthorDtoSchema } from "./author";
+import { PostDtoSchema } from "./post";
 
 export const CommentContentSchema = z.string().min(1).max(200);
 
@@ -29,6 +30,20 @@ export const AuthorDeletedCommentDtoSchema = z.object({
   content: CommentContentSchema,
   createdAt: dateSerializerCodec,
   updatedAt: dateSerializerCodec,
+});
+
+export const AdminCommentDtoSchema = z.object({
+  type: z.literal("active"),
+  id: z.int(),
+  content: CommentContentSchema,
+  author: AuthorDtoSchema,
+  createdAt: dateSerializerCodec,
+  updatedAt: dateSerializerCodec,
+  post: z.object({
+    id: z.int(),
+    content: z.string().min(1).max(200),
+  }),
+  reportCount: z.int().min(0),
 });
 
 export const CommentDtoSchema = z.discriminatedUnion("type", [
