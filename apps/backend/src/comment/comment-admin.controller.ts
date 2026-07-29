@@ -37,7 +37,7 @@ export class CommentAdminController {
   @HttpCode(HttpStatus.OK)
   @AdminOnly()
   @ZodEncodeResponse(AdminListCommentsResponseDtoSchema)
-  async listAdminPosts(
+  async listAdminComments(
     @ZodQuery(AdminListCommentsQueryDtoSchema) query: AdminListCommentsQueryDto,
   ): Promise<AdminListCommentsSuccessResponseDto> {
     const { items: entries, totalCount } =

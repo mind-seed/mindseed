@@ -221,7 +221,7 @@ export class CommentService {
       {
         deletedAt: Temporal.Now.instant(),
         deletedById: userId,
-        deletionType: DeletionType.AUTHOR,
+        deletionType: DeletionType.ADMIN,
       },
     );
   }
