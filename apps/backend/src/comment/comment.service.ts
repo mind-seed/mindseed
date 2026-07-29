@@ -249,12 +249,13 @@ export class CommentService {
     }
 
     if (query) {
+      const escapedQuery = String(query).replace(/[%_\\]/g, "\\$&");
       qb.andWhere(
         new Brackets((qb) => {
           qb.where("comment.content ILIKE :query", {
-            query: `%${query}%`,
+            query: `%${escapedQuery}%`,
           }).orWhere("comment.nickname ILIKE :query", {
-            query: `%${query}%`,
+            query: `%${escapedQuery}%`,
           });
         }),
       );
