@@ -9,11 +9,7 @@ import { PostErrorCode, CommentErrorCode } from "../../common/error-codes";
 
 export const AdminDeleteCommentResponseDtoSchema = responseDtoSchema(
   z.null(),
-  z.enum([
-    PostErrorCode.POST_NOT_FOUND,
-    CommentErrorCode.COMMENT_NOT_FOUND,
-    CommentErrorCode.NOT_COMMENT_AUTHOR,
-  ]),
+  z.enum([PostErrorCode.POST_NOT_FOUND, CommentErrorCode.COMMENT_NOT_FOUND]),
 );
 
 export type AdminDeleteCommentResponseDto = z.output<
