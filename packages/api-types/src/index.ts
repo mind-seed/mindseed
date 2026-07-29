@@ -42,6 +42,8 @@ export * from "./posts/admin/admin-delete-post";
 export * from "./post-comments/create-comment";
 export * from "./post-comments/update-comment";
 export * from "./post-comments/delete-comment";
+export * from "./post-comments/admin/list-comment";
+export * from "./post-comments/admin/delete-comment";
 
 export * from "./mission-assignments/list-today";
 export * from "./mission-assignments/complete";
