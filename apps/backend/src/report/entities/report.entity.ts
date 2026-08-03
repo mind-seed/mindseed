@@ -63,10 +63,6 @@ export class Report {
   @TimestampColumn({ nullable: true })
   processedAt: Temporal.Instant | null;
 
-  // 처리 결과
-  @Column({ type: "text", nullable: true })
-  result: string | null;
-
   // 신고 처리자 (관리자)
   @ManyToOne(() => User, { nullable: true, onDelete: "SET NULL" })
   @JoinColumn()

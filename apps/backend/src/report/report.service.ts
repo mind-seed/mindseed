@@ -5,9 +5,12 @@ import { Report } from "./entities/report.entity";
 import { PostQueryService } from "src/post/post-query.service";
 import { PostNotFoundError } from "src/post/post.errors";
 import { CommentNotFoundError } from "src/comment/comment.errors";
-import { ReportReasonEmptyError } from "./report.errors";
+import { ReportNotFoundError, ReportReasonEmptyError } from "./report.errors";
 import { ReportRange } from "./entities/report.entity";
 import { CommentService } from "src/comment/comment.service";
+import { PostMutationService } from "src/post/post-mutation.service";
+import { User } from "src/user/entities/user.entity";
+import { ReportType } from "@mindseed/api-types";
 
 export type getReportResult = {
   report: Report[];
@@ -21,6 +24,7 @@ export class ReportService {
     private readonly reportRepository: Repository<Report>,
     private readonly postQueryService: PostQueryService,
     private readonly commentService: CommentService,
+    private readonly postMutationService: PostMutationService,
   ) {}
 
   /**
@@ -99,6 +103,9 @@ export class ReportService {
   ): Promise<getReportResult> {
     const reports = await this.reportRepository
       .createQueryBuilder("report")
+      .where("report.isProcessed = :isProcessed", {
+        isProcessed: false,
+      })
       .leftJoinAndSelect("report.user", "user")
       .leftJoinAndSelect("user.profile", "profile")
       .leftJoinAndSelect("report.post", "post")
@@ -114,5 +121,56 @@ export class ReportService {
       report: reports,
       totalCount,
     };
+  }
+
+  /**
+   * 신고 내역을 조회한다.
+   * @param id 신고 id
+   * @param type 신고 처리 방법
+   * @param user 신고 처리자
+   * @returns void
+   */
+
+  async patchReport({
+    id,
+    type,
+    user,
+  }: {
+    id: number;
+    type: ReportType;
+    user: User;
+  }): Promise<void> {
+    const userId = user.id;
+
+    const report = await this.reportRepository.findOne({
+      where: { id },
+      relations: { post: true, comment: true },
+    });
+
+    if (!report) {
+      throw new ReportNotFoundError();
+    }
+
+    if (type === "DELETE") {
+      if (report.range === ReportRange.POST) {
+        await this.postMutationService.deleteAdminPost(report.postId!);
+      } else if (report.range === ReportRange.COMMENT) {
+        await this.commentService.adminDeleteComment(
+          report.comment!.postId,
+          report.commentId!,
+          userId,
+        );
+      }
+    }
+
+    await this.reportRepository.update(
+      { id },
+      {
+        isProcessed: true,
+        processedAt: new Date(),
+        processedBy: user,
+        processedById: userId,
+      },
+    );
   }
 }
