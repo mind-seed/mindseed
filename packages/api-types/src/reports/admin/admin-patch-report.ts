@@ -6,8 +6,12 @@
 import z from "zod";
 import { responseDtoSchema } from "../../helpers";
 
+export const ReportTypeSchema = z.enum(["DELETE", "STAY"]);
+
+export type ReportType = z.output<typeof ReportTypeSchema>;
+
 export const PatchReportRequestDtoSchema = z.object({
-  type: z.enum(["DELETE", "STAY"]).optional().default("STAY"),
+  type: ReportTypeSchema.optional().default("STAY"),
 });
 
 export type PatchReportRequestDto = z.output<
