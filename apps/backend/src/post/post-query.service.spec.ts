@@ -62,7 +62,7 @@ describe("PostQueryService", () => {
     return postRepository.save(
       postRepository.create({
         content: "test content",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         nickname: "testnick",
         author: { id: userId } as User,
         ...overrides,
@@ -164,17 +164,17 @@ describe("PostQueryService", () => {
         // Given: posts
         const user = await saveTestUser();
         const ids = await saveTestPosts(user.id, [
-          { category: PostCategory.DUMMY1 },
-          { category: PostCategory.DUMMY1 },
-          { category: PostCategory.DUMMY1 },
-          { category: PostCategory.DUMMY2 },
-          { category: PostCategory.DUMMY1 },
+          { category: PostCategory.CONCERN },
+          { category: PostCategory.CONCERN },
+          { category: PostCategory.CONCERN },
+          { category: PostCategory.DIARY },
+          { category: PostCategory.CONCERN },
         ]);
 
         // When: 글 조회 시도
         const result = await postQueryService.listPosts(user.id, {
           limit: 2,
-          category: PostCategory.DUMMY1,
+          category: PostCategory.CONCERN,
           orderBy: "createdAt",
           orderDirection: "asc",
         });
@@ -187,7 +187,7 @@ describe("PostQueryService", () => {
         const result2 = await postQueryService.listPosts(user.id, {
           cursor: result.nextCursor,
           limit: 2,
-          category: PostCategory.DUMMY1,
+          category: PostCategory.CONCERN,
           orderBy: "createdAt",
           orderDirection: "asc",
         });
@@ -532,15 +532,15 @@ describe("PostQueryService", () => {
       const [post1, post2, post3] = await Promise.all([
         saveTestPost(author.id, {
           content: "alpha content",
-          category: PostCategory.DUMMY1,
+          category: PostCategory.CONCERN,
         }),
         saveTestPost(author.id, {
           content: "beta content",
-          category: PostCategory.DUMMY1,
+          category: PostCategory.CONCERN,
         }),
         saveTestPost(author.id, {
           content: "alpha hidden",
-          category: PostCategory.DUMMY2,
+          category: PostCategory.DIARY,
         }),
       ]);
       await saveReport(post1.id, reporter.id);
@@ -550,7 +550,7 @@ describe("PostQueryService", () => {
         page: 1,
         limit: 10,
         orderBy: "latest",
-        category: "dummy1",
+        category: "concern",
         isReported: true,
         query: "alpha",
       });
@@ -568,7 +568,7 @@ describe("PostQueryService", () => {
       const post = await postRepository.save(
         postRepository.create({
           content: "hello world",
-          category: PostCategory.DUMMY1,
+          category: PostCategory.CONCERN,
           nickname: "testnick",
           author: user,
         }),
@@ -581,7 +581,7 @@ describe("PostQueryService", () => {
       expect(result.post).toMatchObject({
         id: post.id,
         content: "hello world",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
       });
     });
 
