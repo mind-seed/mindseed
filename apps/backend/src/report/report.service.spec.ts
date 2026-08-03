@@ -8,6 +8,7 @@ import { Post, PostCategory } from "src/post/entities/post.entity";
 import { User, UserRole } from "src/user/entities/user.entity";
 import { UserProfile } from "src/user/entities/user-profile.entity";
 import { PostQueryService } from "src/post/post-query.service";
+import { PostMutationService } from "src/post/post-mutation.service";
 import { PostNotFoundError } from "src/post/post.errors";
 import { CommentNotFoundError } from "src/comment/comment.errors";
 import { CommentService } from "src/comment/comment.service";
@@ -29,6 +30,7 @@ describe("ReportService", () => {
   let dbBackup: PGMem.IBackup;
   let postQueryService: jest.Mocked<PostQueryService>;
   let commentService: jest.Mocked<CommentService>;
+  let postMutationService: jest.Mocked<PostMutationService>;
 
   let userCounter = 0;
 
@@ -50,7 +52,7 @@ describe("ReportService", () => {
     return postRepository.save(
       postRepository.create({
         content: "test content",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         nickname: "testnick",
         author: { id: userId } as User,
         ...overrides,
@@ -90,6 +92,10 @@ describe("ReportService", () => {
       existsComment: jest.fn(),
     } as unknown as jest.Mocked<CommentService>;
 
+    postMutationService = {
+      deleteAdminPost: jest.fn(),
+    } as unknown as jest.Mocked<PostMutationService>;
+
     module = await Test.createTestingModule({
       providers: [
         ReportService,
@@ -104,6 +110,10 @@ describe("ReportService", () => {
         {
           provide: CommentService,
           useValue: commentService,
+        },
+        {
+          provide: PostMutationService,
+          useValue: postMutationService,
         },
       ],
     }).compile();

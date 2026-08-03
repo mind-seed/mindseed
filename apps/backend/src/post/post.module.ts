@@ -22,6 +22,6 @@ import { Report } from "src/report/entities/report.entity";
   ],
   controllers: [PostController, PostAdminController],
   providers: [PostQueryService, PostMutationService],
-  exports: [PostQueryService],
+  exports: [PostQueryService, PostMutationService],
 })
 export class PostModule {}

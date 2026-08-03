@@ -45,7 +45,7 @@ describe("CommentService", () => {
     return postRepository.save(
       postRepository.create({
         content: "test content",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         nickname: "testnick",
         author: { id: userId } as User,
         ...overrides,

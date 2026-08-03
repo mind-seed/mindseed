@@ -53,7 +53,7 @@ describe("PostMutationService", () => {
     return postRepository.save(
       postRepository.create({
         content: "test content",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         nickname: "testnick",
         author: { id: userId } as User,
         ...overrides,
@@ -135,7 +135,7 @@ describe("PostMutationService", () => {
         userId: user.id,
         content: "hello",
         nickname: "nick",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         attachmentIds: [a1.id, a2.id],
       });
 
@@ -160,7 +160,7 @@ describe("PostMutationService", () => {
         userId: user.id,
         content: "hello",
         nickname: "nick",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         attachmentIds: [nonExistentAttachmentId],
       });
 
@@ -178,7 +178,7 @@ describe("PostMutationService", () => {
         userId: user.id,
         content: "hello",
         nickname: "nick",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         attachmentIds: [attachment.id],
       });
 
@@ -198,7 +198,7 @@ describe("PostMutationService", () => {
         userId: user.id,
         content: "hello",
         nickname: "nick",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         attachmentIds: [attachment.id],
       });
 
@@ -224,7 +224,7 @@ describe("PostMutationService", () => {
         userId: user.id,
         postId: post.id,
         content: "updated content",
-        category: PostCategory.DUMMY2,
+        category: PostCategory.DIARY,
         attachmentIds: [newAttachment.id],
       });
 
@@ -235,7 +235,7 @@ describe("PostMutationService", () => {
       });
       expect(updatedPost).toMatchObject({
         content: "updated content",
-        category: PostCategory.DUMMY2,
+        category: PostCategory.DIARY,
       });
       expect(updatedPost!.attachments.map((a) => a.id)).toEqual(
         expect.arrayContaining([newAttachment.id]),
@@ -256,7 +256,7 @@ describe("PostMutationService", () => {
         userId: 0,
         postId: 0,
         content: "content",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         attachmentIds: [],
       });
 
@@ -276,7 +276,7 @@ describe("PostMutationService", () => {
         userId: otherUser.id,
         postId: post.id,
         content: "content",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         attachmentIds: [],
       });
 
@@ -295,7 +295,7 @@ describe("PostMutationService", () => {
         userId: otherUser.id,
         postId: post.id,
         content: "content",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         attachmentIds: [],
       });
 
@@ -316,7 +316,7 @@ describe("PostMutationService", () => {
         userId: user.id,
         postId: post.id,
         content: "content",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         attachmentIds: [nonExistentAttachmentId],
       });
 
@@ -337,7 +337,7 @@ describe("PostMutationService", () => {
         userId: user.id,
         postId: post.id,
         content: "content",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         attachmentIds: [attachment.id],
       });
 
@@ -359,7 +359,7 @@ describe("PostMutationService", () => {
         userId: user.id,
         postId: post.id,
         content: "content",
-        category: PostCategory.DUMMY1,
+        category: PostCategory.CONCERN,
         attachmentIds: [attachment.id],
       });
 

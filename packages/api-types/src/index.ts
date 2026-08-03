@@ -64,6 +64,7 @@ export * from "./resources/admin/delete-resource";
 export * from "./reports/create-post-report";
 export * from "./reports/create-comment-report";
 export * from "./reports/admin/admin-get-report-list";
+export * from "./reports/admin/admin-patch-report";
 
 export * from "./counsels/list-counsels";
 export * from "./counsels/get-counsel";

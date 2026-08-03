@@ -1,15 +1,26 @@
-import { Controller, Get, HttpCode, HttpStatus } from "@nestjs/common";
+import { Controller, Get, HttpCode, HttpStatus, Patch } from "@nestjs/common";
 import { CurrentUser, AdminOnly } from "src/auth/decorators/auth.decorators";
 import { User } from "src/user/entities/user.entity";
 import { ReportService } from "src/report/report.service";
-import type { GetReportListRequestDto } from "@mindseed/api-types";
+import type {
+  GetReportListRequestDto,
+  PatchReportRequestDto,
+  PatchReportSuccessResponseDto,
+} from "@mindseed/api-types";
 import {
   GetReportListRequestDtoSchema,
   GetReportListResponseDtoSchema,
   GetReportListSuccessResponseDto,
+  idParamSchema,
+  PatchReportRequestDtoSchema,
+  PatchReportResponseDtoSchema,
 } from "@mindseed/api-types";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
-import { ZodQuery } from "src/common/pipes/zod-validation.decorator";
+import {
+  ZodBody,
+  ZodParam,
+  ZodQuery,
+} from "src/common/pipes/zod-validation.decorator";
 import type { getReportResult } from "src/report/report.service";
 
 @Controller("/admin/reports")
@@ -61,6 +72,27 @@ export class ReportAdminController {
         reports,
         totalCount: result.totalCount,
       },
+    };
+  }
+
+  @Patch(":id")
+  @HttpCode(HttpStatus.OK)
+  @AdminOnly()
+  @ZodEncodeResponse(PatchReportResponseDtoSchema)
+  async patchReport(
+    @CurrentUser() user: User,
+    @ZodBody(PatchReportRequestDtoSchema) body: PatchReportRequestDto,
+    @ZodParam("id", idParamSchema) reportId: number,
+  ): Promise<PatchReportSuccessResponseDto> {
+    await this.reportService.patchReport({
+      id: reportId,
+      type: body.type,
+      user,
+    });
+
+    return {
+      success: true,
+      data: null,
     };
   }
 }

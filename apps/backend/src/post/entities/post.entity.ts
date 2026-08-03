@@ -16,9 +16,10 @@ import { Attachment } from "src/attachment/entities/attachment.entity";
 import { PostComment } from "src/comment/entities/post-comment.entity";
 
 export enum PostCategory {
-  DUMMY1 = "DUMMY1",
-  DUMMY2 = "DUMMY2",
-  DUMMY3 = "DUMMY3",
+  CONCERN = "CONCERN",
+  DIARY = "DIARY",
+  INQUIRY = "INQUIRY",
+  OTHER = "OTHER",
 }
 
 @Entity({ name: "post" })
