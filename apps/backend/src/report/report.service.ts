@@ -115,7 +115,9 @@ export class ReportService {
       .take(limit)
       .getMany();
 
-    const totalCount = await this.reportRepository.count();
+    const totalCount = await this.reportRepository.count({
+      where: { isProcessed: false },
+    });
 
     return {
       report: reports,
