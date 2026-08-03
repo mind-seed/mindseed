@@ -12,8 +12,9 @@ import { initializePgMem } from "src/test/pg-mem.helper";
 import { PostNotFoundError } from "src/post/post.errors";
 import { Attachment } from "src/attachment/entities/attachment.entity";
 import { Temporal } from "@js-temporal/polyfill";
+import { Report, ReportRange } from "src/report/entities/report.entity";
 
-const entities = [UserProfile, User, Attachment, PostComment, Post];
+const entities = [UserProfile, User, Attachment, PostComment, Post, Report];
 
 describe("CommentService", () => {
   let module: TestingModule;
@@ -515,22 +516,229 @@ describe("CommentService", () => {
     });
   });
 
-  describe("existsComment", () => {
-    it("success: 존재하는 댓글 확인", async () => {
-      // Given: 댓글이 존재하는 경우
+  async function saveTestReport(
+    commentId: number,
+    overrides?: Partial<Report>,
+  ): Promise<Report> {
+    const reportRepository = dataSource.getRepository(Report);
+    return reportRepository.save(
+      reportRepository.create({
+        reason: "test reason",
+        range: ReportRange.COMMENT,
+        commentId,
+        ...overrides,
+      }),
+    );
+  }
+
+  describe("adminListComments", () => {
+    it("success: 기본 목록 조회 (latest 정렬)", async () => {
       const user = await saveTestUser();
       const post = await saveTestPost(user.id);
-      const comment = await saveTestComment(post.id, user.id);
+      const comment1 = await saveTestComment(post.id, user.id, {
+        content: "first",
+      });
+      const comment2 = await saveTestComment(post.id, user.id, {
+        content: "second",
+      });
+      const comment3 = await saveTestComment(post.id, user.id, {
+        content: "third",
+      });
 
-      // When: existsComment 호출
-      const result = await commentService.existsComment(comment.id);
+      const result = await commentService.adminListComments({
+        page: 1,
+        limit: 10,
+        orderBy: "latest",
+        isReported: false,
+      });
 
-      // Then: true 반환
-      expect(result).toBe(true);
+      expect(result.items).toHaveLength(3);
+      expect(result.totalCount).toBe(3);
+      expect(result.items[0].comment.id).toBe(comment3.id);
+      expect(result.items[1].comment.id).toBe(comment2.id);
+      expect(result.items[2].comment.id).toBe(comment1.id);
     });
 
-    it("삭제된 댓글은 존재하지 않는 것으로 처리", async () => {
-      // Given: 댓글이 삭제된 경우
+    it("success: oldest 정렬", async () => {
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment1 = await saveTestComment(post.id, user.id, {
+        content: "first",
+      });
+      const comment2 = await saveTestComment(post.id, user.id, {
+        content: "second",
+      });
+
+      const result = await commentService.adminListComments({
+        page: 1,
+        limit: 10,
+        orderBy: "oldest",
+        isReported: false,
+      });
+
+      expect(result.items).toHaveLength(2);
+      expect(result.items[0].comment.id).toBe(comment1.id);
+      expect(result.items[1].comment.id).toBe(comment2.id);
+    });
+
+    it("success: mostReported 정렬", async () => {
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment1 = await saveTestComment(post.id, user.id, {
+        content: "reported twice",
+      });
+      const comment2 = await saveTestComment(post.id, user.id, {
+        content: "reported once",
+      });
+      const comment3 = await saveTestComment(post.id, user.id, {
+        content: "not reported",
+      });
+      await saveTestReport(comment1.id);
+      await saveTestReport(comment1.id);
+      await saveTestReport(comment2.id);
+
+      const result = await commentService.adminListComments({
+        page: 1,
+        limit: 10,
+        orderBy: "mostReported",
+        isReported: false,
+      });
+
+      expect(result.items).toHaveLength(3);
+      expect(result.items[0].comment.id).toBe(comment1.id);
+      expect(result.items[0].additional.reportCount).toBe(2);
+      expect(result.items[1].comment.id).toBe(comment2.id);
+      expect(result.items[1].additional.reportCount).toBe(1);
+      expect(result.items[2].comment.id).toBe(comment3.id);
+      expect(result.items[2].additional.reportCount).toBe(0);
+    });
+
+    it("success: isReported 필터", async () => {
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const reportedComment = await saveTestComment(post.id, user.id, {
+        content: "reported",
+      });
+      await saveTestReport(reportedComment.id);
+      await saveTestComment(post.id, user.id, { content: "not reported" });
+
+      const result = await commentService.adminListComments({
+        page: 1,
+        limit: 10,
+        orderBy: "latest",
+        isReported: true,
+      });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].comment.id).toBe(reportedComment.id);
+      expect(result.totalCount).toBe(1);
+    });
+
+    it("success: query로 content 검색", async () => {
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      await saveTestComment(post.id, user.id, { content: "hello world" });
+      await saveTestComment(post.id, user.id, { content: "hello there" });
+      await saveTestComment(post.id, user.id, { content: "goodbye" });
+
+      const result = await commentService.adminListComments({
+        page: 1,
+        limit: 10,
+        orderBy: "latest",
+        isReported: false,
+        query: "hello",
+      });
+
+      expect(result.items).toHaveLength(2);
+      expect(result.totalCount).toBe(2);
+    });
+
+    it("success: query로 nickname 검색", async () => {
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      await saveTestComment(post.id, user.id, { nickname: "Alice" });
+      await saveTestComment(post.id, user.id, { nickname: "Bob" });
+      await saveTestComment(post.id, user.id, { nickname: "Charlie" });
+
+      const result = await commentService.adminListComments({
+        page: 1,
+        limit: 10,
+        orderBy: "latest",
+        isReported: false,
+        query: "Ali",
+      });
+
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].comment.nickname).toBe("Alice");
+      expect(result.totalCount).toBe(1);
+    });
+
+    it("success: 페이징 동작 확인", async () => {
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      for (let i = 0; i < 5; i++) {
+        await saveTestComment(post.id, user.id, { content: `comment ${i}` });
+      }
+
+      const result = await commentService.adminListComments({
+        page: 2,
+        limit: 2,
+        orderBy: "oldest",
+        isReported: false,
+      });
+
+      expect(result.items).toHaveLength(2);
+      expect(result.totalCount).toBe(5);
+    });
+
+    it("댓글이 없는 경우 빈 배열 반환", async () => {
+      const result = await commentService.adminListComments({
+        page: 1,
+        limit: 10,
+        orderBy: "latest",
+        isReported: false,
+      });
+
+      expect(result.items).toHaveLength(0);
+      expect(result.totalCount).toBe(0);
+    });
+  });
+
+  describe("adminDeleteComment", () => {
+    it("success: 어드민이 댓글 삭제 (작성자와 다른 사용자)", async () => {
+      const user = await saveTestUser();
+      const otherUser = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, otherUser.id);
+
+      await commentService.adminDeleteComment(post.id, comment.id, user.id);
+
+      const deletedComment = await commentRepository.findOne({
+        where: { id: comment.id },
+      });
+      expect(deletedComment).not.toBeNull();
+      expect(deletedComment!.deletedAt).not.toBeNull();
+      expect(deletedComment!.deletedById).toBe(user.id);
+    });
+
+    it("존재하지 않는 글 처리", async () => {
+      const user = await saveTestUser();
+
+      const result = commentService.adminDeleteComment(0, 0, user.id);
+
+      await expect(result).rejects.toThrow(PostNotFoundError);
+    });
+
+    it("존재하지 않는 댓글 처리", async () => {
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+
+      const result = commentService.adminDeleteComment(post.id, 0, user.id);
+
+      await expect(result).rejects.toThrow(CommentNotFoundError);
+    });
+
+    it("이미 삭제된 댓글 처리", async () => {
       const user = await saveTestUser();
       const post = await saveTestPost(user.id);
       const comment = await saveTestComment(post.id, user.id, {
@@ -539,21 +747,61 @@ describe("CommentService", () => {
         deletionType: DeletionType.AUTHOR,
       });
 
-      // When: existsComment 호출
+      const result = commentService.adminDeleteComment(
+        post.id,
+        comment.id,
+        user.id,
+      );
+
+      await expect(result).rejects.toThrow(CommentNotFoundError);
+    });
+
+    it("해당 글의 댓글이 아닌 경우 처리", async () => {
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const otherPost = await saveTestPost(user.id);
+      const comment = await saveTestComment(otherPost.id, user.id);
+
+      const result = commentService.adminDeleteComment(
+        post.id,
+        comment.id,
+        user.id,
+      );
+
+      await expect(result).rejects.toThrow(CommentNotFoundError);
+    });
+  });
+
+  describe("existsComment", () => {
+    it("success: 존재하는 댓글 확인", async () => {
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, user.id);
+
       const result = await commentService.existsComment(comment.id);
 
-      // Then: false 반환
+      expect(result).toBe(true);
+    });
+
+    it("삭제된 댓글은 존재하지 않는 것으로 처리", async () => {
+      const user = await saveTestUser();
+      const post = await saveTestPost(user.id);
+      const comment = await saveTestComment(post.id, user.id, {
+        deletedAt: Temporal.Now.instant(),
+        deletedBy: user,
+        deletionType: DeletionType.AUTHOR,
+      });
+
+      const result = await commentService.existsComment(comment.id);
+
       expect(result).toBe(false);
     });
 
     it("존재하지 않는 commentId 처리", async () => {
-      // Given: DB에 존재하지 않는 commentId
       const nonExistentCommentId = 0;
 
-      // When: existsComment 호출
       const result = await commentService.existsComment(nonExistentCommentId);
 
-      // Then: false 반환
       expect(result).toBe(false);
     });
   });

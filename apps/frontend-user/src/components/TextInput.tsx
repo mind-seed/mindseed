@@ -42,9 +42,10 @@ export const TextInput = ({
           disabled={disabled}
           onChange={onChange}
         />
-        {adornmentType === "icon" && (
+        {adornmentType === "icon" && type === "password" && (
           <InputButton
             type="button"
+            disabled={disabled}
             onClick={() => setIsVisible((current) => !current)}
             aria-label={isVisible ? "비밀번호 숨기기" : "비밀번호 보기"}
           >

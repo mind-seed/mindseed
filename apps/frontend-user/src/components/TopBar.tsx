@@ -36,7 +36,7 @@ export const TopBar = ({
           onClick={onRightClick}
           aria-label="더보기"
         >
-          <MoreHorizontalIcon color={COLORS.gray.gray900} />
+          <MoreHorizontalIcon color={COLORS.text.black} />
         </RightButton>
       )}
       {rightType === "text" && rightText && (

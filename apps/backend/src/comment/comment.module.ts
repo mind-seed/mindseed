@@ -6,6 +6,7 @@ import { CommentService } from "./comment.service";
 import { CommentController } from "./comment.controller";
 import { AuthModule } from "src/auth/auth.module";
 import { UserModule } from "src/user/user.module";
+import { CommentAdminController } from "./comment-admin.controller";
 
 @Module({
   imports: [
@@ -13,7 +14,7 @@ import { UserModule } from "src/user/user.module";
     AuthModule,
     UserModule,
   ],
-  controllers: [CommentController],
+  controllers: [CommentController, CommentAdminController],
   providers: [CommentService],
   exports: [CommentService],
 })
