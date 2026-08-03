@@ -7,14 +7,17 @@ import { TopBar } from "../../components/TopBar";
 import { useCountdown } from "../../hooks/useCountdown";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import { AuthorNicknameSchema, PasswordSchema } from "../../type/index";
+import {
+  CompleteSignupRequestDtoSchema,
+  PasswordSchema,
+  SendMailRequestDtoSchema,
+  VerifyMailRequestDtoSchema,
+} from "../../type/index";
 
 type SignUpStep = "email" | "password" | "profile";
 
 const VERIFICATION_VALIDITY_SECONDS = 3 * 60;
 const VERIFICATION_RESEND_DELAY_SECONDS = 30;
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const VERIFICATION_CODE_PATTERN = /^\d{6}$/;
 
 export const SignUp = () => {
   const navigate = useNavigate();
@@ -56,7 +59,7 @@ export const SignUp = () => {
   };
 
   const handleSendCode = () => {
-    if (!EMAIL_PATTERN.test(email.trim())) {
+    if (!SendMailRequestDtoSchema.safeParse({ email: email.trim() }).success) {
       setEmailError("올바른 이메일 형식이 아닙니다.");
       return;
     }
@@ -75,7 +78,12 @@ export const SignUp = () => {
     if (step === "email") {
       if (isEmailStepDisabled) return;
 
-      if (!VERIFICATION_CODE_PATTERN.test(verificationCode)) {
+      if (
+        !VerifyMailRequestDtoSchema.safeParse({
+          email: email.trim(),
+          code: verificationCode,
+        }).success
+      ) {
         setVerificationCodeError("인증 코드가 올바르지 않습니다.");
         return;
       }
@@ -106,16 +114,23 @@ export const SignUp = () => {
 
     if (isProfileStepDisabled) return;
 
-    const nicknameResult = AuthorNicknameSchema.safeParse(nickname.trim());
     const numericAge = Number(age);
-    const isAgeValid = numericAge >= 1 && numericAge <= 99;
+    const signupResult = CompleteSignupRequestDtoSchema.safeParse({
+      password,
+      nickname: nickname.trim(),
+      age: numericAge,
+    });
+    const nicknameResult =
+      CompleteSignupRequestDtoSchema.shape.nickname.safeParse(nickname.trim());
+    const ageResult =
+      CompleteSignupRequestDtoSchema.shape.age.safeParse(numericAge);
 
     setNicknameError(
-      nicknameResult.success ? "" : "닉네임은 2~10자로 입력해주세요.",
+      nicknameResult.success ? "" : "닉네임은 2~8자로 입력해주세요.",
     );
-    setAgeError(isAgeValid ? "" : "나이를 올바르게 입력해주세요.");
+    setAgeError(ageResult.success ? "" : "나이를 올바르게 입력해주세요.");
 
-    if (!nicknameResult.success || !isAgeValid) return;
+    if (!signupResult.success) return;
 
     navigate("/login");
   };
@@ -330,7 +345,6 @@ const Page = styled.main`
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 2.1875rem 1.25rem 1.875rem;
 `;
 
 const Form = styled.form`
@@ -377,8 +391,11 @@ const Label = styled.label`
 
 const EmailRow = styled.div`
   display: flex;
-  align-items: stretch;
   gap: 0.75rem;
+
+  > * {
+    min-width: 0;
+  }
 `;
 
 const ButtonWrapper = styled.div`

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import { styled } from "styled-components";
-import onboardingImage from "../assets/OnboardingImage.png";
+import onboardingImage from "../assets/onboarding-img.png";
 import { Button } from "../components/Button";
 import { Logo } from "../components/Logo";
 import { COLORS } from "../style/colors";
@@ -53,7 +53,7 @@ const Page = styled.main`
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 2.1875rem 1.25rem 1.875rem;
+  padding: 1.625rem 1.25rem 0.75rem;
 `;
 
 const WelcomeHeader = styled.div`

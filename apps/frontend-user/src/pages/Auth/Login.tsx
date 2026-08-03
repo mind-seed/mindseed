@@ -6,9 +6,7 @@ import { TextInput } from "../../components/TextInput";
 import { TopBar } from "../../components/TopBar";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import { PasswordSchema } from "../../type/index";
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { LoginRequestDtoSchema } from "../../type/index";
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -21,16 +19,14 @@ export const Login = () => {
     event.preventDefault();
     if (!email.trim() || !password) return;
 
-    const isEmailValid = EMAIL_PATTERN.test(email.trim());
-    const passwordResult = PasswordSchema.safeParse(password);
+    const loginResult = LoginRequestDtoSchema.safeParse({
+      email: email.trim(),
+      password,
+    });
 
-    if (!isEmailValid || !passwordResult.success) {
-      setEmailError(!isEmailValid ? "올바른 이메일 형식이 아닙니다." : "");
-      setPasswordError(
-        !passwordResult.success
-          ? "영문 대소문자, 숫자, 특수문자를 포함한 8~20자로 입력해주세요."
-          : "",
-      );
+    if (!loginResult.success) {
+      setEmailError("올바른 이메일 형식이 아닙니다.");
+      setPasswordError("");
       return;
     }
 
@@ -114,7 +110,6 @@ const Page = styled.main`
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 2.1875rem 1.25rem 1.875rem;
 `;
 
 const Form = styled.form`

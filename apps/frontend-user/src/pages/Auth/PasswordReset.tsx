@@ -4,15 +4,17 @@ import { styled } from "styled-components";
 import { Button } from "../../components/Button";
 import { TextInput } from "../../components/TextInput";
 import { TopBar } from "../../components/TopBar";
-import { VerificationCodeInput } from "../../components/VerificationCodeInput";
+import { VerificationCodeInput } from "../../components/Auth/VerificationCodeInput";
 import { useCountdown } from "../../hooks/useCountdown";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import { PasswordSchema } from "../../type/index";
+import {
+  EmailPasswordResetRequestDtoSchema,
+  ResetPasswordRequestDtoSchema,
+  VerifyMailRequestDtoSchema,
+} from "../../type/index";
 
 type PasswordResetStep = "email" | "code" | "password";
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const VERIFICATION_CODE_PATTERN = /^\d{6}$/;
 
 export const PasswordReset = () => {
   const navigate = useNavigate();
@@ -54,7 +56,10 @@ export const PasswordReset = () => {
     if (isSubmitDisabled) return;
 
     if (step === "email") {
-      if (!EMAIL_PATTERN.test(email.trim())) {
+      if (
+        !EmailPasswordResetRequestDtoSchema.safeParse({ email: email.trim() })
+          .success
+      ) {
         setEmailError("올바른 이메일 형식이 아닙니다.");
         return;
       }
@@ -67,7 +72,12 @@ export const PasswordReset = () => {
     }
 
     if (step === "code") {
-      if (!VERIFICATION_CODE_PATTERN.test(verificationCode)) {
+      if (
+        !VerifyMailRequestDtoSchema.safeParse({
+          email: email.trim(),
+          code: verificationCode,
+        }).success
+      ) {
         setVerificationCodeError("인증 코드가 올바르지 않습니다.");
         return;
       }
@@ -77,7 +87,9 @@ export const PasswordReset = () => {
       return;
     }
 
-    const passwordResult = PasswordSchema.safeParse(password);
+    const passwordResult = ResetPasswordRequestDtoSchema.safeParse({
+      password,
+    });
 
     if (!passwordResult.success) {
       setPasswordError(
@@ -134,7 +146,7 @@ export const PasswordReset = () => {
               />
             </CodeContent>
             {verificationCodeError && (
-              <ErrorMessage>인증 코드가 일치하지 않습니다.</ErrorMessage>
+              <ErrorMessage>{verificationCodeError}</ErrorMessage>
             )}
           </>
         )}
@@ -220,7 +232,6 @@ const Page = styled.main`
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 2.1875rem 1.25rem 1.875rem;
 `;
 
 const Form = styled.form`

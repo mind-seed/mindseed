@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { styled } from "styled-components";
-import { COLORS } from "../style/colors";
-import { TEXT_STYLE } from "../style/typography";
+import { COLORS } from "../../style/colors";
+import { TEXT_STYLE } from "../../style/typography";
 
 type VerificationCodeInputProps = {
   value: string;
@@ -52,7 +52,7 @@ export const VerificationCodeInput = ({
 
     if (event.key === "ArrowLeft" && index > 0) focusInput(index - 1);
     if (event.key === "ArrowRight" && index < CODE_LENGTH - 1) {
-      focusInput(index + 1);
+      focusInput(Math.min(index + 1, value.length));
     }
   };
 
