@@ -5,27 +5,10 @@ export const useCountdown = (initialSeconds: number) => {
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isExpired, setIsExpired] = useState(false);
 
-  const reset = useCallback(
-    (seconds = initialSeconds) => {
-      const duration = Math.max(0, Math.floor(seconds));
-
-      setRemainingSeconds(duration);
-      setIsExpired(duration === 0);
-      setExpiresAt(duration > 0 ? Date.now() + duration * 1000 : null);
-    },
-    [initialSeconds],
-  );
-
-  const stop = useCallback(() => {
-    setExpiresAt(null);
-    setRemainingSeconds(0);
-    setIsExpired(false);
-  }, []);
-
   useEffect(() => {
     if (expiresAt === null) return;
 
-    const timer = window.setInterval(() => {
+    const updateRemaining = () => {
       const nextRemainingSeconds = Math.max(
         0,
         Math.ceil((expiresAt - Date.now()) / 1000),
@@ -37,10 +20,38 @@ export const useCountdown = (initialSeconds: number) => {
         setExpiresAt(null);
         setIsExpired(true);
       }
-    }, 1000);
+    };
+
+    updateRemaining();
+
+    const timer = window.setInterval(updateRemaining, 1000);
 
     return () => window.clearInterval(timer);
   }, [expiresAt]);
+
+  const reset = useCallback(
+    (seconds = initialSeconds) => {
+      const duration = Math.max(0, Math.floor(seconds));
+
+      if (duration === 0) {
+        setRemainingSeconds(0);
+        setIsExpired(true);
+        setExpiresAt(null);
+        return;
+      }
+
+      setRemainingSeconds(duration);
+      setIsExpired(false);
+      setExpiresAt(Date.now() + duration * 1000);
+    },
+    [initialSeconds],
+  );
+
+  const stop = useCallback(() => {
+    setExpiresAt(null);
+    setRemainingSeconds(0);
+    setIsExpired(false);
+  }, []);
 
   const formattedTime = useMemo(() => {
     const minutes = Math.floor(remainingSeconds / 60);

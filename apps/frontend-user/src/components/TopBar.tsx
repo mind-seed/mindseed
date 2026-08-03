@@ -9,6 +9,7 @@ type TopBarProps = {
   rightType?: "text" | "icon";
   rightText?: string;
   rightDisabled?: boolean;
+  rightTone?: "primary" | "muted" | "danger";
   onBackClick?: () => void;
   onRightClick?: () => void;
 };
@@ -18,6 +19,7 @@ export const TopBar = ({
   rightType,
   rightText,
   rightDisabled = false,
+  rightTone = "primary",
   onBackClick,
   onRightClick,
 }: TopBarProps) => (
@@ -34,6 +36,7 @@ export const TopBar = ({
           type="button"
           disabled={rightDisabled}
           onClick={onRightClick}
+          $tone={rightTone}
           aria-label="더보기"
         >
           <MoreHorizontalIcon color={COLORS.text.black} />
@@ -44,6 +47,7 @@ export const TopBar = ({
           type="button"
           disabled={rightDisabled}
           onClick={onRightClick}
+          $tone={rightTone}
         >
           {rightText}
         </RightButton>
@@ -83,14 +87,19 @@ const Title = styled.span`
   ${TEXT_STYLE.body.md2};
   user-select: none;
 `;
-const RightButton = styled.button`
+const RightButton = styled.button<{ $tone: "primary" | "muted" | "danger" }>`
   display: flex;
   justify-content: center;
   align-items: center;
   border: none;
   background: none;
   ${TEXT_STYLE.title.ti};
-  color: ${COLORS.main["main+"]};
+  color: ${({ $tone }) =>
+    $tone === "danger"
+      ? COLORS.state.error
+      : $tone === "muted"
+        ? COLORS.gray.gray400
+        : COLORS.main["main+"]};
   line-height: 1;
   user-select: none;
   cursor: pointer;

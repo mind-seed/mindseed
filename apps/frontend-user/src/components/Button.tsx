@@ -44,7 +44,6 @@ const StyledButton = styled.button<{
   $showIcon?: boolean;
   $size: "medium" | "small";
 }>`
-  width: 100%;
   display: flex;
   justify-content: center;
   gap: ${({ $showIcon }) => $showIcon && `0.625rem`};
@@ -54,6 +53,7 @@ const StyledButton = styled.button<{
   ${({ $size }) =>
     $size === "medium"
       ? css`
+          width: 100%;
           padding: 1rem 1.25rem;
           border-radius: 12px;
         `

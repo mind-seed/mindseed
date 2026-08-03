@@ -2,17 +2,22 @@ import { Outlet, useLocation } from "react-router";
 import { BottomNav } from "../components/BottomNav";
 import styled from "styled-components";
 
+const SHOW_BOTTOM_NAV_PATHS = [
+  "/",
+  "/mission",
+  "/community",
+  "/contents",
+  "/mypage",
+];
+
 export const Layout = () => {
   const { pathname } = useLocation();
-  const hidesBottomNav =
-    ["/onboarding", "/login", "/signup", "/password-reset"].includes(
-      pathname,
-    ) || /^\/community\/[^/]+(?:\/edit)?$/.test(pathname);
+  const showsBottomNav = SHOW_BOTTOM_NAV_PATHS.includes(pathname);
 
   return (
-    <LayoutWrapper $hasBottomNav={!hidesBottomNav}>
+    <LayoutWrapper $hasBottomNav={showsBottomNav}>
       <Outlet />
-      {!hidesBottomNav && <BottomNav />}
+      {showsBottomNav && <BottomNav />}
     </LayoutWrapper>
   );
 };

@@ -46,6 +46,7 @@ const Nav = styled.nav`
   align-items: center;
   padding: 0 1.25rem env(safe-area-inset-bottom);
   z-index: 10;
+  background: ${COLORS.gray.gray0};
 `;
 const NavItem = styled(Link)<{ $isActive: boolean }>`
   flex: 1;
