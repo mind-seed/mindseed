@@ -166,6 +166,7 @@ export class PostController {
                 type,
                 content: c.content,
                 author: { nickname: c.nickname },
+                isOwner: c.authorId === user.id,
               };
           }
         }),
