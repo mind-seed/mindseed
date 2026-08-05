@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
+import { useMutation } from "@tanstack/react-query";
 import { styled } from "styled-components";
 import { Button } from "../../components/Button";
 import { TextInput } from "../../components/TextInput";
@@ -13,11 +14,59 @@ import {
   SendMailRequestDtoSchema,
   VerifyMailRequestDtoSchema,
 } from "../../type/index";
+import { ApiError, getEmailToken, sendSignUpMail, signUp } from "../../api/api";
+import { setTokens } from "../../api/tokens";
+import { AuthErrorCode } from "@mindseed/api-types";
+import type {
+  CompleteSignupRequestDto,
+  SendMailRequestDto,
+  VerifyMailRequestDto,
+} from "@mindseed/api-types";
 
 type SignUpStep = "email" | "password" | "profile";
 
 const VERIFICATION_VALIDITY_SECONDS = 3 * 60;
 const VERIFICATION_RESEND_DELAY_SECONDS = 30;
+
+function getSendMailErrorMessage(error: Error | null): string {
+  if (error === null) return "";
+  if (error instanceof ApiError) {
+    if (error.errorCode === AuthErrorCode.EMAIL_ALREADY_EXISTS) {
+      return "이미 가입된 이메일입니다.";
+    }
+    if (error.errorCode === AuthErrorCode.EMAIL_RATE_LIMITED) {
+      return "이메일 발송 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.";
+    }
+    if (error.errorCode === AuthErrorCode.VERIFICATION_COOLDOWN) {
+      return "인증 코드를 다시 받으려면 30초 후에 시도해주세요.";
+    }
+  }
+  return "인증 코드 발송 중 오류가 발생했습니다. 다시 시도해주세요.";
+}
+
+function getEmailTokenErrorMessage(error: Error | null): string {
+  if (error === null) return "";
+  if (
+    error instanceof ApiError &&
+    error.errorCode === AuthErrorCode.INVALID_VERIFICATION_CODE
+  ) {
+    return "인증 코드가 올바르지 않습니다.";
+  }
+  return "인증 중 오류가 발생했습니다. 다시 시도해주세요.";
+}
+
+function getSignUpErrorMessage(error: Error | null): string {
+  if (error === null) return "";
+  if (error instanceof ApiError) {
+    if (error.errorCode === AuthErrorCode.EMAIL_ALREADY_EXISTS) {
+      return "이미 가입된 이메일입니다.";
+    }
+    if (error.errorCode === AuthErrorCode.INVALID_SIGN_UP_TOKEN) {
+      return "인증이 만료되었습니다. 처음부터 다시 시도해주세요.";
+    }
+  }
+  return "회원가입 중 오류가 발생했습니다. 다시 시도해주세요.";
+}
 
 export const SignUp = () => {
   const navigate = useNavigate();
@@ -37,12 +86,52 @@ export const SignUp = () => {
   const [nicknameError, setNicknameError] = useState("");
   const [age, setAge] = useState("");
   const [ageError, setAgeError] = useState("");
+  const [emailToken, setEmailToken] = useState<string | null>(null);
+
   const isCodeValid = verificationTimer.isRunning;
   const isEmailStepDisabled =
     !isCodeValid || verificationCode.trim().length !== 6;
   const isPasswordStepDisabled =
     !password || !passwordConfirm || password !== passwordConfirm;
   const isProfileStepDisabled = !nickname.trim() || !age;
+
+  const sendMailMutation = useMutation({
+    mutationFn: (input: SendMailRequestDto) => sendSignUpMail(input),
+    onSuccess: () => {
+      setIsCodeSent(true);
+      setVerificationCode("");
+      verificationTimer.reset();
+      resendTimer.reset();
+    },
+  });
+
+  const getEmailTokenMutation = useMutation({
+    mutationFn: (input: VerifyMailRequestDto) => getEmailToken(input),
+    onSuccess: (data) => {
+      setEmailToken(data.token);
+      verificationTimer.stop();
+      setStep("password");
+    },
+  });
+
+  const signUpMutation = useMutation({
+    mutationFn: (input: CompleteSignupRequestDto) => {
+      if (emailToken === null) {
+        throw new Error("이메일 인증 토큰이 없습니다.");
+      }
+      return signUp(emailToken, input);
+    },
+    onSuccess: (data) => {
+      setTokens(data.accessToken, data.refreshToken);
+      void navigate("/");
+    },
+  });
+
+  const sendMailApiError = getSendMailErrorMessage(sendMailMutation.error);
+  const emailTokenApiError = getEmailTokenErrorMessage(
+    getEmailTokenMutation.error,
+  );
+  const signUpApiError = getSignUpErrorMessage(signUpMutation.error);
 
   const handleBack = () => {
     if (step === "profile") {
@@ -59,17 +148,16 @@ export const SignUp = () => {
   };
 
   const handleSendCode = () => {
-    if (!SendMailRequestDtoSchema.safeParse({ email: email.trim() }).success) {
+    const result = SendMailRequestDtoSchema.safeParse({ email: email.trim() });
+    if (!result.success) {
       setEmailError("올바른 이메일 형식이 아닙니다.");
       return;
     }
 
     setEmailError("");
     setVerificationCodeError("");
-    setIsCodeSent(true);
-    setVerificationCode("");
-    verificationTimer.reset();
-    resendTimer.reset();
+    sendMailMutation.reset();
+    sendMailMutation.mutate(result.data);
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -78,19 +166,18 @@ export const SignUp = () => {
     if (step === "email") {
       if (isEmailStepDisabled) return;
 
-      if (
-        !VerifyMailRequestDtoSchema.safeParse({
-          email: email.trim(),
-          code: verificationCode,
-        }).success
-      ) {
+      const result = VerifyMailRequestDtoSchema.safeParse({
+        email: email.trim(),
+        code: verificationCode,
+      });
+
+      if (!result.success) {
         setVerificationCodeError("인증 코드가 올바르지 않습니다.");
         return;
       }
 
       setVerificationCodeError("");
-      verificationTimer.stop();
-      setStep("password");
+      getEmailTokenMutation.mutate(result.data);
       return;
     }
 
@@ -132,7 +219,7 @@ export const SignUp = () => {
 
     if (!signupResult.success) return;
 
-    navigate("/login");
+    signUpMutation.mutate(signupResult.data);
   };
 
   return (
@@ -157,8 +244,8 @@ export const SignUp = () => {
                     name="signup-email"
                     type="email"
                     value={email}
-                    status={emailError ? "error" : "normal"}
-                    description={emailError}
+                    status={emailError || sendMailApiError ? "error" : "normal"}
+                    description={emailError || sendMailApiError}
                     placeholder="example@gmail.com"
                     onChange={(event) => {
                       setEmail(event.target.value);
@@ -168,6 +255,8 @@ export const SignUp = () => {
                       setIsCodeSent(false);
                       verificationTimer.stop();
                       resendTimer.stop();
+                      sendMailMutation.reset();
+                      getEmailTokenMutation.reset();
                     }}
                   />
 
@@ -176,7 +265,11 @@ export const SignUp = () => {
                       variant="primary"
                       size="medium"
                       label="코드 발송"
-                      disabled={!email.trim() || resendTimer.isRunning}
+                      disabled={
+                        !email.trim() ||
+                        resendTimer.isRunning ||
+                        sendMailMutation.isPending
+                      }
                       onClick={handleSendCode}
                     />
                   </ButtonWrapper>
@@ -188,8 +281,12 @@ export const SignUp = () => {
                 <TextInput
                   name="signup-code"
                   value={verificationCode}
-                  status={verificationCodeError ? "error" : "normal"}
-                  description={verificationCodeError}
+                  status={
+                    verificationCodeError || emailTokenApiError
+                      ? "error"
+                      : "normal"
+                  }
+                  description={verificationCodeError || emailTokenApiError}
                   placeholder={
                     !isCodeSent
                       ? "인증번호 발송 후 입력 가능합니다"
@@ -203,6 +300,7 @@ export const SignUp = () => {
                   onChange={(event) => {
                     setVerificationCode(event.target.value);
                     setVerificationCodeError("");
+                    getEmailTokenMutation.reset();
                   }}
                 />
               </Field>
@@ -291,6 +389,7 @@ export const SignUp = () => {
                   onChange={(event) => {
                     setNickname(event.target.value);
                     setNicknameError("");
+                    signUpMutation.reset();
                   }}
                 />
               </Field>
@@ -300,12 +399,13 @@ export const SignUp = () => {
                 <TextInput
                   name="signup-age"
                   value={age}
-                  status={ageError ? "error" : "normal"}
-                  description={ageError}
+                  status={ageError || signUpApiError ? "error" : "normal"}
+                  description={ageError || signUpApiError}
                   placeholder="나이를 입력해주세요"
                   onChange={(event) => {
                     setAge(event.target.value.replace(/\D/g, "").slice(0, 2));
                     setAgeError("");
+                    signUpMutation.reset();
                   }}
                 />
               </Field>
@@ -322,10 +422,10 @@ export const SignUp = () => {
             showIcon={step !== "profile"}
             disabled={
               step === "email"
-                ? isEmailStepDisabled
+                ? isEmailStepDisabled || getEmailTokenMutation.isPending
                 : step === "password"
                   ? isPasswordStepDisabled
-                  : isProfileStepDisabled
+                  : isProfileStepDisabled || signUpMutation.isPending
             }
           />
           <Links>

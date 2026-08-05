@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { PostWithCommentsSchema } from "../../type/index";
 import type {
   CommunityPost,
   PictureDto,
@@ -7,6 +6,7 @@ import type {
   PostContent,
 } from "../../type/index";
 import { useNavigate, useParams } from "react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { styled } from "styled-components";
 import { Category } from "../../components/Category";
 import { PictureList } from "../../components/Picture";
@@ -14,114 +14,51 @@ import { TopBar } from "../../components/TopBar";
 import { AddIcon } from "../../components/Icons/AddIcon";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
+import {
+  getPost,
+  createPost,
+  updatePost,
+  beginAttachmentUpload,
+  confirmAttachmentUpload,
+} from "../../api/api";
+import { callAuthenticated } from "../../api/callAuthenticated";
+import { getAccessToken } from "../../api/tokens";
+import { POST_CATEGORIES } from "../../postCategory";
 
 const COMMUNITY_AUTHOR_NICKNAME = "마음지기";
 
-type WriteCategory = PostCategory | "other";
+type WriteCategory = PostCategory;
 
-const WRITE_CATEGORIES: ReadonlyArray<{
-  value: WriteCategory;
-  label: string;
-}> = [
-  { value: "dummy1", label: "고민상담" },
-  { value: "dummy2", label: "일상" },
-  { value: "dummy3", label: "문의" },
-  { value: "other", label: "기타" },
-];
-
-const COMMUNITY_POSTS: CommunityPost[] = [
-  {
-    id: 1,
-    content: "요즘 마음이 복잡한데 어떻게 정리하면 좋을까요?",
-    category: "dummy1",
-    author: { nickname: COMMUNITY_AUTHOR_NICKNAME },
-    attachments: [],
-    likeCount: 12,
-    isOwner: true,
-    isLiked: false,
-    createdAt: "2026-07-28T09:00:00.000Z",
-    updatedAt: "2026-07-28T09:00:00.000Z",
-    comments: [
-      {
-        type: "active",
-        id: 1,
-        content: "작성자 댓글입니다.",
-        author: { nickname: COMMUNITY_AUTHOR_NICKNAME },
-        createdAt: "2026-07-28T09:10:00.000Z",
-        updatedAt: "2026-07-28T09:10:00.000Z",
-      },
-      {
-        type: "active",
-        id: 2,
-        content: "천천히 하나씩 적어보는 건 어떨까요?",
-        author: { nickname: "새싹이" },
-        createdAt: "2026-07-28T09:20:00.000Z",
-        updatedAt: "2026-07-28T09:20:00.000Z",
-      },
-    ],
-  },
-  {
-    id: 2,
-    content: "오늘은 산책하면서 기분 전환을 했어요.",
-    category: "dummy2",
-    author: { nickname: "초록이" },
-    attachments: [],
-    likeCount: 8,
-    isOwner: false,
-    isLiked: true,
-    createdAt: "2026-07-27T10:00:00.000Z",
-    updatedAt: "2026-07-27T10:00:00.000Z",
-    comments: [],
-  },
-  {
-    id: 3,
-    content: "자가진단 결과는 어디에서 다시 확인할 수 있나요?",
-    category: "dummy3",
-    author: { nickname: "푸른콩" },
-    attachments: [],
-    likeCount: 5,
-    isOwner: false,
-    isLiked: false,
-    createdAt: "2026-07-26T11:00:00.000Z",
-    updatedAt: "2026-07-26T11:00:00.000Z",
-    comments: [],
-  },
-  {
-    id: 4,
-    content: "잠들기 전에 어떤 생각을 하면 마음이 편해질까요?",
-    category: "dummy1",
-    author: { nickname: "나무늘보" },
-    attachments: [],
-    likeCount: 18,
-    isOwner: false,
-    isLiked: false,
-    createdAt: "2026-07-25T12:00:00.000Z",
-    updatedAt: "2026-07-25T12:00:00.000Z",
-    comments: [],
-  },
-  {
-    id: 5,
-    content: "작은 화분에 새싹이 올라왔어요!",
-    category: "dummy2",
-    author: { nickname: "햇살이" },
-    attachments: [],
-    likeCount: 21,
-    isOwner: false,
-    isLiked: true,
-    createdAt: "2026-07-24T13:00:00.000Z",
-    updatedAt: "2026-07-24T13:00:00.000Z",
-    comments: [],
-  },
-].map((post) => PostWithCommentsSchema.parse(post));
+const WRITE_CATEGORIES = POST_CATEGORIES;
 
 const getCommunityPostPath = (postId: string | number) =>
   `/community/${postId}`;
 
+type NewAttachment = {
+  key: number;
+  localUrl: string;
+  attachmentId: number | null;
+};
+
 export const PostWritePage = () => {
   const { postId } = useParams();
-  const post = COMMUNITY_POSTS.find((item) => String(item.id) === postId);
+  const navigate = useNavigate();
 
-  return <PostWriteContent key={postId} postId={postId} post={post} />;
+  const postQuery = useQuery({
+    queryKey: ["posts", Number(postId)],
+    queryFn: ({ signal }) =>
+      callAuthenticated(
+        (token) => getPost(token, Number(postId), { signal }),
+        navigate,
+      ),
+    enabled: postId !== undefined,
+  });
+
+  if (postId !== undefined && !postQuery.data) return null;
+
+  return (
+    <PostWriteContent key={postId} postId={postId} post={postQuery.data} />
+  );
 };
 
 const PostWriteContent = ({
@@ -132,51 +69,135 @@ const PostWriteContent = ({
   post?: CommunityPost;
 }) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const keyCounterRef = useRef(0);
+  const localUrlsRef = useRef<string[]>([]);
   const isEdit = post !== undefined;
   const [category, setCategory] = useState<WriteCategory>(
     post?.category ?? WRITE_CATEGORIES[0].value,
   );
   const [content, setContent] = useState<PostContent>(post?.content ?? "");
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const imageUrlsRef = useRef<string[]>([]);
+  const [newAttachments, setNewAttachments] = useState<NewAttachment[]>([]);
   const displayNickname = post?.author.nickname ?? COMMUNITY_AUTHOR_NICKNAME;
   const pictures: PictureDto[] = [
     ...(post?.attachments ?? []),
-    ...imageUrls.map((url, index) => ({ id: -(index + 1), url })),
+    ...newAttachments.map((a) => ({ id: a.attachmentId ?? a.key, url: a.localUrl })),
   ];
   const trimmedContent = content.trim();
+  const hasUploadPending = newAttachments.some((a) => a.attachmentId === null);
   const isPostUnchanged =
     post !== undefined &&
     category === post.category &&
     trimmedContent === post.content.trim() &&
-    imageUrls.length === 0;
-  const isCompleteDisabled = !trimmedContent || isPostUnchanged;
+    newAttachments.length === 0;
+  const isCompleteDisabled =
+    !trimmedContent || isPostUnchanged || hasUploadPending;
+
+  const createPostMutation = useMutation({
+    mutationFn: () =>
+      callAuthenticated(
+        (token) =>
+          createPost(token, {
+            content: trimmedContent,
+            category,
+            nickname: displayNickname,
+            attachmentIds: newAttachments
+              .filter((a) => a.attachmentId !== null)
+              .map((a) => a.attachmentId!),
+          }),
+        navigate,
+      ),
+    onSuccess: (data) => {
+      void queryClient.invalidateQueries({ queryKey: ["posts"] });
+      navigate(getCommunityPostPath(data.id));
+    },
+  });
+
+  const updatePostMutation = useMutation({
+    mutationFn: () =>
+      callAuthenticated(
+        (token) =>
+          updatePost(token, Number(postId), {
+            content: trimmedContent,
+            category,
+            attachmentIds: [
+              ...(post?.attachments.map((a) => a.id) ?? []),
+              ...newAttachments
+                .filter((a) => a.attachmentId !== null)
+                .map((a) => a.attachmentId!),
+            ],
+          }),
+        navigate,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["posts"] });
+      navigate(getCommunityPostPath(Number(postId)));
+    },
+  });
+
+  const isPending = createPostMutation.isPending || updatePostMutation.isPending;
 
   useEffect(
     () => () => {
-      imageUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      localUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
     },
     [],
   );
 
   const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const remainingCount = Math.max(
-      0,
-      3 - (post?.attachments.length ?? 0) - imageUrlsRef.current.length,
-    );
+    const existingCount =
+      (post?.attachments.length ?? 0) + newAttachments.length;
+    const remainingCount = Math.max(0, 3 - existingCount);
     const files = Array.from(event.target.files ?? []).slice(0, remainingCount);
-    const urls = files.map((image) => URL.createObjectURL(image));
-
-    imageUrlsRef.current = [...imageUrlsRef.current, ...urls];
-    setImageUrls(imageUrlsRef.current);
     event.target.value = "";
+
+    if (files.length === 0) return;
+
+    const entries: NewAttachment[] = files.map((file) => {
+      const key = ++keyCounterRef.current;
+      const localUrl = URL.createObjectURL(file);
+      localUrlsRef.current.push(localUrl);
+      return { key, localUrl, attachmentId: null };
+    });
+
+    setNewAttachments((prev) => [...prev, ...entries]);
+
+    const token = getAccessToken();
+    if (!token) return;
+
+    void Promise.all(
+      entries.map(async (entry, i) => {
+        try {
+          const { attachmentId, presignedUrl } = await beginAttachmentUpload(
+            token,
+          );
+          await fetch(presignedUrl, {
+            method: "PUT",
+            body: files[i],
+            headers: { "Content-Type": files[i].type },
+          });
+          await confirmAttachmentUpload(token, { attachmentId });
+          setNewAttachments((prev) =>
+            prev.map((a) =>
+              a.key === entry.key ? { ...a, attachmentId } : a,
+            ),
+          );
+        } catch {
+          setNewAttachments((prev) => prev.filter((a) => a.key !== entry.key));
+        }
+      }),
+    );
   };
 
   const handleComplete = () => {
-    if (isCompleteDisabled) return;
+    if (isCompleteDisabled || isPending) return;
 
-    navigate(post ? getCommunityPostPath(post.id) : "/community");
+    if (isEdit) {
+      updatePostMutation.mutate();
+    } else {
+      createPostMutation.mutate();
+    }
   };
 
   if (postId && !post) return null;
@@ -187,7 +208,7 @@ const PostWriteContent = ({
         title={isEdit ? "글 수정" : "글 작성"}
         rightType="text"
         rightText={isEdit ? "완료" : "게시"}
-        rightDisabled={isCompleteDisabled}
+        rightDisabled={isCompleteDisabled || isPending}
         onBackClick={() => navigate(-1)}
         onRightClick={handleComplete}
       />
