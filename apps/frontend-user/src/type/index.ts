@@ -1,34 +1,28 @@
 import type { z } from "zod";
-import { LoginRequestDtoSchema } from "../../../../packages/api-types/src/auth/login";
-import { ResetPasswordRequestDtoSchema } from "../../../../packages/api-types/src/auth/reset-password";
-import { SendMailRequestDtoSchema } from "../../../../packages/api-types/src/auth/send-sign-up-mail";
-import { EmailPasswordResetRequestDtoSchema } from "../../../../packages/api-types/src/auth/send-password-reset-mail";
-import { CompleteSignupRequestDtoSchema } from "../../../../packages/api-types/src/auth/sign-up";
-import { VerifyMailRequestDtoSchema } from "../../../../packages/api-types/src/auth/get-email-token";
-import { AuthorNicknameSchema } from "../../../../packages/api-types/src/common/author";
 import {
   ActiveCommentDtoSchema,
-  AuthorDeletedCommentDtoSchema,
-  DeletedCommentDtoSchema,
-} from "../../../../packages/api-types/src/common/comment";
-import {
   AttachmentDtoSchema,
+  AuthorDeletedCommentDtoSchema,
+  AuthorNicknameSchema,
+  CompleteSignupRequestDtoSchema,
+  CreateDiagnosisRequestDtoSchema,
+  DeletedCommentDtoSchema,
+  EmailPasswordResetRequestDtoSchema,
+  LoginRequestDtoSchema,
+  MissionAssignmentDtoSchema,
   PostCategorySchema,
   PostContentSchema,
   PostDtoSchema,
   PostWithCommentsSchema,
-} from "../../../../packages/api-types/src/common/post";
-import { ResourceDtoSchema } from "../../../../packages/api-types/src/common/resource";
-import {
-  MissionAssignmentDtoSchema,
+  ResetPasswordRequestDtoSchema,
+  ResourceDtoSchema,
+  SendMailRequestDtoSchema,
   SimplifiedMissionSchema,
-} from "../../../../packages/api-types/src/common/mission";
-import {
+  UpdateCurrentUserRequestDtoSchema,
   UserDtoSchema,
   UserProfileDtoSchema,
-} from "../../../../packages/api-types/src/common/user";
-import { CreateDiagnosisRequestDtoSchema } from "../../../../packages/api-types/src/diagnoses/create-diagnosis";
-import { UpdateCurrentUserRequestDtoSchema } from "../../../../packages/api-types/src/users/update-current-profile";
+  VerifyMailRequestDtoSchema,
+} from "@mindseed/api-types";
 
 export { AuthorNicknameSchema };
 export {
@@ -53,7 +47,7 @@ export {
   VerifyMailRequestDtoSchema,
 };
 export { UpdateCurrentUserRequestDtoSchema };
-export { PasswordSchema } from "../../../../packages/api-types/src/common/user";
+export { PasswordSchema } from "@mindseed/api-types";
 
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
