@@ -27,26 +27,27 @@ export const ReportModal = ({
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
+      if (event.key === "Escape" && !isPending) onCancel();
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onCancel]);
+  }, [isOpen, isPending, onCancel]);
 
   if (!isOpen) return null;
 
   return (
-    <Overlay onClick={onCancel}>
+    <Overlay onClick={isPending ? undefined : onCancel}>
       <Modal
-        role="alertdialog"
+        role="dialog"
         aria-modal="true"
+        aria-labelledby="report-modal-title"
         onClick={(event) => event.stopPropagation()}
       >
         <WarningIcon width={48} height={48} color={COLORS.state.error} />
 
         <Message>
-          <Title>신고하기</Title>
+          <Title id="report-modal-title">신고하기</Title>
           <Description>신고 사유를 입력해주세요.</Description>
         </Message>
 
@@ -66,7 +67,7 @@ export const ReportModal = ({
           >
             신고
           </ConfirmButton>
-          <CancelButton type="button" onClick={onCancel}>
+          <CancelButton type="button" disabled={isPending} onClick={onCancel}>
             취소
           </CancelButton>
         </Actions>
@@ -164,4 +165,9 @@ const CancelButton = styled.button`
   color: ${COLORS.gray.gray600};
   ${TEXT_STYLE.title.ti};
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;
