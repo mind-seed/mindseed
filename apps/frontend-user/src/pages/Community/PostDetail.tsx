@@ -51,6 +51,12 @@ export const PostDetailPage = () => {
   });
 
   if (postQuery.isLoading) return null;
+  if (postQuery.isError) return (
+    <Page>
+      <TopBar onBackClick={() => navigate("/community")} />
+      <NotFound>게시글을 불러오지 못했습니다.</NotFound>
+    </Page>
+  );
 
   return (
     <PostDetailContent
@@ -110,6 +116,8 @@ const PostDetailContent = ({
       });
       if (result.success) {
         setComments((items) => [...items, result.data]);
+      } else {
+        void queryClient.invalidateQueries({ queryKey: ["posts", post!.id] });
       }
       setComment("");
       setIsCommentMode(false);
@@ -198,7 +206,11 @@ const PostDetailContent = ({
         (token) => setPostLike(token, post!.id, { liked }),
         navigate,
       ),
-    onSuccess: () => {
+    onError: (_, liked) => {
+      setIsLiked(!liked);
+      setLikeCount((count) => Math.max(0, count + (liked ? -1 : 1)));
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });

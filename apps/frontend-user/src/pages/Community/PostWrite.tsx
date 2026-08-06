@@ -22,7 +22,6 @@ import {
   confirmAttachmentUpload,
 } from "../../api/api";
 import { callAuthenticated } from "../../api/callAuthenticated";
-import { getAccessToken } from "../../api/tokens";
 import { POST_CATEGORIES } from "../../postCategory";
 
 const COMMUNITY_AUTHOR_NICKNAME = "마음지기";
@@ -38,6 +37,7 @@ type NewAttachment = {
   key: number;
   localUrl: string;
   attachmentId: number | null;
+  uploadFailed?: boolean;
 };
 
 export const PostWritePage = () => {
@@ -53,6 +53,10 @@ export const PostWritePage = () => {
       ),
     enabled: postId !== undefined,
   });
+
+  useEffect(() => {
+    if (postId !== undefined && postQuery.isError) navigate(-1);
+  }, [postId, postQuery.isError, navigate]);
 
   if (postId !== undefined && !postQuery.data) return null;
 
@@ -82,17 +86,18 @@ const PostWriteContent = ({
   const displayNickname = post?.author.nickname ?? COMMUNITY_AUTHOR_NICKNAME;
   const pictures: PictureDto[] = [
     ...(post?.attachments ?? []),
-    ...newAttachments.map((a) => ({ id: a.attachmentId ?? a.key, url: a.localUrl })),
+    ...newAttachments.map((a) => ({ id: a.attachmentId ?? -a.key, url: a.localUrl })),
   ];
   const trimmedContent = content.trim();
-  const hasUploadPending = newAttachments.some((a) => a.attachmentId === null);
+  const hasUploadPending = newAttachments.some((a) => a.attachmentId === null && !a.uploadFailed);
+  const hasUploadFailed = newAttachments.some((a) => a.uploadFailed);
   const isPostUnchanged =
     post !== undefined &&
     category === post.category &&
     trimmedContent === post.content.trim() &&
     newAttachments.length === 0;
   const isCompleteDisabled =
-    !trimmedContent || isPostUnchanged || hasUploadPending;
+    !trimmedContent || isPostUnchanged || hasUploadPending || hasUploadFailed;
 
   const createPostMutation = useMutation({
     mutationFn: () =>
@@ -163,28 +168,34 @@ const PostWriteContent = ({
 
     setNewAttachments((prev) => [...prev, ...entries]);
 
-    const token = getAccessToken();
-    if (!token) return;
-
     void Promise.all(
       entries.map(async (entry, i) => {
         try {
-          const { attachmentId, presignedUrl } = await beginAttachmentUpload(
-            token,
+          const { attachmentId, presignedUrl } = await callAuthenticated(
+            (token) => beginAttachmentUpload(token),
+            navigate,
           );
-          await fetch(presignedUrl, {
+          const uploadResponse = await fetch(presignedUrl, {
             method: "PUT",
             body: files[i],
             headers: { "Content-Type": files[i].type },
           });
-          await confirmAttachmentUpload(token, { attachmentId });
+          if (!uploadResponse.ok) throw new Error("Upload failed");
+          await callAuthenticated(
+            (token) => confirmAttachmentUpload(token, { attachmentId }),
+            navigate,
+          );
           setNewAttachments((prev) =>
             prev.map((a) =>
               a.key === entry.key ? { ...a, attachmentId } : a,
             ),
           );
         } catch {
-          setNewAttachments((prev) => prev.filter((a) => a.key !== entry.key));
+          setNewAttachments((prev) =>
+            prev.map((a) =>
+              a.key === entry.key ? { ...a, uploadFailed: true } : a,
+            ),
+          );
         }
       }),
     );
@@ -238,6 +249,9 @@ const PostWriteContent = ({
           {pictures.length > 0 && (
             <PictureContainer aria-label="첨부 이미지">
               <PictureList pictures={pictures} />
+              {hasUploadFailed && (
+                <UploadError>일부 이미지 업로드에 실패했습니다.</UploadError>
+              )}
             </PictureContainer>
           )}
         </InputWrapper>
@@ -332,4 +346,10 @@ const HiddenInput = styled.input`
 
 const PictureContainer = styled.div`
   padding: 0.625rem 0;
+`;
+
+const UploadError = styled.p`
+  margin-top: 0.5rem;
+  color: ${COLORS.gray.gray500};
+  ${TEXT_STYLE.body.sm};
 `;

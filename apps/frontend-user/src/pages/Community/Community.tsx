@@ -77,7 +77,10 @@ export const CommunityMainPage = () => {
         (token) => setPostLike(token, postId, { liked }),
         navigate,
       ),
-    onSuccess: () => {
+    onError: (_, { postId, liked }) => {
+      setLikedPosts((current) => ({ ...current, [postId]: !liked }));
+    },
+    onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
