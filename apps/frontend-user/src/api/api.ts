@@ -57,13 +57,38 @@ export class ApiError extends Error {
 
 type Options = { signal?: AbortSignal };
 
+type ResponseSchema<TData> = ZodType<
+  | { success: true; data: TData }
+  | { success: false; statusCode: number; errorCode?: string }
+>;
+
+async function parseResponse<TData>(
+  response: Response,
+  schema: ResponseSchema<TData>,
+): Promise<TData> {
+  let json: unknown;
+  try {
+    json = await response.json();
+  } catch {
+    throw new ApiError(undefined, response.status);
+  }
+
+  const result = schema.safeParse(json);
+  if (!result.success) {
+    throw new ApiError(undefined, response.status);
+  }
+
+  if (!result.data.success) {
+    throw new ApiError(result.data.errorCode, result.data.statusCode);
+  }
+
+  return result.data.data;
+}
+
 async function post<TData>(
   path: string,
   body: unknown,
-  schema: ZodType<
-    | { success: true; data: TData }
-    | { success: false; statusCode: number; errorCode?: string }
-  >,
+  schema: ResponseSchema<TData>,
   options?: Options & { token?: string },
 ): Promise<TData> {
   const headers: Record<string, string> = {
@@ -80,22 +105,12 @@ async function post<TData>(
     signal: options?.signal,
   });
 
-  const json: unknown = await response.json();
-  const parsed = schema.parse(json);
-
-  if (!parsed.success) {
-    throw new ApiError(parsed.errorCode, parsed.statusCode);
-  }
-
-  return parsed.data;
+  return parseResponse(response, schema);
 }
 
 async function get<TData>(
   path: string,
-  schema: ZodType<
-    | { success: true; data: TData }
-    | { success: false; statusCode: number; errorCode?: string }
-  >,
+  schema: ResponseSchema<TData>,
   options?: Options & { token?: string },
 ): Promise<TData> {
   const headers: Record<string, string> = {};
@@ -109,23 +124,13 @@ async function get<TData>(
     signal: options?.signal,
   });
 
-  const json: unknown = await response.json();
-  const parsed = schema.parse(json);
-
-  if (!parsed.success) {
-    throw new ApiError(parsed.errorCode, parsed.statusCode);
-  }
-
-  return parsed.data;
+  return parseResponse(response, schema);
 }
 
 async function put<TData>(
   path: string,
   body: unknown,
-  schema: ZodType<
-    | { success: true; data: TData }
-    | { success: false; statusCode: number; errorCode?: string }
-  >,
+  schema: ResponseSchema<TData>,
   options?: Options & { token?: string },
 ): Promise<TData> {
   const headers: Record<string, string> = {
@@ -142,23 +147,13 @@ async function put<TData>(
     signal: options?.signal,
   });
 
-  const json: unknown = await response.json();
-  const parsed = schema.parse(json);
-
-  if (!parsed.success) {
-    throw new ApiError(parsed.errorCode, parsed.statusCode);
-  }
-
-  return parsed.data;
+  return parseResponse(response, schema);
 }
 
 async function patch<TData>(
   path: string,
   body: unknown,
-  schema: ZodType<
-    | { success: true; data: TData }
-    | { success: false; statusCode: number; errorCode?: string }
-  >,
+  schema: ResponseSchema<TData>,
   options?: Options & { token?: string },
 ): Promise<TData> {
   const headers: Record<string, string> = {
@@ -175,22 +170,12 @@ async function patch<TData>(
     signal: options?.signal,
   });
 
-  const json: unknown = await response.json();
-  const parsed = schema.parse(json);
-
-  if (!parsed.success) {
-    throw new ApiError(parsed.errorCode, parsed.statusCode);
-  }
-
-  return parsed.data;
+  return parseResponse(response, schema);
 }
 
 async function del<TData>(
   path: string,
-  schema: ZodType<
-    | { success: true; data: TData }
-    | { success: false; statusCode: number; errorCode?: string }
-  >,
+  schema: ResponseSchema<TData>,
   options?: Options & { token?: string },
 ): Promise<TData> {
   const headers: Record<string, string> = {};
@@ -204,14 +189,7 @@ async function del<TData>(
     signal: options?.signal,
   });
 
-  const json: unknown = await response.json();
-  const parsed = schema.parse(json);
-
-  if (!parsed.success) {
-    throw new ApiError(parsed.errorCode, parsed.statusCode);
-  }
-
-  return parsed.data;
+  return parseResponse(response, schema);
 }
 
 export async function sendSignUpMail(

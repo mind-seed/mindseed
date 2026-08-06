@@ -16,16 +16,23 @@ import {
   setTokens,
 } from "./api/tokens";
 
+let bootstrapPromise: Promise<void> | null = null;
+
 async function bootstrap(): Promise<void> {
   if (getAccessToken() !== null) return;
   const rt = getRefreshToken();
   if (rt === null) return;
-  try {
-    const tokens = await refreshTokens(rt);
-    setTokens(tokens.accessToken, tokens.refreshToken);
-  } catch {
-    clearTokens();
-  }
+  bootstrapPromise ??= (async () => {
+    try {
+      const tokens = await refreshTokens(rt);
+      setTokens(tokens.accessToken, tokens.refreshToken);
+    } catch {
+      clearTokens();
+    } finally {
+      bootstrapPromise = null;
+    }
+  })();
+  await bootstrapPromise;
 }
 
 async function appLoader() {
