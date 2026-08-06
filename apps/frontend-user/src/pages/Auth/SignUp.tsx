@@ -15,6 +15,7 @@ import {
   VerifyMailRequestDtoSchema,
 } from "../../type/index";
 import { ApiError, getEmailToken, sendSignUpMail, signUp } from "../../api/api";
+import { getEmailTokenErrorMessage } from "./authErrors";
 import { setTokens } from "../../api/tokens";
 import { AuthErrorCode } from "@mindseed/api-types";
 import type {
@@ -42,17 +43,6 @@ function getSendMailErrorMessage(error: Error | null): string {
     }
   }
   return "인증 코드 발송 중 오류가 발생했습니다. 다시 시도해주세요.";
-}
-
-function getEmailTokenErrorMessage(error: Error | null): string {
-  if (error === null) return "";
-  if (
-    error instanceof ApiError &&
-    error.errorCode === AuthErrorCode.INVALID_VERIFICATION_CODE
-  ) {
-    return "인증 코드가 올바르지 않습니다.";
-  }
-  return "인증 중 오류가 발생했습니다. 다시 시도해주세요.";
 }
 
 function getSignUpErrorMessage(error: Error | null): string {
@@ -124,6 +114,15 @@ export const SignUp = () => {
     onSuccess: (data) => {
       setTokens(data.accessToken, data.refreshToken);
       void navigate("/");
+    },
+    onError: (error) => {
+      if (
+        error instanceof ApiError &&
+        error.errorCode === AuthErrorCode.INVALID_SIGN_UP_TOKEN
+      ) {
+        setEmailToken(null);
+        setStep("email");
+      }
     },
   });
 
@@ -399,8 +398,8 @@ export const SignUp = () => {
                 <TextInput
                   name="signup-age"
                   value={age}
-                  status={ageError || signUpApiError ? "error" : "normal"}
-                  description={ageError || signUpApiError}
+                  status={ageError ? "error" : "normal"}
+                  description={ageError}
                   placeholder="나이를 입력해주세요"
                   onChange={(event) => {
                     setAge(event.target.value.replace(/\D/g, "").slice(0, 2));
@@ -410,6 +409,7 @@ export const SignUp = () => {
                 />
               </Field>
             </Fields>
+            {signUpApiError && <ErrorMessage>{signUpApiError}</ErrorMessage>}
           </>
         )}
 
@@ -501,6 +501,13 @@ const EmailRow = styled.div`
 const ButtonWrapper = styled.div`
   width: 108px;
   flex-shrink: 0;
+`;
+
+const ErrorMessage = styled.p`
+  margin-top: 0.5rem;
+  color: ${COLORS.state.error};
+  ${TEXT_STYLE.body.ti};
+  text-align: center;
 `;
 
 const BottomArea = styled.div`
