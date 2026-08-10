@@ -7,10 +7,10 @@ import { ReportDtoSchema } from "./report";
 export const PostContentSchema = z.string().min(1).max(200);
 
 export const PostCategorySchema = z.enum([
-  "CONCERN",
-  "DIARY",
-  "INQUIRY",
-  "OTHER",
+  "concern",
+  "diary",
+  "inquiry",
+  "other",
 ]);
 
 export const AttachmentDtoSchema = z.object({

@@ -27,7 +27,7 @@ describe("ResourceMutationService", () => {
       resourceRepository.create({
         title: "test resource",
         type: ResourceType.ARTICLE,
-        category: ResourceCategory.DUMMY1,
+        category: ResourceCategory.DEPRESSION,
         url: "https://example.com",
         ...overrides,
       }),
@@ -69,7 +69,7 @@ describe("ResourceMutationService", () => {
       const resource = await resourceMutationService.createResource({
         title: "test resource",
         type: ResourceType.ARTICLE,
-        category: ResourceCategory.DUMMY1,
+        category: ResourceCategory.DEPRESSION,
         url: "https://example.com",
       });
 
@@ -78,7 +78,7 @@ describe("ResourceMutationService", () => {
       expect(saved).toMatchObject({
         title: "test resource",
         type: ResourceType.ARTICLE,
-        category: ResourceCategory.DUMMY1,
+        category: ResourceCategory.DEPRESSION,
         url: "https://example.com",
       });
     });
@@ -94,7 +94,7 @@ describe("ResourceMutationService", () => {
         resourceId: resource.id,
         title: "updated title",
         type: ResourceType.VIDEO,
-        category: ResourceCategory.DUMMY2,
+        category: ResourceCategory.ANXIETY,
         url: "https://updated.com",
       });
 
@@ -103,7 +103,7 @@ describe("ResourceMutationService", () => {
       expect(updated).toMatchObject({
         title: "updated title",
         type: ResourceType.VIDEO,
-        category: ResourceCategory.DUMMY2,
+        category: ResourceCategory.ANXIETY,
         url: "https://updated.com",
       });
     });
@@ -117,7 +117,7 @@ describe("ResourceMutationService", () => {
         resourceId: nonExistentResourceId,
         title: "title",
         type: ResourceType.ARTICLE,
-        category: ResourceCategory.DUMMY1,
+        category: ResourceCategory.DEPRESSION,
         url: "https://example.com",
       });
 

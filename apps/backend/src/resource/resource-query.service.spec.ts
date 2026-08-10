@@ -27,7 +27,7 @@ describe("ResourceQueryService", () => {
       resourceRepository.create({
         title: "test resource",
         type: ResourceType.ARTICLE,
-        category: ResourceCategory.DUMMY1,
+        category: ResourceCategory.DEPRESSION,
         url: "https://example.com",
         ...overrides,
       }),
@@ -77,18 +77,18 @@ describe("ResourceQueryService", () => {
     it("success: 각 parameter 처리", async () => {
       // Given: resources
       const ids = await saveTestResources([
-        { category: ResourceCategory.DUMMY1 },
-        { category: ResourceCategory.DUMMY2 },
-        { category: ResourceCategory.DUMMY1 },
-        { category: ResourceCategory.DUMMY1 },
-        { category: ResourceCategory.DUMMY1 },
+        { category: ResourceCategory.DEPRESSION },
+        { category: ResourceCategory.ANXIETY },
+        { category: ResourceCategory.DEPRESSION },
+        { category: ResourceCategory.DEPRESSION },
+        { category: ResourceCategory.DEPRESSION },
       ]);
 
       // When: 첫 페이지 조회
       const result = await resourceQueryService.listResourcesWithOffset({
         offset: 0,
         limit: 2,
-        category: ResourceCategory.DUMMY1,
+        category: ResourceCategory.DEPRESSION,
         orderBy: "createdAt",
         orderDirection: "asc",
       });
@@ -101,7 +101,7 @@ describe("ResourceQueryService", () => {
       const result2 = await resourceQueryService.listResourcesWithOffset({
         offset: 2,
         limit: 2,
-        category: ResourceCategory.DUMMY1,
+        category: ResourceCategory.DEPRESSION,
         orderBy: "createdAt",
         orderDirection: "asc",
       });
@@ -116,16 +116,16 @@ describe("ResourceQueryService", () => {
     it("success: 각 parameter 처리", async () => {
       // Given: resources
       const ids = await saveTestResources([
-        { category: ResourceCategory.DUMMY1 },
-        { category: ResourceCategory.DUMMY2 },
-        { category: ResourceCategory.DUMMY1 },
-        { category: ResourceCategory.DUMMY1 },
-        { category: ResourceCategory.DUMMY1 },
+        { category: ResourceCategory.DEPRESSION },
+        { category: ResourceCategory.ANXIETY },
+        { category: ResourceCategory.DEPRESSION },
+        { category: ResourceCategory.DEPRESSION },
+        { category: ResourceCategory.DEPRESSION },
       ]);
 
       const result1 = await resourceQueryService.listResourcesWithCursor({
         limit: 2,
-        category: ResourceCategory.DUMMY1,
+        category: ResourceCategory.DEPRESSION,
         orderBy: "createdAt",
         orderDirection: "asc",
       });
@@ -138,7 +138,7 @@ describe("ResourceQueryService", () => {
       const result2 = await resourceQueryService.listResourcesWithCursor({
         cursor: result1.nextCursor,
         limit: 2,
-        category: ResourceCategory.DUMMY1,
+        category: ResourceCategory.DEPRESSION,
         orderBy: "createdAt",
         orderDirection: "asc",
       });

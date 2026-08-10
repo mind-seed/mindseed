@@ -5,7 +5,12 @@ export const ResourceTitleSchema = z.string().min(1);
 
 export const ResourceTypeSchema = z.enum(["article", "video", "audio"]);
 
-export const ResourceCategorySchema = z.enum(["dummy1", "dummy2", "dummy3"]);
+export const ResourceCategorySchema = z.enum([
+  "depression",
+  "anxiety",
+  "stress",
+  "other",
+]);
 
 export const ResourceDtoSchema = z.object({
   id: z.int(),

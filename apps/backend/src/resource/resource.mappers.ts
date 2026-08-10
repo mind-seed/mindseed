@@ -16,7 +16,8 @@ export const typeMap = createBiMap<ResourceType, ApiResourceType>([
 ]);
 
 export const categoryMap = createBiMap<ResourceCategory, ApiResourceCategory>([
-  [ResourceCategory.DUMMY1, "dummy1"],
-  [ResourceCategory.DUMMY2, "dummy2"],
-  [ResourceCategory.DUMMY3, "dummy3"],
+  [ResourceCategory.DEPRESSION, "depression"],
+  [ResourceCategory.ANXIETY, "anxiety"],
+  [ResourceCategory.STRESS, "stress"],
+  [ResourceCategory.OTHER, "other"],
 ]);

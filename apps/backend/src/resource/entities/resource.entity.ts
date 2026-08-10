@@ -12,9 +12,10 @@ export enum ResourceType {
 }
 
 export enum ResourceCategory {
-  DUMMY1 = "DUMMY1",
-  DUMMY2 = "DUMMY2",
-  DUMMY3 = "DUMMY3",
+  DEPRESSION = "DEPRESSION",
+  ANXIETY = "ANXIETY",
+  STRESS = "STRESS",
+  OTHER = "OTHER",
 }
 
 @Entity({ name: "resource" })
