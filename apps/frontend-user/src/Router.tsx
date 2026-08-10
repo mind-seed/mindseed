@@ -8,13 +8,14 @@ import { PasswordReset } from "./pages/Auth/PasswordReset";
 import { CommunityMainPage } from "./pages/Community/Community";
 import { PostDetailPage } from "./pages/Community/PostDetail";
 import { PostWritePage } from "./pages/Community/PostWrite";
-import { refreshTokens } from "./api/api";
+import { ApiError, refreshTokens } from "./api/api";
 import {
   clearTokens,
   getAccessToken,
   getRefreshToken,
   setTokens,
 } from "./api/tokens";
+import { AuthErrorCode } from "@mindseed/api-types";
 
 let bootstrapPromise: Promise<void> | null = null;
 
@@ -26,8 +27,10 @@ async function bootstrap(): Promise<void> {
     try {
       const tokens = await refreshTokens(rt);
       setTokens(tokens.accessToken, tokens.refreshToken);
-    } catch {
-      clearTokens();
+    } catch (e) {
+      if (e instanceof ApiError && e.errorCode === AuthErrorCode.INVALID_REFRESH_TOKEN) {
+        clearTokens();
+      }
     } finally {
       bootstrapPromise = null;
     }
