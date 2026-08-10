@@ -41,7 +41,6 @@ export const CommunityMainPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchText, setSearchText] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
   const [activeSort, setActiveSort] = useState<CommunitySort>("최신순");
   const [isSortOpen, setIsSortOpen] = useState(false);
   const categoryParam = searchParams.get("category");
@@ -77,9 +76,6 @@ export const CommunityMainPage = () => {
         (token) => setPostLike(token, postId, { liked }),
         navigate,
       ),
-    onError: (_, { postId, liked }) => {
-      setLikedPosts((current) => ({ ...current, [postId]: !liked }));
-    },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
@@ -115,9 +111,7 @@ export const CommunityMainPage = () => {
   };
 
   const handleLikeClick = (post: PostDto) => {
-    const newLiked = !(likedPosts[post.id] ?? post.isLiked);
-    setLikedPosts((current) => ({ ...current, [post.id]: newLiked }));
-    setPostLikeMutation.mutate({ postId: post.id, liked: newLiked });
+    setPostLikeMutation.mutate({ postId: post.id, liked: !post.isLiked });
   };
 
   return (
@@ -162,7 +156,7 @@ export const CommunityMainPage = () => {
               content={post.content}
               attachments={post.attachments}
               createdAt={post.createdAt}
-              isLiked={likedPosts[post.id] ?? post.isLiked}
+              isLiked={post.isLiked}
               onClick={() => navigate(getCommunityPostPath(post.id))}
               onLikeClick={() => handleLikeClick(post)}
             />
