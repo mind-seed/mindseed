@@ -1,119 +1,81 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { styled } from "styled-components";
-import { Comment, CommentInput } from "../../components/community/Comment";
-import { BottomSheet } from "../../components/community/BottomSheet";
-import { CommentButton } from "../../components/community/CommentButton";
-import { LikeButton } from "../../components/community/LikeButton";
-import { Post } from "../../components/community/Post";
+import { Comment, CommentInput } from "../../components/Community/Comment";
+import { BottomSheet } from "../../components/Community/BottomSheet";
+import { CommentButton } from "../../components/Community/CommentButton";
+import { LikeButton } from "../../components/Community/LikeButton";
+import { Post } from "../../components/Community/Post";
 import { TopBar } from "../../components/TopBar";
-import { DeleteModal } from "../../components/community/DeleteModal";
+import { DeleteModal } from "../../components/Community/DeleteModal";
+import { ReportModal } from "../../components/Community/ReportModal";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import {
-  ActiveCommentDtoSchema,
-  PostWithCommentsSchema,
-} from "../../type/index";
+import { ActiveCommentDtoSchema } from "../../type/index";
 import type { CommunityPost } from "../../type/index";
+import type { CreateCommentRequestDto } from "@mindseed/api-types";
+import { getPost, setPostLike, deletePost, createComment, updateComment, deleteComment, createPostReport, createCommentReport } from "../../api/api";
+import { callAuthenticated } from "../../api/callAuthenticated";
 
 const COMMUNITY_AUTHOR_NICKNAME = "마음지기";
 
 type DeleteTarget = { type: "post" } | { type: "comment"; commentId: number };
-
-const COMMUNITY_POSTS: CommunityPost[] = [
-  {
-    id: 1,
-    content: "요즘 마음이 복잡한데 어떻게 정리하면 좋을까요?",
-    category: "dummy1",
-    author: { nickname: COMMUNITY_AUTHOR_NICKNAME },
-    attachments: [],
-    likeCount: 12,
-    isOwner: true,
-    isLiked: false,
-    createdAt: "2026-07-28T09:00:00.000Z",
-    updatedAt: "2026-07-28T09:00:00.000Z",
-    comments: [
-      {
-        type: "active",
-        id: 1,
-        content: "작성자 댓글입니다.",
-        author: { nickname: COMMUNITY_AUTHOR_NICKNAME },
-        createdAt: "2026-07-28T09:10:00.000Z",
-        updatedAt: "2026-07-28T09:10:00.000Z",
-      },
-      {
-        type: "active",
-        id: 2,
-        content: "천천히 하나씩 적어보는 건 어떨까요?",
-        author: { nickname: "새싹이" },
-        createdAt: "2026-07-28T09:20:00.000Z",
-        updatedAt: "2026-07-28T09:20:00.000Z",
-      },
-    ],
-  },
-  {
-    id: 2,
-    content: "오늘은 산책하면서 기분 전환을 했어요.",
-    category: "dummy2",
-    author: { nickname: "초록이" },
-    attachments: [],
-    likeCount: 8,
-    isOwner: false,
-    isLiked: true,
-    createdAt: "2026-07-27T10:00:00.000Z",
-    updatedAt: "2026-07-27T10:00:00.000Z",
-    comments: [],
-  },
-  {
-    id: 3,
-    content: "자가진단 결과는 어디에서 다시 확인할 수 있나요?",
-    category: "dummy3",
-    author: { nickname: "푸른콩" },
-    attachments: [],
-    likeCount: 5,
-    isOwner: false,
-    isLiked: false,
-    createdAt: "2026-07-26T11:00:00.000Z",
-    updatedAt: "2026-07-26T11:00:00.000Z",
-    comments: [],
-  },
-  {
-    id: 4,
-    content: "잠들기 전에 어떤 생각을 하면 마음이 편해질까요?",
-    category: "dummy1",
-    author: { nickname: "나무늘보" },
-    attachments: [],
-    likeCount: 18,
-    isOwner: false,
-    isLiked: false,
-    createdAt: "2026-07-25T12:00:00.000Z",
-    updatedAt: "2026-07-25T12:00:00.000Z",
-    comments: [],
-  },
-  {
-    id: 5,
-    content: "작은 화분에 새싹이 올라왔어요!",
-    category: "dummy2",
-    author: { nickname: "햇살이" },
-    attachments: [],
-    likeCount: 21,
-    isOwner: false,
-    isLiked: true,
-    createdAt: "2026-07-24T13:00:00.000Z",
-    updatedAt: "2026-07-24T13:00:00.000Z",
-    comments: [],
-  },
-].map((post) => PostWithCommentsSchema.parse(post));
+type ReportTarget = { type: "post" } | { type: "comment"; commentId: number };
 
 export const PostDetailPage = () => {
   const { postId } = useParams();
-  const post = COMMUNITY_POSTS.find((item) => String(item.id) === postId);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  return <PostDetailContent key={postId} post={post} />;
+  const postQuery = useQuery({
+    queryKey: ["posts", Number(postId)],
+    queryFn: ({ signal }) =>
+      callAuthenticated(
+        (token) => getPost(token, Number(postId), { signal }),
+        navigate,
+      ),
+    enabled: !!postId,
+  });
+
+  const deletePostMutation = useMutation({
+    mutationFn: () =>
+      callAuthenticated(
+        (token) => deletePost(token, Number(postId)),
+        navigate,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["posts"] });
+      navigate("/community", { replace: true });
+    },
+  });
+
+  if (postQuery.isLoading) return null;
+  if (postQuery.isError) return (
+    <Page>
+      <TopBar onBackClick={() => navigate("/community")} />
+      <NotFound>게시글을 불러오지 못했습니다.</NotFound>
+    </Page>
+  );
+
+  return (
+    <PostDetailContent
+      key={postId}
+      post={postQuery.data}
+      onDeletePost={() => deletePostMutation.mutate()}
+    />
+  );
 };
 
-const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
+const PostDetailContent = ({
+  post,
+  onDeletePost,
+}: {
+  post?: CommunityPost;
+  onDeletePost: () => void;
+}) => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const commentInputRef = useRef<HTMLDivElement>(null);
   const [comment, setComment] = useState("");
   const [isCommentMode, setIsCommentMode] = useState(false);
@@ -125,6 +87,7 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingComment, setEditingComment] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
   const originalEditingComment = comments.find(
     (item) => item.id === editingCommentId && item.type === "active",
   );
@@ -133,6 +96,124 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
     originalEditingComment?.type === "active" &&
     trimmedEditingComment === originalEditingComment.content.trim();
   const isEditDisabled = !trimmedEditingComment || isEditingCommentUnchanged;
+
+  const createCommentMutation = useMutation({
+    mutationFn: (input: CreateCommentRequestDto) =>
+      callAuthenticated(
+        (token) => createComment(token, post!.id, input),
+        navigate,
+      ),
+    onSuccess: (data, variables) => {
+      const now = new Date().toISOString();
+      const result = ActiveCommentDtoSchema.safeParse({
+        type: "active",
+        id: data.id,
+        content: variables.content,
+        author: { nickname: variables.nickname },
+        isOwner: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+      if (result.success) {
+        setComments((items) => [...items, result.data]);
+      } else {
+        void queryClient.invalidateQueries({ queryKey: ["posts", post!.id] });
+      }
+      setComment("");
+      setIsCommentMode(false);
+    },
+  });
+
+  const updateCommentMutation = useMutation({
+    mutationFn: ({
+      commentId,
+      content,
+    }: {
+      commentId: number;
+      content: string;
+    }) =>
+      callAuthenticated(
+        (token) => updateComment(token, post!.id, commentId, { content }),
+        navigate,
+      ),
+    onSuccess: (_, variables) => {
+      setComments((items) =>
+        items.map((item) =>
+          item.id === variables.commentId && item.type === "active"
+            ? { ...item, content: variables.content }
+            : item,
+        ),
+      );
+      setEditingCommentId(null);
+      setEditingComment("");
+    },
+  });
+
+  const deleteCommentMutation = useMutation({
+    mutationFn: (commentId: number) =>
+      callAuthenticated(
+        (token) => deleteComment(token, post!.id, commentId),
+        navigate,
+      ),
+    onSuccess: (_, commentId) => {
+      setComments((items) =>
+        items.map((item) =>
+          item.id === commentId
+            ? {
+                type: "deleted" as const,
+                id: item.id,
+                deletionType: "author" as const,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt,
+              }
+            : item,
+        ),
+      );
+      setEditingCommentId(null);
+      setEditingComment("");
+      setDeleteTarget(null);
+    },
+  });
+
+  const createPostReportMutation = useMutation({
+    mutationFn: (reason: string) =>
+      callAuthenticated(
+        (token) => createPostReport(token, { postId: post!.id, reason }),
+        navigate,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["posts"] });
+      setReportTarget(null);
+      navigate("/community", { replace: true });
+    },
+  });
+
+  const createCommentReportMutation = useMutation({
+    mutationFn: ({ commentId, reason }: { commentId: number; reason: string }) =>
+      callAuthenticated(
+        (token) => createCommentReport(token, { commentId, reason }),
+        navigate,
+      ),
+    onSuccess: (_, variables) => {
+      setComments((items) => items.filter((item) => item.id !== variables.commentId));
+      setReportTarget(null);
+    },
+  });
+
+  const setPostLikeMutation = useMutation({
+    mutationFn: (liked: boolean) =>
+      callAuthenticated(
+        (token) => setPostLike(token, post!.id, { liked }),
+        navigate,
+      ),
+    onError: (_, liked) => {
+      setIsLiked(!liked);
+      setLikeCount((count) => Math.max(0, count + (liked ? -1 : 1)));
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
 
   useEffect(() => {
     if (!isCommentMode && editingCommentId === null) return;
@@ -154,59 +235,49 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
     event.preventDefault();
     const trimmedComment = comment.trim();
     if (!trimmedComment || !post) return;
-
-    const now = new Date().toISOString();
-    const result = ActiveCommentDtoSchema.safeParse({
-      type: "active",
-      id: comments.reduce((maxId, item) => Math.max(maxId, item.id), 0) + 1,
+    createCommentMutation.mutate({
+      nickname: COMMUNITY_AUTHOR_NICKNAME,
       content: trimmedComment,
-      author: { nickname: COMMUNITY_AUTHOR_NICKNAME },
-      createdAt: now,
-      updatedAt: now,
     });
-
-    if (!result.success) return;
-
-    setComments((items) => [...items, result.data]);
-    setComment("");
-    setIsCommentMode(false);
   };
 
   const handleLikeClick = () => {
-    setIsLiked(!isLiked);
-    setLikeCount((count) => Math.max(0, count + (isLiked ? -1 : 1)));
+    const newLiked = !isLiked;
+    setIsLiked(newLiked);
+    setLikeCount((count) => Math.max(0, count + (newLiked ? 1 : -1)));
+    setPostLikeMutation.mutate(newLiked);
   };
 
   const handleEditSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isEditDisabled || editingCommentId === null) return;
-
-    setComments((items) =>
-      items.map((item) =>
-        item.id === editingCommentId && item.type === "active"
-          ? { ...item, content: trimmedEditingComment }
-          : item,
-      ),
-    );
-    setEditingCommentId(null);
-    setEditingComment("");
+    updateCommentMutation.mutate({
+      commentId: editingCommentId,
+      content: trimmedEditingComment,
+    });
   };
 
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
 
     if (deleteTarget.type === "comment") {
-      setComments((items) =>
-        items.filter((item) => item.id !== deleteTarget.commentId),
-      );
-      setEditingCommentId(null);
-      setEditingComment("");
-      setDeleteTarget(null);
+      deleteCommentMutation.mutate(deleteTarget.commentId);
       return;
     }
 
     setDeleteTarget(null);
-    navigate("/community", { replace: true });
+    onDeletePost();
+  };
+
+  const handleReportConfirm = (reason: string) => {
+    if (!reportTarget) return;
+
+    if (reportTarget.type === "comment") {
+      createCommentReportMutation.mutate({ commentId: reportTarget.commentId, reason });
+      return;
+    }
+
+    createPostReportMutation.mutate(reason);
   };
 
   if (!post) {
@@ -256,7 +327,7 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
             <CommentInput
               value={comment}
               buttonText="등록"
-              disabled={!comment.trim()}
+              disabled={!comment.trim() || createCommentMutation.isPending}
               onChange={(event) => setComment(event.target.value)}
               onSubmit={handleSubmit}
               autoFocus
@@ -270,14 +341,13 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
               <CommentInput
                 value={editingComment}
                 buttonText="수정"
-                disabled={isEditDisabled}
+                disabled={isEditDisabled || updateCommentMutation.isPending}
                 onChange={(event) => setEditingComment(event.target.value)}
                 onSubmit={handleEditSubmit}
                 autoFocus
               />
             </CommentInputArea>
-          ) : item.type === "active" &&
-            item.author.nickname === COMMUNITY_AUTHOR_NICKNAME ? (
+          ) : item.type === "active" && item.isOwner ? (
             <Comment
               key={item.id}
               comment={item}
@@ -306,7 +376,12 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
         <BottomSheet
           variant="commentMore"
           isClose={false}
-          onClick={() => setMoreCommentId(null)}
+          onClick={(menu) => {
+            if (menu === "report") {
+              setReportTarget({ type: "comment", commentId: moreCommentId });
+            }
+            setMoreCommentId(null);
+          }}
           onClose={() => setMoreCommentId(null)}
         />
       )}
@@ -340,6 +415,10 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
             if (menu === "copyLink") {
               void navigator.clipboard?.writeText(window.location.href);
             }
+
+            if (menu === "report") {
+              setReportTarget({ type: "post" });
+            }
           }}
           onClose={() => setIsPostMenuOpen(false)}
         />
@@ -349,6 +428,13 @@ const PostDetailContent = ({ post }: { post?: CommunityPost }) => {
         isOpen={deleteTarget !== null}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
+      />
+
+      <ReportModal
+        isOpen={reportTarget !== null}
+        isPending={createPostReportMutation.isPending || createCommentReportMutation.isPending}
+        onConfirm={handleReportConfirm}
+        onCancel={() => setReportTarget(null)}
       />
     </Page>
   );

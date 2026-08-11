@@ -111,6 +111,7 @@ export class PostAdminController {
                 type,
                 content: c.content,
                 author: { nickname: c.nickname },
+                isOwner: false,
               };
           }
         }),

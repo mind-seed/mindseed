@@ -7,6 +7,7 @@ import { TEXT_STYLE } from "../../style/typography";
 import { Picture } from "../Picture";
 import { LikeButton } from "./LikeButton";
 import type { PostDto } from "../../type/index";
+import { getPostCategoryLabel } from "../../postCategory";
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
 
@@ -57,7 +58,7 @@ export const Post = ({
           <Picture pictures={attachments} />
         )}
         <Footer>
-          <Category>#{category.replace(/^#/, "")}</Category>
+          <Category>#{getPostCategoryLabel(category)}</Category>
           {variant === "list" && (
             <LikeArea onClick={(event) => event.stopPropagation()}>
               <LikeButton isLiked={isLiked} onClick={onLikeClick} />

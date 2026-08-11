@@ -1,7 +1,6 @@
 import z from "zod";
 import { dateSerializerCodec } from "./codecs";
 import { AuthorDtoSchema } from "./author";
-import { PostDtoSchema } from "./post";
 
 export const CommentContentSchema = z.string().min(1).max(200);
 
@@ -12,6 +11,7 @@ export const ActiveCommentDtoSchema = z.object({
   id: z.int(),
   content: CommentContentSchema,
   author: AuthorDtoSchema,
+  isOwner: z.boolean(),
   createdAt: dateSerializerCodec,
   updatedAt: dateSerializerCodec,
 });

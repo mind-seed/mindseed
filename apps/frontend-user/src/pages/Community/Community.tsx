@@ -1,118 +1,31 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { styled } from "styled-components";
 import { Category } from "../../components/Category";
-import { FilterButton } from "../../components/community/FilterButton";
-import { FloatingButton } from "../../components/community/FloatingButton";
-import { Banner } from "../../components/community/Banner";
-import { BottomSheet } from "../../components/community/BottomSheet";
-import { Post } from "../../components/community/Post";
+import { FilterButton } from "../../components/Community/FilterButton";
+import { FloatingButton } from "../../components/Community/FloatingButton";
+import { Banner } from "../../components/Community/Banner";
+import { BottomSheet } from "../../components/Community/BottomSheet";
+import { Post } from "../../components/Community/Post";
 import { SearchBar } from "../../components/SearchBar";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import { PostWithCommentsSchema } from "../../type/index";
-import type { CommunityPost, PostCategory } from "../../type/index";
+import type { PostCategory } from "../../type/index";
+import type { PostDto } from "../../type/index";
+import { getPosts, setPostLike } from "../../api/api";
+import { callAuthenticated } from "../../api/callAuthenticated";
+import { POST_CATEGORIES } from "../../postCategory";
 
-type CommunityCategory = "all" | PostCategory | "other";
+type CommunityCategory = "ALL" | PostCategory;
 
 const COMMUNITY_CATEGORIES: ReadonlyArray<{
   value: CommunityCategory;
   label: string;
-}> = [
-  { value: "all", label: "전체" },
-  { value: "dummy1", label: "고민상담" },
-  { value: "dummy2", label: "일상" },
-  { value: "dummy3", label: "문의" },
-  { value: "other", label: "기타" },
-];
+}> = [{ value: "ALL", label: "전체" }, ...POST_CATEGORIES];
 
 const COMMUNITY_SORT_OPTIONS = ["최신순", "인기순", "추천순"] as const;
 type CommunitySort = (typeof COMMUNITY_SORT_OPTIONS)[number];
-
-const COMMUNITY_POSTS: CommunityPost[] = [
-  {
-    id: 1,
-    content: "요즘 마음이 복잡한데 어떻게 정리하면 좋을까요?",
-    category: "dummy1",
-    author: { nickname: "마음지기" },
-    attachments: [],
-    likeCount: 12,
-    isOwner: true,
-    isLiked: false,
-    createdAt: "2026-07-28T09:00:00.000Z",
-    updatedAt: "2026-07-28T09:00:00.000Z",
-    comments: [
-      {
-        type: "active",
-        id: 1,
-        content: "작성자 댓글입니다.",
-        author: { nickname: "마음지기" },
-        createdAt: "2026-07-28T09:10:00.000Z",
-        updatedAt: "2026-07-28T09:10:00.000Z",
-      },
-      {
-        type: "active",
-        id: 2,
-        content: "천천히 하나씩 적어보는 건 어떨까요?",
-        author: { nickname: "새싹이" },
-        createdAt: "2026-07-28T09:20:00.000Z",
-        updatedAt: "2026-07-28T09:20:00.000Z",
-      },
-    ],
-  },
-  {
-    id: 2,
-    content: "오늘은 산책하면서 기분 전환을 했어요.",
-    category: "dummy2",
-    author: { nickname: "초록이" },
-    attachments: [],
-    likeCount: 8,
-    isOwner: false,
-    isLiked: true,
-    createdAt: "2026-07-27T10:00:00.000Z",
-    updatedAt: "2026-07-27T10:00:00.000Z",
-    comments: [],
-  },
-  {
-    id: 3,
-    content: "자가진단 결과는 어디에서 다시 확인할 수 있나요?",
-    category: "dummy3",
-    author: { nickname: "푸른콩" },
-    attachments: [],
-    likeCount: 5,
-    isOwner: false,
-    isLiked: false,
-    createdAt: "2026-07-26T11:00:00.000Z",
-    updatedAt: "2026-07-26T11:00:00.000Z",
-    comments: [],
-  },
-  {
-    id: 4,
-    content: "잠들기 전에 어떤 생각을 하면 마음이 편해질까요?",
-    category: "dummy1",
-    author: { nickname: "나무늘보" },
-    attachments: [],
-    likeCount: 18,
-    isOwner: false,
-    isLiked: false,
-    createdAt: "2026-07-25T12:00:00.000Z",
-    updatedAt: "2026-07-25T12:00:00.000Z",
-    comments: [],
-  },
-  {
-    id: 5,
-    content: "작은 화분에 새싹이 올라왔어요!",
-    category: "dummy2",
-    author: { nickname: "햇살이" },
-    attachments: [],
-    likeCount: 21,
-    isOwner: false,
-    isLiked: true,
-    createdAt: "2026-07-24T13:00:00.000Z",
-    updatedAt: "2026-07-24T13:00:00.000Z",
-    comments: [],
-  },
-].map((post) => PostWithCommentsSchema.parse(post));
 
 const getCommunityPostPath = (postId: string | number) =>
   `/community/${postId}`;
@@ -124,27 +37,60 @@ const isCommunityCategory = (
 
 export const CommunityMainPage = () => {
   const navigate = useNavigate();
-  const posts = COMMUNITY_POSTS;
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchText, setSearchText] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [likedPosts, setLikedPosts] = useState<Record<number, boolean>>({});
   const [activeSort, setActiveSort] = useState<CommunitySort>("최신순");
   const [isSortOpen, setIsSortOpen] = useState(false);
   const categoryParam = searchParams.get("category");
   const activeCategory = isCommunityCategory(categoryParam)
     ? categoryParam
-    : "all";
+    : "ALL";
+
+  const postsQuery = useQuery({
+    queryKey: [
+      "posts",
+      { category: activeCategory === "ALL" ? undefined : activeCategory },
+    ],
+    queryFn: ({ signal }) =>
+      callAuthenticated(
+        (token) =>
+          getPosts(
+            token,
+            {
+              limit: 50,
+              orderBy: "createdAt",
+              orderDirection: "desc",
+              category: activeCategory === "ALL" ? undefined : activeCategory,
+            },
+            { signal },
+          ),
+        navigate,
+      ),
+  });
+
+  const setPostLikeMutation = useMutation({
+    mutationFn: ({ postId, liked }: { postId: number; liked: boolean }) =>
+      callAuthenticated(
+        (token) => setPostLike(token, postId, { liked }),
+        navigate,
+      ),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
+
+  const posts: PostDto[] = postsQuery.data?.items ?? [];
+
   const normalizedKeyword = searchKeyword.trim().toLowerCase();
   const filteredPosts = posts.filter((post) => {
-    const matchesCategory =
-      activeCategory === "all" || post.category === activeCategory;
     const matchesKeyword =
       !normalizedKeyword ||
       post.content.toLowerCase().includes(normalizedKeyword) ||
       post.author.nickname.toLowerCase().includes(normalizedKeyword);
 
-    return matchesCategory && matchesKeyword;
+    return matchesKeyword;
   });
   const sortedPosts = [...filteredPosts].sort((first, second) => {
     if (activeSort === "최신순") {
@@ -161,14 +107,11 @@ export const CommunityMainPage = () => {
   });
 
   const handleCategoryChange = (category: CommunityCategory) => {
-    setSearchParams(category === "all" ? {} : { category });
+    setSearchParams(category === "ALL" ? {} : { category });
   };
 
-  const handleLikeClick = (post: CommunityPost) => {
-    setLikedPosts((current) => ({
-      ...current,
-      [post.id]: !(current[post.id] ?? post.isLiked),
-    }));
+  const handleLikeClick = (post: PostDto) => {
+    setPostLikeMutation.mutate({ postId: post.id, liked: !post.isLiked });
   };
 
   return (
@@ -213,7 +156,7 @@ export const CommunityMainPage = () => {
               content={post.content}
               attachments={post.attachments}
               createdAt={post.createdAt}
-              isLiked={likedPosts[post.id] ?? post.isLiked}
+              isLiked={post.isLiked}
               onClick={() => navigate(getCommunityPostPath(post.id))}
               onLikeClick={() => handleLikeClick(post)}
             />

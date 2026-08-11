@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useMutation } from "@tanstack/react-query";
 import { styled } from "styled-components";
 import { Button } from "../../components/Button";
 import { TextInput } from "../../components/TextInput";
@@ -13,8 +14,45 @@ import {
   ResetPasswordRequestDtoSchema,
   VerifyMailRequestDtoSchema,
 } from "../../type/index";
+import {
+  ApiError,
+  sendPasswordResetMail,
+  getEmailToken,
+  resetPassword,
+} from "../../api/api";
+import { AuthErrorCode } from "@mindseed/api-types";
+import { getEmailTokenErrorMessage } from "./authErrors";
+import type {
+  EmailPasswordResetRequestDto,
+  VerifyMailRequestDto,
+  ResetPasswordRequestDto,
+} from "@mindseed/api-types";
 
 type PasswordResetStep = "email" | "code" | "password";
+
+function getSendPasswordResetMailErrorMessage(error: Error | null): string {
+  if (error === null) return "";
+  if (error instanceof ApiError) {
+    if (error.errorCode === AuthErrorCode.EMAIL_RATE_LIMITED) {
+      return "이메일 발송 횟수를 초과했습니다. 잠시 후 다시 시도해주세요.";
+    }
+    if (error.errorCode === AuthErrorCode.VERIFICATION_COOLDOWN) {
+      return "인증 코드를 다시 받으려면 30초 후에 시도해주세요.";
+    }
+  }
+  return "인증 코드 발송 중 오류가 발생했습니다. 다시 시도해주세요.";
+}
+
+function getResetPasswordErrorMessage(error: Error | null): string {
+  if (error === null) return "";
+  if (
+    error instanceof ApiError &&
+    error.errorCode === AuthErrorCode.INVALID_PASSWORD_RESET_TOKEN
+  ) {
+    return "인증이 만료되었습니다. 처음부터 다시 시도해주세요.";
+  }
+  return "비밀번호 변경 중 오류가 발생했습니다. 다시 시도해주세요.";
+}
 
 export const PasswordReset = () => {
   const navigate = useNavigate();
@@ -28,16 +66,64 @@ export const PasswordReset = () => {
   const [verificationCodeError, setVerificationCodeError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [passwordConfirmError, setPasswordConfirmError] = useState("");
+  const [emailToken, setEmailToken] = useState<string | null>(null);
+
+  const sendPasswordResetMailMutation = useMutation({
+    mutationFn: (input: EmailPasswordResetRequestDto) =>
+      sendPasswordResetMail(input),
+    onSuccess: () => {
+      setVerificationCode("");
+      verificationTimer.reset();
+      setStep("code");
+    },
+  });
+
+  const getEmailTokenMutation = useMutation({
+    mutationFn: (input: VerifyMailRequestDto) => getEmailToken(input),
+    onSuccess: (data) => {
+      setEmailToken(data.token);
+      verificationTimer.stop();
+      setStep("password");
+    },
+  });
+
+  const resetPasswordMutation = useMutation({
+    mutationFn: (input: ResetPasswordRequestDto) => {
+      if (emailToken === null) {
+        throw new Error("이메일 인증 토큰이 없습니다.");
+      }
+      return resetPassword(emailToken, input);
+    },
+    onSuccess: () => {
+      void navigate("/login");
+    },
+  });
+
+  const sendPasswordResetMailApiError = getSendPasswordResetMailErrorMessage(
+    sendPasswordResetMailMutation.error,
+  );
+  const emailTokenApiError = getEmailTokenErrorMessage(
+    getEmailTokenMutation.error,
+  );
+  const resetPasswordApiError = getResetPasswordErrorMessage(
+    resetPasswordMutation.error,
+  );
 
   const isSubmitDisabled =
     step === "email"
-      ? !email.trim()
+      ? !email.trim() || sendPasswordResetMailMutation.isPending
       : step === "code"
-        ? !verificationTimer.isRunning || verificationCode.length !== 6
-        : !password || !passwordConfirm || password !== passwordConfirm;
+        ? !verificationTimer.isRunning ||
+          verificationCode.length !== 6 ||
+          getEmailTokenMutation.isPending
+        : !password ||
+          !passwordConfirm ||
+          password !== passwordConfirm ||
+          resetPasswordMutation.isPending;
 
   const handleBack = () => {
     if (step === "password") {
+      verificationTimer.reset();
       setStep("code");
       return;
     }
@@ -56,34 +142,35 @@ export const PasswordReset = () => {
     if (isSubmitDisabled) return;
 
     if (step === "email") {
-      if (
-        !EmailPasswordResetRequestDtoSchema.safeParse({ email: email.trim() })
-          .success
-      ) {
+      const result = EmailPasswordResetRequestDtoSchema.safeParse({
+        email: email.trim(),
+      });
+
+      if (!result.success) {
         setEmailError("올바른 이메일 형식이 아닙니다.");
         return;
       }
 
       setEmailError("");
-      setVerificationCode("");
-      verificationTimer.reset();
-      setStep("code");
+      sendPasswordResetMailMutation.reset();
+      sendPasswordResetMailMutation.mutate(result.data);
       return;
     }
 
     if (step === "code") {
-      if (
-        !VerifyMailRequestDtoSchema.safeParse({
-          email: email.trim(),
-          code: verificationCode,
-        }).success
-      ) {
+      const result = VerifyMailRequestDtoSchema.safeParse({
+        email: email.trim(),
+        code: verificationCode,
+      });
+
+      if (!result.success) {
         setVerificationCodeError("인증 코드가 올바르지 않습니다.");
         return;
       }
 
       setVerificationCodeError("");
-      setStep("password");
+      getEmailTokenMutation.reset();
+      getEmailTokenMutation.mutate(result.data);
       return;
     }
 
@@ -100,8 +187,8 @@ export const PasswordReset = () => {
 
     setPasswordError("");
     setPasswordConfirmError("");
-
-    navigate("/login");
+    resetPasswordMutation.reset();
+    resetPasswordMutation.mutate(passwordResult.data);
   };
 
   return (
@@ -116,12 +203,13 @@ export const PasswordReset = () => {
               name="password-reset-email"
               type="email"
               value={email}
-              status={emailError ? "error" : "normal"}
-              description={emailError}
+              status={emailError || sendPasswordResetMailApiError ? "error" : "normal"}
+              description={emailError || sendPasswordResetMailApiError}
               placeholder="example@gmail.com"
               onChange={(event) => {
                 setEmail(event.target.value);
                 setEmailError("");
+                sendPasswordResetMailMutation.reset();
               }}
             />
           </EmailContent>
@@ -142,11 +230,14 @@ export const PasswordReset = () => {
                 onChange={(value) => {
                   setVerificationCode(value);
                   setVerificationCodeError("");
+                  getEmailTokenMutation.reset();
                 }}
               />
             </CodeContent>
-            {verificationCodeError && (
-              <ErrorMessage>{verificationCodeError}</ErrorMessage>
+            {(verificationCodeError || emailTokenApiError) && (
+              <ErrorMessage>
+                {verificationCodeError || emailTokenApiError}
+              </ErrorMessage>
             )}
           </>
         )}
@@ -176,6 +267,7 @@ export const PasswordReset = () => {
                         ? "비밀번호가 일치하지 않습니다."
                         : "",
                     );
+                    resetPasswordMutation.reset();
                   }}
                 />
               </Field>
@@ -187,8 +279,12 @@ export const PasswordReset = () => {
                   name="password-reset-password-confirm"
                   type="password"
                   value={passwordConfirm}
-                  status={passwordConfirmError ? "error" : "normal"}
-                  description={passwordConfirmError}
+                  status={
+                    passwordConfirmError || resetPasswordApiError
+                      ? "error"
+                      : "normal"
+                  }
+                  description={passwordConfirmError || resetPasswordApiError}
                   placeholder="비밀번호를 다시 입력해주세요."
                   adornmentType="icon"
                   onChange={(event) => {
@@ -199,6 +295,7 @@ export const PasswordReset = () => {
                         ? "비밀번호가 일치하지 않습니다."
                         : "",
                     );
+                    resetPasswordMutation.reset();
                   }}
                 />
               </Field>

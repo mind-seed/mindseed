@@ -1,12 +1,24 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router";
+import { useMutation } from "@tanstack/react-query";
 import { styled } from "styled-components";
 import { Button } from "../../components/Button";
 import { TextInput } from "../../components/TextInput";
 import { TopBar } from "../../components/TopBar";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import { LoginRequestDtoSchema } from "../../type/index";
+import { AuthErrorCode, LoginRequestDtoSchema } from "@mindseed/api-types";
+import type { LoginRequestDto } from "@mindseed/api-types";
+import { ApiError, login } from "../../api/api";
+import { setTokens } from "../../api/tokens";
+
+function getLoginErrorMessage(error: Error | null): string {
+  if (error === null) return "";
+  if (error instanceof ApiError && error.errorCode === AuthErrorCode.INVALID_CREDENTIALS) {
+    return "이메일 또는 비밀번호가 올바르지 않습니다.";
+  }
+  return "로그인 중 오류가 발생했습니다. 다시 시도해주세요.";
+}
 
 export const Login = () => {
   const navigate = useNavigate();
@@ -15,25 +27,26 @@ export const Login = () => {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
 
+  const loginMutation = useMutation({
+    mutationFn: (input: LoginRequestDto) => login(input),
+    onSuccess: (data) => {
+      setTokens(data.accessToken, data.refreshToken);
+      void navigate("/");
+    },
+  });
+
+  const apiError = getLoginErrorMessage(loginMutation.error);
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!email.trim() || !password) return;
-
-    const loginResult = LoginRequestDtoSchema.safeParse({
-      email: email.trim(),
-      password,
-    });
-
-    if (!loginResult.success) {
-      setEmailError("올바른 이메일 형식이 아닙니다.");
-      setPasswordError("");
+    const result = LoginRequestDtoSchema.safeParse({ email, password });
+    if (!result.success) {
+      const fieldErrors = result.error.flatten().fieldErrors;
+      setEmailError(fieldErrors.email?.[0] ?? "");
+      setPasswordError(fieldErrors.password?.[0] ?? "");
       return;
     }
-
-    setEmailError("");
-    setPasswordError("");
-
-    navigate("/");
+    loginMutation.mutate(result.data);
   };
 
   return (
@@ -60,6 +73,7 @@ export const Login = () => {
               onChange={(event) => {
                 setEmail(event.target.value);
                 setEmailError("");
+                loginMutation.reset();
               }}
             />
           </Field>
@@ -70,13 +84,14 @@ export const Login = () => {
               name="login-password"
               type="password"
               value={password}
-              status={passwordError ? "error" : "normal"}
-              description={passwordError}
+              status={passwordError || apiError ? "error" : "normal"}
+              description={passwordError || apiError}
               placeholder="비밀번호를 입력해주세요."
               adornmentType="icon"
               onChange={(event) => {
                 setPassword(event.target.value);
                 setPasswordError("");
+                loginMutation.reset();
               }}
             />
           </Field>
@@ -88,7 +103,7 @@ export const Login = () => {
             size="medium"
             type="submit"
             label="로그인"
-            disabled={!email.trim() || !password}
+            disabled={loginMutation.isPending}
           />
 
           <Links>
