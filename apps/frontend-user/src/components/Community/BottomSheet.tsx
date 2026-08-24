@@ -3,9 +3,9 @@ import { styled } from "styled-components";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
 import { CheckIcon } from "../Icons/CheckIcon";
-import { ChevronRightIcon } from "../Icons/ChevronRightIcon";
+import { ChevronRightIcon } from "../Icons/ChevronIcon";
 import { CopyIcon } from "../Icons/CopyIcon";
-import { EditIcon } from "../Icons/EditIcon";
+import { PenIcon } from "../Icons/PenIcon";
 import { TrashIcon } from "../Icons/TrashIcon";
 import { WarningIcon } from "../Icons/WarningIcon";
 
@@ -95,7 +95,7 @@ export const BottomSheet = <T extends string>(props: BottomSheetProps<T>) => {
                   onClick={() => props.onClick("edit")}
                 >
                   <ActionContent>
-                    <EditIcon />
+                    <PenIcon />
                     <span>내 글 수정하기</span>
                   </ActionContent>
                   <ChevronRightIcon color={COLORS.gray.gray400} />

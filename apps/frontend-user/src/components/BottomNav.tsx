@@ -2,18 +2,18 @@ import { Link, useLocation } from "react-router";
 import styled from "styled-components";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
-import { CommunityIcon } from "./Icons/CommunityIcon";
-import { ContentsIcon } from "./Icons/ContentsIcon";
+import { CommentIcon } from "./Icons/CommentIcon";
+import { CompassIcon } from "./Icons/CompassIcon";
 import { HomeIcon } from "./Icons/HomeIcon";
-import { MissionIcon } from "./Icons/MissionIcon";
-import { ProfileIcon } from "./Icons/ProfileIcon";
+import { TargetIcon } from "./Icons/TargetIcon";
+import { UserIcon } from "./Icons/UserIcon";
 
 const NAV_LIST = [
   { label: "홈", link: "", icon: <HomeIcon /> },
-  { label: "미션", link: "mission", icon: <MissionIcon /> },
-  { label: "커뮤니티", link: "community", icon: <CommunityIcon /> },
-  { label: "콘텐츠", link: "contents", icon: <ContentsIcon /> },
-  { label: "마이페이지", link: "mypage", icon: <ProfileIcon /> },
+  { label: "미션", link: "mission", icon: <TargetIcon /> },
+  { label: "커뮤니티", link: "community", icon: <CommentIcon /> },
+  { label: "콘텐츠", link: "contents", icon: <CompassIcon /> },
+  { label: "마이페이지", link: "mypage", icon: <UserIcon /> },
 ];
 
 export const BottomNav = () => {

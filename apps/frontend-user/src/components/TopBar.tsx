@@ -1,8 +1,8 @@
 import { styled } from "styled-components";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
-import { ChevronLeftIcon } from "./Icons/ChevronLeftIcon";
-import { MoreHorizontalIcon } from "./Icons/MoreHorizontalIcon";
+import { ChevronLeftIcon } from "./Icons/ChevronIcon";
+import { MoreIcon } from "./Icons/MoreIcon";
 
 type TopBarProps = {
   title?: string;
@@ -39,7 +39,7 @@ export const TopBar = ({
           $tone={rightTone}
           aria-label="더보기"
         >
-          <MoreHorizontalIcon color={COLORS.text.black} />
+          <MoreIcon color={COLORS.text.black} />
         </RightButton>
       )}
       {rightType === "text" && rightText && (

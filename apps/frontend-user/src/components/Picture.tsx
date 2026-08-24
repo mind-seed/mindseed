@@ -1,9 +1,12 @@
 import { styled, css } from "styled-components";
 import { useState } from "react";
 import { COLORS } from "../style/colors";
-import type { PictureDto } from "../type/index";
-import { ChevronLeftIcon } from "./Icons/ChevronLeftIcon";
-import { ChevronRightIcon } from "./Icons/ChevronRightIcon";
+import type { z } from "zod";
+import { AttachmentDtoSchema } from "@mindseed/api-types";
+import { ChevronLeftIcon } from "./Icons/ChevronIcon";
+import { ChevronRightIcon } from "./Icons/ChevronIcon";
+
+type PictureDto = z.infer<typeof AttachmentDtoSchema>;
 
 type PictureProps = {
   pictures: PictureDto[];

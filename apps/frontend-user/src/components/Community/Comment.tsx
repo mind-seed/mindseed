@@ -6,10 +6,13 @@ import "dayjs/locale/ko";
 import { styled } from "styled-components";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import type { CommentDto } from "../../type/index";
-import { MoreHorizontalIcon } from "../Icons/MoreHorizontalIcon";
+import type { z } from "zod";
+import { CommentDtoSchema } from "@mindseed/api-types";
+import { MoreIcon } from "../Icons/MoreIcon";
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
+
+type CommentDto = z.infer<typeof CommentDtoSchema>;
 
 export type CommentProps = {
   comment: CommentDto;
@@ -81,7 +84,7 @@ export const Comment = (props: CommentProps) => {
             onClick={props.onMoreClick}
             aria-label="댓글 더보기"
           >
-            <MoreHorizontalIcon
+            <MoreIcon
               width="16"
               height="16"
               color={COLORS.gray.gray500}
