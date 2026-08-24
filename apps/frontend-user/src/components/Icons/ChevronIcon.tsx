@@ -1,27 +1,46 @@
 import type { SVGProps } from "react";
-export const SearchIcon = (props: SVGProps<SVGSVGElement>) => {
+
+export const ChevronLeftIcon = (props: SVGProps<SVGSVGElement>) => {
   const numericWidth = Number.isNaN(Number(props.width))
     ? 16
     : Number(props.width);
   const computedStrokeWidth = numericWidth > 20 ? 1.8 : 1.4;
   return (
     <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       {...props}
     >
       <path
-        d="M6.66667 11.6667C9.244 11.6667 11.3333 9.57733 11.3333 7C11.3333 4.42267 9.244 2.33334 6.66667 2.33334C4.08934 2.33334 2 4.42267 2 7C2 9.57733 4.08934 11.6667 6.66667 11.6667Z"
+        d="M15 18L9 12L15 6"
         stroke="currentColor"
         strokeWidth={computedStrokeWidth}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+};
+
+export const ChevronRightIcon = (props: SVGProps<SVGSVGElement>) => {
+  const numericWidth = Number.isNaN(Number(props.width))
+    ? 16
+    : Number(props.width);
+  const computedStrokeWidth = numericWidth > 20 ? 1.8 : 1.4;
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
       <path
-        d="M14.0001 14L10.6667 10.6667"
+        d="M9 18L15 12L9 6"
         stroke="currentColor"
         strokeWidth={computedStrokeWidth}
         strokeLinecap="round"

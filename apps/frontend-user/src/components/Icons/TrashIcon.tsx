@@ -5,7 +5,7 @@ export const TrashIcon = (props: SVGProps<SVGSVGElement>) => (
     height="24"
     viewBox="0 0 24 24"
     fill="none"
-    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
     {...props}
   >
     <path
