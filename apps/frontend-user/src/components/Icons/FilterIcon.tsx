@@ -5,11 +5,11 @@ export const FilterIcon = (props: SVGProps<SVGSVGElement>) => (
     height="20"
     viewBox="0 0 20 20"
     fill="none"
-    aria-hidden="true"
+    xmlns="http://www.w3.org/2000/svg"
     {...props}
   >
     <path
-      d="M16.6668 3.33331H3.3335L8.00016 9.55581C8.21653 9.84431 8.3335 10.1952 8.3335 10.5558V16.6666L11.6668 15V10.5558C11.6668 10.1952 11.7838 9.84431 12.0002 9.55581L16.6668 3.33331Z"
+      d="M16.6666 3.33333H3.33325L7.99992 9.55583C8.21629 9.84432 8.33325 10.1952 8.33325 10.5558V16.6667L11.6666 15V10.5558C11.6666 10.1952 11.7835 9.84432 11.9999 9.55583L16.6666 3.33333Z"
       stroke="currentColor"
       strokeWidth="1.4"
       strokeLinejoin="round"
