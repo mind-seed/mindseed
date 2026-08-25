@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import type {
-  CommunityPost,
-  PictureDto,
-  PostCategory,
-  PostContent,
-} from "../../type/index";
+import type { z } from "zod";
+import {
+  AttachmentDtoSchema,
+  PostCategorySchema,
+  PostContentSchema,
+  PostWithCommentsSchema,
+} from "@mindseed/api-types";
 import { useNavigate, useParams } from "react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { styled } from "styled-components";
@@ -22,7 +23,12 @@ import {
   confirmAttachmentUpload,
 } from "../../api/api";
 import { callAuthenticated } from "../../api/callAuthenticated";
-import { POST_CATEGORIES } from "../../postCategory";
+import { POST_CATEGORIES } from "../../constants/postCategory";
+
+type CommunityPost = z.infer<typeof PostWithCommentsSchema>;
+type PictureDto = z.infer<typeof AttachmentDtoSchema>;
+type PostCategory = z.output<typeof PostCategorySchema>;
+type PostContent = z.output<typeof PostContentSchema>;
 
 const COMMUNITY_AUTHOR_NICKNAME = "마음지기";
 
@@ -86,10 +92,15 @@ const PostWriteContent = ({
   const displayNickname = post?.author.nickname ?? COMMUNITY_AUTHOR_NICKNAME;
   const pictures: PictureDto[] = [
     ...(post?.attachments ?? []),
-    ...newAttachments.map((a) => ({ id: a.attachmentId ?? -a.key, url: a.localUrl })),
+    ...newAttachments.map((a) => ({
+      id: a.attachmentId ?? -a.key,
+      url: a.localUrl,
+    })),
   ];
   const trimmedContent = content.trim();
-  const hasUploadPending = newAttachments.some((a) => a.attachmentId === null && !a.uploadFailed);
+  const hasUploadPending = newAttachments.some(
+    (a) => a.attachmentId === null && !a.uploadFailed,
+  );
   const hasUploadFailed = newAttachments.some((a) => a.uploadFailed);
   const isPostUnchanged =
     post !== undefined &&
@@ -141,7 +152,8 @@ const PostWriteContent = ({
     },
   });
 
-  const isPending = createPostMutation.isPending || updatePostMutation.isPending;
+  const isPending =
+    createPostMutation.isPending || updatePostMutation.isPending;
 
   useEffect(
     () => () => {
@@ -186,9 +198,7 @@ const PostWriteContent = ({
             navigate,
           );
           setNewAttachments((prev) =>
-            prev.map((a) =>
-              a.key === entry.key ? { ...a, attachmentId } : a,
-            ),
+            prev.map((a) => (a.key === entry.key ? { ...a, attachmentId } : a)),
           );
         } catch {
           setNewAttachments((prev) =>

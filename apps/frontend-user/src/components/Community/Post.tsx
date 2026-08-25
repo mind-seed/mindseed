@@ -6,10 +6,13 @@ import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
 import { Picture } from "../Picture";
 import { LikeButton } from "./LikeButton";
-import type { PostDto } from "../../type/index";
-import { getPostCategoryLabel } from "../../postCategory";
+import type { z } from "zod";
+import { PostDtoSchema } from "@mindseed/api-types";
+import { getPostCategoryLabel } from "../../constants/postCategory";
 dayjs.extend(relativeTime);
 dayjs.locale("ko");
+
+type PostDto = z.infer<typeof PostDtoSchema>;
 
 type PostVariant = "list" | "detail";
 

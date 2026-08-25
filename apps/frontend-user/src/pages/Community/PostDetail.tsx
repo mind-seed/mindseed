@@ -12,11 +12,16 @@ import { DeleteModal } from "../../components/Community/DeleteModal";
 import { ReportModal } from "../../components/Community/ReportModal";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import { ActiveCommentDtoSchema } from "../../type/index";
-import type { CommunityPost } from "../../type/index";
-import type { CreateCommentRequestDto } from "@mindseed/api-types";
+import type { z } from "zod";
+import {
+  ActiveCommentDtoSchema,
+  PostWithCommentsSchema,
+  type CreateCommentRequestDto,
+} from "@mindseed/api-types";
 import { getPost, setPostLike, deletePost, createComment, updateComment, deleteComment, createPostReport, createCommentReport } from "../../api/api";
 import { callAuthenticated } from "../../api/callAuthenticated";
+
+type CommunityPost = z.infer<typeof PostWithCommentsSchema>;
 
 const COMMUNITY_AUTHOR_NICKNAME = "마음지기";
 
