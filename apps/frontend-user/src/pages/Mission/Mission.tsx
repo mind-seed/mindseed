@@ -95,7 +95,7 @@ export const Mission = () => {
           <SummaryLabel>완료된 미션</SummaryLabel>
           <SummaryValue>
             <CheckIcon color={COLORS.main.main} />
-            <SummaryText>{MISSION_SUMMARY.completedCount}</SummaryText>
+            <SummaryText>{completedIds.length}</SummaryText>
           </SummaryValue>
         </SummaryItem>
         <SummaryItem>

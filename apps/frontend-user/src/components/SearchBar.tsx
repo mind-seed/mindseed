@@ -19,7 +19,7 @@ export const SearchBar = ({
   onSearch,
 }: SearchBarProps) => {
   const handleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && onSearch) {
+    if (e.key === "Enter" && !e.nativeEvent.isComposing && onSearch) {
       onSearch(value);
     }
   };
