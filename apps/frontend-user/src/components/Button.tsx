@@ -1,7 +1,7 @@
 import { styled, css } from "styled-components";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
-import { SmallChevronRightIcon } from "./Icons/SmallChevronRightIcon";
+import { ChevronRightIcon } from "./Icons/ChevronIcon";
 
 type ButtonVariant = "primary" | "outlined";
 
@@ -34,7 +34,7 @@ export const Button = ({
       $showIcon={showIcon}
     >
       {label}
-      {showIcon && <SmallChevronRightIcon width="1em" height="1em" />}
+      {showIcon && <ChevronRightIcon width="1em" height="1em" />}
     </StyledButton>
   );
 };
