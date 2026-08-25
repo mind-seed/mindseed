@@ -8,6 +8,7 @@ import { PasswordReset } from "./pages/Auth/PasswordReset";
 import { CommunityMainPage } from "./pages/Community/Community";
 import { PostDetailPage } from "./pages/Community/PostDetail";
 import { PostWritePage } from "./pages/Community/PostWrite";
+import { Mission } from "./pages/Mission/Mission";
 import { ApiError, refreshTokens } from "./api/api";
 import {
   clearTokens,
@@ -28,7 +29,10 @@ async function bootstrap(): Promise<void> {
       const tokens = await refreshTokens(rt);
       setTokens(tokens.accessToken, tokens.refreshToken);
     } catch (e) {
-      if (e instanceof ApiError && e.errorCode === AuthErrorCode.INVALID_REFRESH_TOKEN) {
+      if (
+        e instanceof ApiError &&
+        e.errorCode === AuthErrorCode.INVALID_REFRESH_TOKEN
+      ) {
         clearTokens();
       }
     } finally {
@@ -67,6 +71,10 @@ export const router = createBrowserRouter([
         loader: appLoader,
         children: [
           { path: "/", element: <Home /> },
+          {
+            path: "/mission",
+            element: <Mission />,
+          },
           {
             path: "/community",
             children: [
