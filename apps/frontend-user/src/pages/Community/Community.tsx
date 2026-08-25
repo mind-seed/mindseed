@@ -11,11 +11,14 @@ import { Post } from "../../components/Community/Post";
 import { SearchBar } from "../../components/SearchBar";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import type { PostCategory } from "../../type/index";
-import type { PostDto } from "../../type/index";
+import type { z } from "zod";
+import { PostCategorySchema, PostDtoSchema } from "@mindseed/api-types";
 import { getPosts, setPostLike } from "../../api/api";
 import { callAuthenticated } from "../../api/callAuthenticated";
-import { POST_CATEGORIES } from "../../postCategory";
+import { POST_CATEGORIES } from "../../constants/postCategory";
+
+type PostCategory = z.output<typeof PostCategorySchema>;
+type PostDto = z.infer<typeof PostDtoSchema>;
 
 type CommunityCategory = "ALL" | PostCategory;
 

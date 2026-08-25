@@ -8,7 +8,7 @@ type SearchBarProps = {
   value: string;
   placeholder?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onSearch: (value: string) => void;
+  onSearch?: (value: string) => void;
 };
 
 export const SearchBar = ({
@@ -18,41 +18,36 @@ export const SearchBar = ({
   onChange,
   onSearch,
 }: SearchBarProps) => {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    onSearch(value);
+  const handleEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.nativeEvent.isComposing && onSearch) {
+      onSearch(value);
+    }
   };
-
   return (
     <SearchBox>
-      <SearchForm action="submit" onSubmit={handleSubmit}>
-        <Input
-          name={name}
-          value={value}
-          placeholder={placeholder}
-          onChange={onChange}
-        />
-        <SearchButton type="submit" aria-label="검색">
-          <SearchIcon width="100%" height="100%" />
-        </SearchButton>
-      </SearchForm>
+      <Input
+        name={name}
+        value={value}
+        placeholder={placeholder}
+        onChange={onChange}
+        onKeyDown={handleEnter}
+      />
+      <SearchButton type="button" onClick={() => onSearch?.(value)}>
+        <SearchIcon color={COLORS.text.black} />
+      </SearchButton>
     </SearchBox>
   );
 };
 
 const SearchBox = styled.div`
   width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 50px;
-  background: ${COLORS.gray.gray100};
-`;
-
-const SearchForm = styled.form`
-  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+  padding: 0.75rem 1rem;
+  border-radius: 50px;
+  background: ${COLORS.gray.gray100};
 `;
 
 const Input = styled.input`
@@ -73,6 +68,7 @@ const SearchButton = styled.button`
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 0;
   border: none;
   background: none;
   cursor: pointer;

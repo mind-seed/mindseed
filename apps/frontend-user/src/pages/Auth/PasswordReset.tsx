@@ -13,7 +13,7 @@ import {
   EmailPasswordResetRequestDtoSchema,
   ResetPasswordRequestDtoSchema,
   VerifyMailRequestDtoSchema,
-} from "../../type/index";
+} from "@mindseed/api-types";
 import {
   ApiError,
   sendPasswordResetMail,
@@ -203,7 +203,9 @@ export const PasswordReset = () => {
               name="password-reset-email"
               type="email"
               value={email}
-              status={emailError || sendPasswordResetMailApiError ? "error" : "normal"}
+              status={
+                emailError || sendPasswordResetMailApiError ? "error" : "normal"
+              }
               description={emailError || sendPasswordResetMailApiError}
               placeholder="example@gmail.com"
               onChange={(event) => {

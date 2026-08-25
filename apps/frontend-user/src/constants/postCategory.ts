@@ -1,4 +1,7 @@
-import type { PostCategory } from "./type/index";
+import type { z } from "zod";
+import { PostCategorySchema } from "@mindseed/api-types";
+
+type PostCategory = z.output<typeof PostCategorySchema>;
 
 export const POST_CATEGORY_LABELS: Record<PostCategory, string> = {
   CONCERN: "고민상담",

@@ -13,7 +13,7 @@ import {
   PasswordSchema,
   SendMailRequestDtoSchema,
   VerifyMailRequestDtoSchema,
-} from "../../type/index";
+} from "@mindseed/api-types";
 import { ApiError, getEmailToken, sendSignUpMail, signUp } from "../../api/api";
 import { getEmailTokenErrorMessage } from "./authErrors";
 import { setTokens } from "../../api/tokens";
