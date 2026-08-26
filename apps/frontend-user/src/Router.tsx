@@ -9,6 +9,7 @@ import { CommunityMainPage } from "./pages/Community/Community";
 import { PostDetailPage } from "./pages/Community/PostDetail";
 import { PostWritePage } from "./pages/Community/PostWrite";
 import { Mission } from "./pages/Mission/Mission";
+import { Contents } from "./pages/Contents/Contents";
 import { ApiError, refreshTokens } from "./api/api";
 import {
   clearTokens,
@@ -83,6 +84,10 @@ export const router = createBrowserRouter([
               { path: ":postId", element: <PostDetailPage /> },
               { path: ":postId/edit", element: <PostWritePage /> },
             ],
+          },
+          {
+            path: "/contents",
+            element: <Contents />,
           },
         ],
       },

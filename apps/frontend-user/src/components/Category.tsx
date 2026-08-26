@@ -14,6 +14,7 @@ export const Category = styled.button.attrs<CategoryProps>((props) => ({
   children: props.$label,
   onClick: props.onClick,
 }))<CategoryProps>`
+  flex-shrink: 0;
   display: flex;
   justify-content: center;
   align-items: center;
