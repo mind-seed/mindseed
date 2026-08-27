@@ -18,7 +18,16 @@ import {
   PostWithCommentsSchema,
   type CreateCommentRequestDto,
 } from "@mindseed/api-types";
-import { getPost, setPostLike, deletePost, createComment, updateComment, deleteComment, createPostReport, createCommentReport } from "../../api/api";
+import {
+  getPost,
+  setPostLike,
+  deletePost,
+  createComment,
+  updateComment,
+  deleteComment,
+  createPostReport,
+  createCommentReport,
+} from "../../api/api";
 import { callAuthenticated } from "../../api/callAuthenticated";
 
 type CommunityPost = z.infer<typeof PostWithCommentsSchema>;
@@ -28,7 +37,7 @@ const COMMUNITY_AUTHOR_NICKNAME = "마음지기";
 type DeleteTarget = { type: "post" } | { type: "comment"; commentId: number };
 type ReportTarget = { type: "post" } | { type: "comment"; commentId: number };
 
-export const PostDetailPage = () => {
+export const PostDetail = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -45,10 +54,7 @@ export const PostDetailPage = () => {
 
   const deletePostMutation = useMutation({
     mutationFn: () =>
-      callAuthenticated(
-        (token) => deletePost(token, Number(postId)),
-        navigate,
-      ),
+      callAuthenticated((token) => deletePost(token, Number(postId)), navigate),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["posts"] });
       navigate("/community", { replace: true });
@@ -56,12 +62,13 @@ export const PostDetailPage = () => {
   });
 
   if (postQuery.isLoading) return null;
-  if (postQuery.isError) return (
-    <Page>
-      <TopBar onBackClick={() => navigate("/community")} />
-      <NotFound>게시글을 불러오지 못했습니다.</NotFound>
-    </Page>
-  );
+  if (postQuery.isError)
+    return (
+      <Page>
+        <TopBar onBackClick={() => navigate("/community")} />
+        <NotFound>게시글을 불러오지 못했습니다.</NotFound>
+      </Page>
+    );
 
   return (
     <PostDetailContent
@@ -194,13 +201,21 @@ const PostDetailContent = ({
   });
 
   const createCommentReportMutation = useMutation({
-    mutationFn: ({ commentId, reason }: { commentId: number; reason: string }) =>
+    mutationFn: ({
+      commentId,
+      reason,
+    }: {
+      commentId: number;
+      reason: string;
+    }) =>
       callAuthenticated(
         (token) => createCommentReport(token, { commentId, reason }),
         navigate,
       ),
     onSuccess: (_, variables) => {
-      setComments((items) => items.filter((item) => item.id !== variables.commentId));
+      setComments((items) =>
+        items.filter((item) => item.id !== variables.commentId),
+      );
       setReportTarget(null);
     },
   });
@@ -278,7 +293,10 @@ const PostDetailContent = ({
     if (!reportTarget) return;
 
     if (reportTarget.type === "comment") {
-      createCommentReportMutation.mutate({ commentId: reportTarget.commentId, reason });
+      createCommentReportMutation.mutate({
+        commentId: reportTarget.commentId,
+        reason,
+      });
       return;
     }
 
@@ -437,7 +455,10 @@ const PostDetailContent = ({
 
       <ReportModal
         isOpen={reportTarget !== null}
-        isPending={createPostReportMutation.isPending || createCommentReportMutation.isPending}
+        isPending={
+          createPostReportMutation.isPending ||
+          createCommentReportMutation.isPending
+        }
         onConfirm={handleReportConfirm}
         onCancel={() => setReportTarget(null)}
       />
@@ -474,7 +495,7 @@ const CommentInputArea = styled.div`
 `;
 
 const NotFound = styled.p`
-  padding: 5rem 1.25rem;
+  margin-top: 55%;
   color: ${COLORS.gray.gray500};
   ${TEXT_STYLE.body.sm};
   text-align: center;
