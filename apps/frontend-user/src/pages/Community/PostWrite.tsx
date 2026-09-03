@@ -46,7 +46,7 @@ type NewAttachment = {
   uploadFailed?: boolean;
 };
 
-export const PostWritePage = () => {
+export const PostWrite = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
 

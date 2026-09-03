@@ -38,7 +38,7 @@ const isCommunityCategory = (
 ): value is CommunityCategory =>
   COMMUNITY_CATEGORIES.some((category) => category.value === value);
 
-export const CommunityMainPage = () => {
+export const Community = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -123,7 +123,7 @@ export const CommunityMainPage = () => {
         <SearchBar
           name="community-search"
           value={searchText}
-          placeholder="검색어를 입력하세요"
+          placeholder="검색어를 입력해주세요"
           onChange={(event) => setSearchText(event.target.value)}
           onSearch={setSearchKeyword}
         />
@@ -149,7 +149,7 @@ export const CommunityMainPage = () => {
         <Banner />
       </BannerContainer>
 
-      <PostContainer>
+      <PostList>
         {sortedPosts.length > 0 ? (
           sortedPosts.map((post) => (
             <Post
@@ -169,7 +169,7 @@ export const CommunityMainPage = () => {
             아직 등록된 글이 없어요. <br />첫 번째 이야기를 들려주실래요?
           </Empty>
         )}
-      </PostContainer>
+      </PostList>
 
       <FloatingButtonContainer>
         <FloatingButton onClick={() => navigate("/community/write")} />
@@ -192,14 +192,11 @@ export const CommunityMainPage = () => {
   );
 };
 
-export const Community = CommunityMainPage;
-
 const Page = styled.main`
   width: 100%;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  padding: 2.1875rem 0 1.875rem;
 `;
 
 const Header = styled.header`
@@ -224,20 +221,19 @@ const BannerContainer = styled.div`
   padding: 0.75rem 1.25rem;
 `;
 
-const PostContainer = styled.div`
+const PostList = styled.div`
   position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
+  align-items: center;
 `;
 
 const Empty = styled.p`
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 35%;
   color: ${COLORS.gray.gray400};
   ${TEXT_STYLE.body.ti};
-  transform: translate(-50%, -50%);
   text-align: center;
 `;
 

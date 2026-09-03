@@ -5,11 +5,14 @@ import { Onboarding } from "./pages/Onboarding";
 import { Login } from "./pages/Auth/Login";
 import { SignUp } from "./pages/Auth/SignUp";
 import { PasswordReset } from "./pages/Auth/PasswordReset";
-import { CommunityMainPage } from "./pages/Community/Community";
-import { PostDetailPage } from "./pages/Community/PostDetail";
-import { PostWritePage } from "./pages/Community/PostWrite";
+import { Community } from "./pages/Community/Community";
+import { PostDetail } from "./pages/Community/PostDetail";
+import { PostWrite } from "./pages/Community/PostWrite";
 import { Mission } from "./pages/Mission/Mission";
 import { Contents } from "./pages/Contents/Contents";
+import { Counsel } from "./pages/Counsel/Counsel";
+import { CounselDetail } from "./pages/Counsel/CounselDetail";
+import { CounselWrite } from "./pages/Counsel/CounselWrite";
 import { ApiError, refreshTokens } from "./api/api";
 import {
   clearTokens,
@@ -79,15 +82,23 @@ export const router = createBrowserRouter([
           {
             path: "/community",
             children: [
-              { index: true, element: <CommunityMainPage /> },
-              { path: "write", element: <PostWritePage /> },
-              { path: ":postId", element: <PostDetailPage /> },
-              { path: ":postId/edit", element: <PostWritePage /> },
+              { index: true, element: <Community /> },
+              { path: "write", element: <PostWrite /> },
+              { path: ":postId", element: <PostDetail /> },
+              { path: ":postId/edit", element: <PostWrite /> },
             ],
           },
           {
             path: "/contents",
             element: <Contents />,
+          },
+          {
+            path: "counsel",
+            children: [
+              { index: true, element: <Counsel /> },
+              { path: "write", element: <CounselWrite /> },
+              { path: ":counselId", element: <CounselDetail /> },
+            ],
           },
         ],
       },
