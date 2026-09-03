@@ -3,7 +3,7 @@ import { styled } from "styled-components";
 import { Button } from "../../components/Button";
 import { CounselStatus } from "../../components/Counsel/CounselStatus";
 import { TopBar } from "../../components/TopBar";
-import potImage from "../../assets/pot-img.png";
+import potImage from "../../assets/pot.png";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
 import type { z } from "zod";

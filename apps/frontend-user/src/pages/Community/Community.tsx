@@ -16,14 +16,11 @@ import { PostCategorySchema, PostDtoSchema } from "@mindseed/api-types";
 import { getPosts, setPostLike } from "../../api/api";
 import { callAuthenticated } from "../../api/callAuthenticated";
 import { POST_CATEGORIES } from "../../constants/postCategory";
-import { COMMUNITY_MOCK_POSTS } from "../../mocks/communityPosts";
 
 type PostCategory = z.output<typeof PostCategorySchema>;
 type PostDto = z.infer<typeof PostDtoSchema>;
 
 type CommunityCategory = "ALL" | PostCategory;
-
-const USE_COMMUNITY_MOCK = true;
 
 const COMMUNITY_CATEGORIES: ReadonlyArray<{
   value: CommunityCategory;
@@ -74,7 +71,6 @@ export const Community = () => {
           ),
         navigate,
       ),
-    enabled: !USE_COMMUNITY_MOCK,
   });
 
   const setPostLikeMutation = useMutation({
@@ -88,11 +84,7 @@ export const Community = () => {
     },
   });
 
-  const posts: PostDto[] = USE_COMMUNITY_MOCK
-    ? COMMUNITY_MOCK_POSTS.filter(
-        (post) => activeCategory === "ALL" || post.category === activeCategory,
-      )
-    : (postsQuery.data?.items ?? []);
+  const posts: PostDto[] = postsQuery.data?.items ?? [];
 
   const normalizedKeyword = searchKeyword.trim().toLowerCase();
   const filteredPosts = posts.filter((post) => {
