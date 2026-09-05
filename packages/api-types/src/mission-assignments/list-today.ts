@@ -21,7 +21,7 @@ export type ListTodayMissionAssignmentsSuccessResponseDto = Extract<
   ListTodayMissionAssignmentsResponseDto,
   { success: true }
 >;
-export type ListTodayMissionAssignmentsErrorResponseDto = Extract<
+export type ListTodayMissionAssignmentsErrorResponseDt8o = Extract<
   ListTodayMissionAssignmentsResponseDto,
   { success: false }
 >;
