@@ -175,11 +175,19 @@ export const Mission = () => {
               rewardPoints={mission.mission.points}
               isCompleted={isCompleted}
               onComplete={async () => {
-                  setCompletedIds((prev) => [...prev, mission.id]);
-                  await completeMutation.mutateAsync(mission.id);
-                  const data = await missionSummaryQuery.refetch();
-                  console.log(data.data, missionQuery.data)
-                  missionSummarySet(data.data, missionQuery.data);
+                  try {
+                    await completeMutation.mutateAsync(mission.id);
+
+                    setCompletedIds((prev) => [...prev, mission.id]);
+
+                    const { data } = await missionSummaryQuery.refetch();
+
+                    if (data) {
+                      missionSummarySet(data, missionQuery.data);
+                    }
+                  } catch {
+                    return;
+                  }
                 }
               }
             />
