@@ -13,7 +13,11 @@ import {
   UserProfileDtoSchema,
 } from "@mindseed/api-types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { completeMission, getCurrentUser, getTodayMissions } from "../../api/api";
+import {
+  completeMission,
+  getCurrentUser,
+  getTodayMissions,
+} from "../../api/api";
 import { useNavigate } from "react-router";
 import { callAuthenticated } from "../../api/callAuthenticated";
 
@@ -63,45 +67,41 @@ export const pointsForNextLevel: Record<number, number> = {
 
 export const Mission = () => {
   const navigate = useNavigate();
-  
+
   const missionQuery = useQuery({
     queryKey: ["missions"],
     queryFn: () =>
-      callAuthenticated(
-        (token) => getTodayMissions(token),
-        navigate,
-      ),
-  })
+      callAuthenticated((token) => getTodayMissions(token), navigate),
+  });
 
   const missionSummarySet = (missionSummaryQueryData, missionQueryData) => {
     setMissionSummary({
       level: missionSummaryQueryData.profile.level,
-      progress: (missionSummaryQueryData.profile.points / pointsForNextLevel[missionSummaryQueryData.profile?.level]) * 100,
+      progress:
+        (missionSummaryQueryData.profile.points /
+          pointsForNextLevel[missionSummaryQueryData.profile?.level]) *
+        100,
       todayCount: missionQueryData.assignments.length,
       completedCount: completedIds.length,
-      totalPoints: missionSummaryQueryData.profile.points
+      totalPoints: missionSummaryQueryData.profile.points,
     });
-  }
+  };
 
   const missionSummaryQuery = useQuery({
     queryKey: ["missionSummary"],
     queryFn: () =>
-      callAuthenticated(
-        (token) => getCurrentUser(token),
-        navigate
-      )
-  })
+      callAuthenticated((token) => getCurrentUser(token), navigate),
+  });
 
   const completeMutation = useMutation({
     mutationFn: (missionId: number) =>
       callAuthenticated((token) => completeMission(token, missionId), navigate),
   });
 
-
   const [completedIds, setCompletedIds] = useState<number[]>(
-    missionQuery.data?.assignments.filter((mission) => mission.status === "completed").map(
-      (mission) => mission.id,
-    ) || [],
+    missionQuery.data?.assignments
+      .filter((mission) => mission.status === "completed")
+      .map((mission) => mission.id) || [],
   );
 
   const [missionSummary, setMissionSummary] = useState({
@@ -175,25 +175,24 @@ export const Mission = () => {
               rewardPoints={mission.mission.points}
               isCompleted={isCompleted}
               onComplete={async () => {
-                  try {
-                    await completeMutation.mutateAsync(mission.id);
+                try {
+                  await completeMutation.mutateAsync(mission.id);
 
-                    setCompletedIds((prev) => [...prev, mission.id]);
+                  setCompletedIds((prev) => [...prev, mission.id]);
 
-                    const { data } = await missionSummaryQuery.refetch();
+                  const { data } = await missionSummaryQuery.refetch();
 
-                    if (
-                      data.isSuccess &&
-                      data.data?.profile &&
-                      missionQuery.data
-                    ) {
-                      missionSummarySet(data, missionQuery.data);
-                    }
-                  } catch {
-                    return;
+                  if (
+                    data.isSuccess &&
+                    data.data?.profile &&
+                    missionQuery.data
+                  ) {
+                    missionSummarySet(data, missionQuery.data);
                   }
+                } catch {
+                  return;
                 }
-              }
+              }}
             />
           );
         })}
@@ -202,9 +201,9 @@ export const Mission = () => {
   );
 };
 
-const Page = styled.main`
+const Page = styled.div`
   width: 100%;
-  flex: 1;
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   padding: 0 1.25rem;
@@ -228,12 +227,6 @@ const SummaryItem = styled.div`
   justify-content: center;
   align-items: center;
   gap: 0.25rem;
-`;
-
-const Divider = styled.span`
-  width: 1px;
-  height: 2.625rem;
-  background: ${COLORS.gray.gray300};
 `;
 
 const SummaryLabel = styled.span`

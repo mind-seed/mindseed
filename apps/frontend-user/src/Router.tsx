@@ -10,6 +10,9 @@ import { PostDetail } from "./pages/Community/PostDetail";
 import { PostWrite } from "./pages/Community/PostWrite";
 import { Mission } from "./pages/Mission/Mission";
 import { Contents } from "./pages/Contents/Contents";
+import { MyPage } from "./pages/MyPage/MyPage";
+import { MyPosts } from "./pages/MyPage/MyPosts";
+import { NicknameChange } from "./pages/MyPage/NicknameChange";
 import { Counsel } from "./pages/Counsel/Counsel";
 import { CounselDetail } from "./pages/Counsel/CounselDetail";
 import { CounselWrite } from "./pages/Counsel/CounselWrite";
@@ -93,6 +96,14 @@ export const router = createBrowserRouter([
           {
             path: "/contents",
             element: <Contents />,
+          },
+          {
+            path: "/mypage",
+            children: [
+              { index: true, element: <MyPage /> },
+              { path: "posts", element: <MyPosts /> },
+              { path: "nickname", element: <NicknameChange /> },
+            ],
           },
           {
             path: "counsel",

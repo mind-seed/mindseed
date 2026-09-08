@@ -1,8 +1,9 @@
 import type { SVGProps } from "react";
-export const SearchIcon = (props: SVGProps<SVGSVGElement>) => {
-  const numericWidth = Number.isNaN(Number(props.width))
-    ? 16
-    : Number(props.width);
+export const SearchIcon = ({
+  width = 24,
+  ...props
+}: SVGProps<SVGSVGElement>) => {
+  const numericWidth = Number(width) || 16;
   const computedStrokeWidth = numericWidth > 20 ? 1.8 : 1.4;
   return (
     <svg

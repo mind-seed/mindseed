@@ -48,9 +48,9 @@ export const Onboarding = () => {
   );
 };
 
-const Page = styled.main`
+const Page = styled.div`
   width: 100%;
-  min-height: 100dvh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   padding: 1.625rem 1.25rem 0.75rem;

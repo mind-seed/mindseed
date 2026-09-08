@@ -14,7 +14,10 @@ import { setTokens } from "../../api/tokens";
 
 function getLoginErrorMessage(error: Error | null): string {
   if (error === null) return "";
-  if (error instanceof ApiError && error.errorCode === AuthErrorCode.INVALID_CREDENTIALS) {
+  if (
+    error instanceof ApiError &&
+    error.errorCode === AuthErrorCode.INVALID_CREDENTIALS
+  ) {
     return "이메일 또는 비밀번호가 올바르지 않습니다.";
   }
   return "로그인 중 오류가 발생했습니다. 다시 시도해주세요.";
@@ -120,9 +123,9 @@ export const Login = () => {
   );
 };
 
-const Page = styled.main`
+const Page = styled.div`
   width: 100%;
-  min-height: 100dvh;
+  height: 100%;
   display: flex;
   flex-direction: column;
 `;

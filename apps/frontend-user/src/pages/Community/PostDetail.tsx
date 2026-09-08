@@ -466,8 +466,8 @@ const PostDetailContent = ({
   );
 };
 
-const Page = styled.main`
-  flex: 1;
+const Page = styled.div`
+  min-height: 100%;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;

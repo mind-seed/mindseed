@@ -41,6 +41,7 @@ const Nav = styled.nav`
   left: 0;
   bottom: 0;
   width: 100%;
+  height: 64px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
