@@ -10,7 +10,7 @@ import { TEXT_STYLE } from "../../style/typography";
 import type { z } from "zod";
 import { UserDtoSchema } from "@mindseed/api-types";
 import { dateSerializerCodec } from "../../../../../packages/api-types/src/common/codecs";
-import { getCharcterImages, getChracter } from "../../constants/character";
+import { getCharcterImages } from "../../constants/character";
 
 type UserDto = z.output<typeof UserDtoSchema>;
 
@@ -38,6 +38,10 @@ const MENU_ITEMS = [
 export const MyPage = () => {
   const navigate = useNavigate();
 
+  const handleLogout = () => {};
+
+  const handleWithDraw = () => {};
+
   return (
     <Page>
       <Hero aria-hidden="true">
@@ -45,11 +49,7 @@ export const MyPage = () => {
         <LightPointImage src={lightPointImage} alt="" />
       </Hero>
 
-      <LogoutButton
-        type="button"
-        aria-label="로그아웃"
-        onClick={() => navigate("/login")}
-      >
+      <LogoutButton type="button" aria-label="로그아웃" onClick={handleLogout}>
         <LogoutIcon width={24} height={24} />
       </LogoutButton>
 
@@ -74,10 +74,7 @@ export const MyPage = () => {
               <ChevronRightIcon width={24} height={24} />
             </MenuButton>
           ))}
-          <WithdrawButton
-            type="button"
-            onClick={() => navigate("/mypage/withdraw")}
-          >
+          <WithdrawButton type="button" onClick={handleWithDraw}>
             회원탈퇴
           </WithdrawButton>
         </MenuList>
