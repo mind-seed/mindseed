@@ -10,6 +10,10 @@ import {
   SimplifiedMissionSchema,
   UserProfileDtoSchema,
 } from "@mindseed/api-types";
+import { callAuthenticated } from "../api/callAuthenticated";
+import { getTodayMissions } from "../api/api";
+import { useQuery } from "@tanstack/react-query";
+import { use, useEffect, useState } from "react";
 
 type SimplifiedMission = z.infer<typeof SimplifiedMissionSchema>;
 type UserProfileDto = z.infer<typeof UserProfileDtoSchema>;
@@ -23,6 +27,31 @@ const TODAY_MISSION: SimplifiedMission = {
 
 export const Home = () => {
   const navigate = useNavigate();
+  const [todayMissionTitle, setTodayMissionTitle] = useState("미션");
+  const [todayMissionPoints, setTodayMissionPoints] = useState(100);
+
+  const missionQuery = useQuery({
+    queryKey: ["missions"],
+    queryFn: () =>
+      callAuthenticated(
+        (token) => getTodayMissions(token),
+        navigate,
+      ),
+  });
+
+  useEffect(() => {
+    if (missionQuery.data) {
+      setTodayMissionTitle(missionQuery.data.assignments[0].mission.title);
+      setTodayMissionPoints(missionQuery.data.assignments[0].mission.points);
+      for (const item of missionQuery.data.assignments) {
+        if (item.status == "uncompleted") {
+          setTodayMissionTitle(item.mission.title);
+          setTodayMissionPoints(item.mission.points);
+          break;
+        }
+      }
+    }
+  }, [missionQuery.data]);
 
   return (
     <Page>
@@ -37,8 +66,8 @@ export const Home = () => {
           <ChevronRightIcon color={COLORS.gray.gray400} />
         </MissionHeaderButton>
         <TodayMission>
-          <MissionTitle>{TODAY_MISSION.title}</MissionTitle>
-          <Reward>+{TODAY_MISSION.points}point</Reward>
+          <MissionTitle>{todayMissionTitle}</MissionTitle>
+          <Reward>+{todayMissionPoints}point</Reward>
         </TodayMission>
       </MissionArea>
     </Page>
