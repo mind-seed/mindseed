@@ -165,12 +165,12 @@ export const Contents = () => {
   );
 };
 
-const Page = styled.main`
+const Page = styled.div`
   width: 100%;
+  min-height: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 0 1.25rem;
 `;
 
 const Header = styled.header`

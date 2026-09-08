@@ -45,9 +45,9 @@ export const Home = () => {
   );
 };
 
-const Page = styled.main`
+const Page = styled.div`
   width: 100%;
-  flex: 1;
+  height: 100%;
   display: flex;
   flex-direction: column;
   padding: 0 1.25rem;
