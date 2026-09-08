@@ -2,7 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { CounselCategory, CounselEntry } from "./entities/counsel-entry.entity";
-import { CounselNotFoundError } from "./counsel.errors";
+import { CounselNotFoundError, NotCounselAuthorError } from "./counsel.errors";
 import {
   CursorPaginationOptions,
   CursorPaginationResult,
@@ -15,6 +15,7 @@ export type ListCounselEntriesOrderBy = "createdAt";
 
 export type ListCounselEntriesWithOffsetOptions =
   OffsetPaginationOptions<ListCounselEntriesOrderBy> & {
+    authorId?: number;
     category?: CounselCategory;
     responded?: boolean;
   };
@@ -24,6 +25,7 @@ export type ListCounselEntriesWithOffsetResult =
 
 export type ListCounselEntriesWithCursorOptions =
   CursorPaginationOptions<ListCounselEntriesOrderBy> & {
+    authorId?: number;
     category?: CounselCategory;
     responded?: boolean;
   };
@@ -56,6 +58,7 @@ export class CounselQueryService {
   async listCounselEntriesWithOffset({
     offset,
     limit,
+    authorId,
     category,
     responded,
     orderBy,
@@ -63,8 +66,11 @@ export class CounselQueryService {
   }: ListCounselEntriesWithOffsetOptions): Promise<ListCounselEntriesWithOffsetResult> {
     const qb = this.counselEntryRepository.createQueryBuilder("counsel");
 
+    if (authorId !== undefined) {
+      qb.where("counsel.authorId = :authorId", { authorId });
+    }
     if (category) {
-      qb.where("counsel.category = :category", { category });
+      qb.andWhere("counsel.category = :category", { category });
     }
     if (responded !== undefined) {
       qb.andWhere(
@@ -96,6 +102,7 @@ export class CounselQueryService {
   async listCounselEntriesWithCursor({
     cursor,
     limit,
+    authorId,
     category,
     responded,
     orderBy,
@@ -103,8 +110,11 @@ export class CounselQueryService {
   }: ListCounselEntriesWithCursorOptions): Promise<ListCounselEntriesWithCursorResult> {
     const qb = this.counselEntryRepository.createQueryBuilder("counsel");
 
+    if (authorId !== undefined) {
+      qb.where("counsel.authorId = :authorId", { authorId });
+    }
     if (category) {
-      qb.where("counsel.category = :category", { category });
+      qb.andWhere("counsel.category = :category", { category });
     }
     if (responded !== undefined) {
       qb.andWhere(
@@ -126,10 +136,13 @@ export class CounselQueryService {
    * id를 기반으로 counsel entry를 조회한다.
    * @throws CounselNotFoundError - counsel entry가 존재하지 않는 경우
    */
-  async getCounselEntry(id: number): Promise<CounselEntry> {
+  async getCounselEntry(id: number, authorId?: number): Promise<CounselEntry> {
     const entry = await this.counselEntryRepository.findOneBy({ id });
     if (!entry) {
       throw new CounselNotFoundError();
+    }
+    if (authorId !== undefined && entry.authorId !== authorId) {
+      throw new NotCounselAuthorError();
     }
     return entry;
   }

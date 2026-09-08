@@ -20,6 +20,7 @@ import {
   getRefreshToken,
   setTokens,
 } from "./api/tokens";
+import { queryClient } from "./api/queryClient";
 import { AuthErrorCode } from "@mindseed/api-types";
 
 let bootstrapPromise: Promise<void> | null = null;
@@ -38,6 +39,7 @@ async function bootstrap(): Promise<void> {
         e.errorCode === AuthErrorCode.INVALID_REFRESH_TOKEN
       ) {
         clearTokens();
+        queryClient.clear();
       }
     } finally {
       bootstrapPromise = null;
@@ -98,6 +100,7 @@ export const router = createBrowserRouter([
               { index: true, element: <Counsel /> },
               { path: "write", element: <CounselWrite /> },
               { path: ":counselId", element: <CounselDetail /> },
+              { path: ":counselId/edit", element: <CounselWrite isEdit /> },
             ],
           },
         ],
