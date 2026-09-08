@@ -4,10 +4,10 @@ import { PostCategorySchema } from "@mindseed/api-types";
 type PostCategory = z.output<typeof PostCategorySchema>;
 
 export const POST_CATEGORY_LABELS: Record<PostCategory, string> = {
-  CONCERN: "고민상담",
-  DIARY: "일상",
-  INQUIRY: "문의",
-  OTHER: "기타",
+  concern: "고민상담",
+  diary: "일상",
+  inquiry: "문의",
+  other: "기타",
 };
 
 export const POST_CATEGORIES: ReadonlyArray<{

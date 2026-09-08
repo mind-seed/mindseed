@@ -20,6 +20,9 @@ import {
   UpdateCommentResponseDtoSchema,
   UpdatePostResponseDtoSchema,
   VerifyMailResponseDtoSchema,
+  ListTodayMissionAssignmentsResponseDtoSchema,
+  CompleteMissionAssignmentResponseDtoSchema,
+  GetCurrentUserResponseDtoSchema,
 } from "@mindseed/api-types";
 import type {
   CompleteSignupRequestDto,
@@ -415,6 +418,37 @@ export async function createCommentReport(
   options?: Options,
 ): Promise<void> {
   await post("/reports/comment", input, CreateCommentReportResponseDtoSchema, {
+    ...options,
+    token,
+  });
+}
+
+export async function getTodayMissions(token: string, options?: Options) {
+  return get(
+    "/mission-assignments/today",
+    ListTodayMissionAssignmentsResponseDtoSchema,
+    {
+      ...options,
+      token,
+    },
+  );
+}
+
+export async function completeMission(
+  token: string,
+  missionAssignmentId: number,
+  options?: Options,
+): Promise<void> {
+  await post(
+    `/mission-assignments/${missionAssignmentId}/complete`,
+    undefined,
+    CompleteMissionAssignmentResponseDtoSchema,
+    { ...options, token },
+  );
+}
+
+export async function getCurrentUser(token: string, options?: Options) {
+  return get("/users/current", GetCurrentUserResponseDtoSchema, {
     ...options,
     token,
   });

@@ -10,10 +10,10 @@ type ApiPostCategory = z.output<typeof PostCategorySchema>;
 type ApiDeletionType = z.output<typeof DeletionTypeSchema>;
 
 export const apiToEntityCategory: Record<ApiPostCategory, PostCategory> = {
-  CONCERN: PostCategory.CONCERN,
-  DIARY: PostCategory.DIARY,
-  INQUIRY: PostCategory.INQUIRY,
-  OTHER: PostCategory.OTHER,
+  concern: PostCategory.CONCERN,
+  diary: PostCategory.DIARY,
+  inquiry: PostCategory.INQUIRY,
+  other: PostCategory.OTHER,
 };
 
 export const entityToApiDeletionType: Record<DeletionType, ApiDeletionType> = {
@@ -22,8 +22,8 @@ export const entityToApiDeletionType: Record<DeletionType, ApiDeletionType> = {
 };
 
 export const entityToApiCategory: Record<PostCategory, ApiPostCategory> = {
-  [PostCategory.CONCERN]: "CONCERN",
-  [PostCategory.DIARY]: "DIARY",
-  [PostCategory.INQUIRY]: "INQUIRY",
-  [PostCategory.OTHER]: "OTHER",
+  [PostCategory.CONCERN]: "concern",
+  [PostCategory.DIARY]: "diary",
+  [PostCategory.INQUIRY]: "inquiry",
+  [PostCategory.OTHER]: "other",
 };

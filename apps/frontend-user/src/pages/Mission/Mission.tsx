@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
@@ -12,75 +12,132 @@ import {
   MissionAssignmentDtoSchema,
   UserProfileDtoSchema,
 } from "@mindseed/api-types";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { completeMission, getCurrentUser, getTodayMissions } from "../../api/api";
+import { useNavigate } from "react-router";
+import { callAuthenticated } from "../../api/callAuthenticated";
 
 type MissionAssignmentDto = z.infer<typeof MissionAssignmentDtoSchema>;
 type UserProfileDto = z.infer<typeof UserProfileDtoSchema>;
 
-const MISSION_SUMMARY: {
+type MissionSummary = {
   level: UserProfileDto["level"];
   progress: number;
   todayCount: number;
   completedCount: number;
   totalPoints: UserProfileDto["points"];
-} = {
-  level: 4,
-  progress: 78,
-  todayCount: 6,
-  completedCount: 2,
-  totalPoints: 23,
 };
 
-const MISSIONS: MissionAssignmentDto[] = [
-  {
-    id: 1,
-    status: "completed",
-    mission: {
-      title: "미션 제목",
-      description:
-        "상세글을 적습니다. 글 제한은 없습니다.\n길어지는 만큼 카드가 늘어납니다.",
-      points: 80,
-    },
-  },
-  {
-    id: 2,
-    status: "uncompleted",
-    mission: {
-      title: "미션 제목",
-      description: "상세글을 적습니다.",
-      points: 80,
-    },
-  },
-  {
-    id: 3,
-    status: "uncompleted",
-    mission: {
-      title: "미션 제목",
-      description: "상세글을 적습니다.",
-      points: 80,
-    },
-  },
-  {
-    id: 4,
-    status: "uncompleted",
-    mission: {
-      title: "미션 제목",
-      description: "상세글을 적습니다.",
-      points: 80,
-    },
-  },
-];
+// eslint-disable-next-line react-refresh/only-export-components
+export const pointsForNextLevel: Record<number, number> = {
+  1: 100,
+  2: 110,
+  3: 130,
+  4: 150,
+  5: 170,
+  6: 200,
+  7: 230,
+  8: 260,
+  9: 290,
+  10: 320,
+  11: 350,
+  12: 380,
+  13: 410,
+  14: 440,
+  15: 470,
+  16: 510,
+  17: 550,
+  18: 600,
+  19: 650,
+  20: 690,
+  21: 730,
+  22: 750,
+  23: 750,
+  24: 750,
+  25: 760,
+  26: 760,
+  27: 760,
+  28: 780,
+  29: 800,
+};
 
 export const Mission = () => {
+  const navigate = useNavigate();
+  
+  const missionQuery = useQuery({
+    queryKey: ["missions"],
+    queryFn: () =>
+      callAuthenticated(
+        (token) => getTodayMissions(token),
+        navigate,
+      ),
+  })
+
+  const missionSummarySet = (missionSummaryQueryData, missionQueryData) => {
+    setMissionSummary({
+      level: missionSummaryQueryData.profile.level,
+      progress: (missionSummaryQueryData.profile.points / pointsForNextLevel[missionSummaryQueryData.profile?.level]) * 100,
+      todayCount: missionQueryData.assignments.length,
+      completedCount: completedIds.length,
+      totalPoints: missionSummaryQueryData.profile.points
+    });
+  }
+
+  const missionSummaryQuery = useQuery({
+    queryKey: ["missionSummary"],
+    queryFn: () =>
+      callAuthenticated(
+        (token) => getCurrentUser(token),
+        navigate
+      )
+  })
+
+  const completeMutation = useMutation({
+    mutationFn: (missionId: number) =>
+      callAuthenticated((token) => completeMission(token, missionId), navigate),
+  });
+
+
   const [completedIds, setCompletedIds] = useState<number[]>(
-    MISSIONS.filter((mission) => mission.status === "completed").map(
+    missionQuery.data?.assignments.filter((mission) => mission.status === "completed").map(
       (mission) => mission.id,
-    ),
+    ) || [],
   );
+
+  const [missionSummary, setMissionSummary] = useState({
+    level: missionQuery.data?.level || 1,
+    progress: 0,
+    todayCount: missionQuery.data?.assignments.length || 0,
+    completedCount: completedIds.length,
+    totalPoints: missionQuery.data?.points || 0,
+  });
+
+  useEffect(() => {
+    if (missionQuery.data) {
+      setCompletedIds(
+        missionQuery.data.assignments
+          .filter((mission) => mission.status === "completed")
+          .map((mission) => mission.id),
+      );
+    }
+  }, [missionQuery.data]);
+
+  useEffect(() => {
+    if (missionQuery.data && missionSummaryQuery.data) {
+      const data = missionSummaryQuery.data;
+      if (data.profile) {
+        console.log(completedIds);
+        missionSummarySet(data, missionQuery.data);
+      }
+    }
+  }, [missionQuery.data, missionSummaryQuery.data]);
+
+  const missions = missionQuery.data?.assignments || [];
   return (
     <Page>
       <LevelProgress
-        level={MISSION_SUMMARY.level}
-        progress={MISSION_SUMMARY.progress}
+        level={missionSummary.level}
+        progress={missionSummary.progress}
       />
 
       <Summary aria-label="미션 현황">
@@ -88,7 +145,7 @@ export const Mission = () => {
           <SummaryLabel>오늘 미션</SummaryLabel>
           <SummaryValue>
             <TargetIcon color={COLORS.main.main} />
-            <SummaryText>{MISSION_SUMMARY.todayCount}</SummaryText>
+            <SummaryText>{missionSummary.todayCount}</SummaryText>
           </SummaryValue>
         </SummaryItem>
         <SummaryItem>
@@ -102,13 +159,13 @@ export const Mission = () => {
           <SummaryLabel>전체 포인트</SummaryLabel>
           <SummaryValue>
             <TrophyIcon color={COLORS.main.main} />
-            <SummaryText>{MISSION_SUMMARY.totalPoints}</SummaryText>
+            <SummaryText>{missionSummary.totalPoints}</SummaryText>
           </SummaryValue>
         </SummaryItem>
       </Summary>
 
       <MissionList>
-        {MISSIONS.map((mission) => {
+        {missions.map((mission) => {
           const isCompleted = completedIds.includes(mission.id);
           return (
             <MissionCard
@@ -117,8 +174,25 @@ export const Mission = () => {
               description={mission.mission.description}
               rewardPoints={mission.mission.points}
               isCompleted={isCompleted}
-              onComplete={() =>
-                setCompletedIds((prev) => [...prev, mission.id])
+              onComplete={async () => {
+                  try {
+                    await completeMutation.mutateAsync(mission.id);
+
+                    setCompletedIds((prev) => [...prev, mission.id]);
+
+                    const { data } = await missionSummaryQuery.refetch();
+
+                    if (
+                      data.isSuccess &&
+                      data.data?.profile &&
+                      missionQuery.data
+                    ) {
+                      missionSummarySet(data, missionQuery.data);
+                    }
+                  } catch {
+                    return;
+                  }
+                }
               }
             />
           );
