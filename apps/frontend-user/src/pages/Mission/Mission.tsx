@@ -182,7 +182,11 @@ export const Mission = () => {
 
                     const { data } = await missionSummaryQuery.refetch();
 
-                    if (data) {
+                    if (
+                      data.isSuccess &&
+                      data.data?.profile &&
+                      missionQuery.data
+                    ) {
                       missionSummarySet(data, missionQuery.data);
                     }
                   } catch {
