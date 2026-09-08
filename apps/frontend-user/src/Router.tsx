@@ -98,6 +98,7 @@ export const router = createBrowserRouter([
               { index: true, element: <Counsel /> },
               { path: "write", element: <CounselWrite /> },
               { path: ":counselId", element: <CounselDetail /> },
+              { path: ":counselId/edit", element: <CounselWrite isEdit /> },
             ],
           },
         ],

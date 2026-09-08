@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { styled } from "styled-components";
 import { Button } from "../../components/Button";
 import { CounselStatus } from "../../components/Counsel/CounselStatus";
@@ -6,17 +7,46 @@ import { TopBar } from "../../components/TopBar";
 import potImage from "../../assets/pot.png";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import type { z } from "zod";
-import { CounselSummaryDtoSchema } from "@mindseed/api-types";
+import { ApiError, getCounsels } from "../../api/api";
+import { callAuthenticated } from "../../api/callAuthenticated";
+import { PaginationErrorCode } from "@mindseed/api-types";
 
-type CounselSummaryDto = z.infer<typeof CounselSummaryDtoSchema>;
-
-const COUNSELS: CounselSummaryDto[] = [].map((counsel) =>
-  CounselSummaryDtoSchema.parse(counsel),
-);
+function getCounselListError(error: unknown): string {
+  if (
+    error instanceof ApiError &&
+    error.errorCode === PaginationErrorCode.INVALID_CURSOR
+  ) {
+    return "잘못된 페이지 정보입니다. 새로고침 후 다시 시도해주세요.";
+  }
+  return "목록을 불러오지 못했습니다.";
+}
 
 export const Counsel = () => {
   const navigate = useNavigate();
+
+  const counselsQuery = useInfiniteQuery({
+    queryKey: ["counsels"],
+    queryFn: ({ signal, pageParam }) =>
+      callAuthenticated(
+        (token) =>
+          getCounsels(
+            token,
+            {
+              cursor: pageParam,
+              limit: 20,
+              orderBy: "createdAt",
+              orderDirection: "desc",
+            },
+            { signal },
+          ),
+        navigate,
+      ),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+
+  const counsels =
+    counselsQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
   return (
     <Page>
@@ -33,9 +63,13 @@ export const Counsel = () => {
       </Header>
 
       <Content>
-        {COUNSELS.length > 0 ? (
+        {counselsQuery.isError ? (
+          <Empty>
+            <EmptyText>{getCounselListError(counselsQuery.error)}</EmptyText>
+          </Empty>
+        ) : counsels.length > 0 ? (
           <PostList>
-            {COUNSELS.map((counsel) => (
+            {counsels.map((counsel) => (
               <CounselStatus
                 key={counsel.id}
                 title={counsel.title}
@@ -43,6 +77,14 @@ export const Counsel = () => {
                 onClick={() => navigate(`/counsel/${counsel.id}`)}
               />
             ))}
+            {counselsQuery.hasNextPage && (
+              <LoadMoreButton
+                onClick={() => void counselsQuery.fetchNextPage()}
+                disabled={counselsQuery.isFetchingNextPage}
+              >
+                {counselsQuery.isFetchingNextPage ? "불러오는 중..." : "더 보기"}
+              </LoadMoreButton>
+            )}
           </PostList>
         ) : (
           <Empty>
@@ -67,6 +109,7 @@ export const Counsel = () => {
 const Page = styled.main`
   width: 100%;
   min-height: 100dvh;
+  padding-bottom: 5rem;
   display: flex;
   flex-direction: column;
 `;
@@ -125,7 +168,25 @@ const PostList = styled.section`
   padding: 0.625rem 1.25rem;
 `;
 
+const LoadMoreButton = styled.button`
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  background: none;
+  color: ${COLORS.gray.gray500};
+  ${TEXT_STYLE.body.sm};
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
+`;
+
 const BottomArea = styled.div`
-  flex-shrink: 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   padding: 0.75rem 1.25rem;
+  background: ${COLORS.gray.gray0};
 `;
