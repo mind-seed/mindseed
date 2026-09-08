@@ -14,6 +14,18 @@ import { CounselDtoSchema, CounselErrorCode } from "@mindseed/api-types";
 import { ApiError, getCounsel, deleteCounsel } from "../../api/api";
 import { callAuthenticated } from "../../api/callAuthenticated";
 
+function getCounselError(error: unknown): string {
+  if (error instanceof ApiError) {
+    switch (error.errorCode) {
+      case CounselErrorCode.COUNSEL_NOT_FOUND:
+        return "상담 글을 찾을 수 없습니다.";
+      case CounselErrorCode.NOT_COUNSEL_AUTHOR:
+        return "조회 권한이 없습니다.";
+    }
+  }
+  return "상담 글을 불러오지 못했습니다.";
+}
+
 function getDeleteError(error: Error | null): string | null {
   if (error === null) return null;
   if (error instanceof ApiError) {
@@ -61,7 +73,7 @@ export const CounselDetail = () => {
     return (
       <Page>
         <TopBar onBackClick={() => navigate(-1)} />
-        <NotFound>상담 글을 불러오지 못했습니다.</NotFound>
+        <NotFound>{getCounselError(counselQuery.error)}</NotFound>
       </Page>
     );
 
