@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { styled } from "styled-components";
 import { Button } from "../../components/Button";
 import { CounselStatus } from "../../components/Counsel/CounselStatus";
@@ -6,51 +7,94 @@ import { TopBar } from "../../components/TopBar";
 import potImage from "../../assets/pot.png";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import type { z } from "zod";
-import { CounselSummaryDtoSchema } from "@mindseed/api-types";
+import { ApiError, getCounsels } from "../../api/api";
+import { callAuthenticated } from "../../api/callAuthenticated";
+import { PaginationErrorCode } from "@mindseed/api-types";
 
-type CounselSummaryDto = z.infer<typeof CounselSummaryDtoSchema>;
-
-const COUNSELS: CounselSummaryDto[] = [].map((counsel) =>
-  CounselSummaryDtoSchema.parse(counsel),
-);
+function getCounselListError(error: unknown): string {
+  if (
+    error instanceof ApiError &&
+    error.errorCode === PaginationErrorCode.INVALID_CURSOR
+  ) {
+    return "잘못된 페이지 정보입니다. 새로고침 후 다시 시도해주세요.";
+  }
+  return "목록을 불러오지 못했습니다.";
+}
 
 export const Counsel = () => {
   const navigate = useNavigate();
 
+  const counselsQuery = useInfiniteQuery({
+    queryKey: ["counsels"],
+    queryFn: ({ signal, pageParam }) =>
+      callAuthenticated(
+        (token) =>
+          getCounsels(
+            token,
+            {
+              cursor: pageParam,
+              limit: 20,
+              orderBy: "createdAt",
+              orderDirection: "desc",
+            },
+            { signal },
+          ),
+        navigate,
+      ),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+
+  const counsels =
+    counselsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+
   return (
     <Page>
       <TopBar onBackClick={() => navigate(-1)} />
-      <Header>
-        <Heading>
-          최근 힘든 일이 있으신가요?
-          <br />
-          편안하게 말씀해 주세요.
-        </Heading>
-        <Description>
-          작성해주신 모든 내용은 비밀이 철저히 유지됩니다.
-        </Description>
-      </Header>
+      <Container>
+        <Header>
+          <Heading>
+            최근 힘든 일이 있으신가요?
+            <br />
+            편안하게 말씀해 주세요.
+          </Heading>
+          <Description>
+            작성해주신 모든 내용은 비밀이 철저히 유지됩니다.
+          </Description>
+        </Header>
 
-      <Content>
-        {COUNSELS.length > 0 ? (
-          <PostList>
-            {COUNSELS.map((counsel) => (
-              <CounselStatus
-                key={counsel.id}
-                title={counsel.title}
-                responded={counsel.responded}
-                onClick={() => navigate(`/counsel/${counsel.id}`)}
-              />
-            ))}
-          </PostList>
-        ) : (
-          <Empty>
-            <EmptyText>아직 아무런 글도 작성되지 않았어요!</EmptyText>
-            <EmptyImage src={potImage} aria-label="빈 화분 이미지 영역" />
-          </Empty>
-        )}
-      </Content>
+        <Content>
+          {counselsQuery.isError ? (
+            <Empty>
+              <EmptyText>{getCounselListError(counselsQuery.error)}</EmptyText>
+            </Empty>
+          ) : counsels.length > 0 ? (
+            <PostList>
+              {counsels.map((counsel) => (
+                <CounselStatus
+                  key={counsel.id}
+                  title={counsel.title}
+                  responded={counsel.responded}
+                  onClick={() => navigate(`/counsel/${counsel.id}`)}
+                />
+              ))}
+              {counselsQuery.hasNextPage && (
+                <LoadMoreButton
+                  onClick={() => void counselsQuery.fetchNextPage()}
+                  disabled={counselsQuery.isFetchingNextPage}
+                >
+                  {counselsQuery.isFetchingNextPage ? "불러오는 중..." : "더 보기"}
+                </LoadMoreButton>
+              )}
+            </PostList>
+          ) : (
+            <Empty>
+              <EmptyText>아직 아무런 글도 작성되지 않았어요!</EmptyText>
+              <EmptyImage src={potImage} aria-label="빈 화분 이미지 영역" />
+            </Empty>
+          )}
+        </Content>
+      </Container>
 
       <BottomArea>
         <Button
@@ -66,7 +110,15 @@ export const Counsel = () => {
 
 const Page = styled.main`
   width: 100%;
-  min-height: 100dvh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+`;
+
+const Container = styled.div`
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
 `;
@@ -88,11 +140,9 @@ const Description = styled.p`
 `;
 
 const Content = styled.div`
-  min-height: 0;
   flex: 1;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
 `;
 
 const Empty = styled.div`
@@ -122,7 +172,22 @@ const PostList = styled.section`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 0.625rem 1.25rem;
+  margin-top: 0.625rem;
+  padding: 0 1.25rem;
+`;
+
+const LoadMoreButton = styled.button`
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  background: none;
+  color: ${COLORS.gray.gray500};
+  ${TEXT_STYLE.body.sm};
+  cursor: pointer;
+
+  &:disabled {
+    cursor: default;
+  }
 `;
 
 const BottomArea = styled.div`

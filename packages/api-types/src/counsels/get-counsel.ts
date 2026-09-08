@@ -10,7 +10,10 @@ import { CounselErrorCode } from "../common/error-codes";
 
 export const GetCounselResponseDtoSchema = responseDtoSchema(
   CounselDtoSchema,
-  z.enum([CounselErrorCode.COUNSEL_NOT_FOUND]),
+  z.enum([
+    CounselErrorCode.COUNSEL_NOT_FOUND,
+    CounselErrorCode.NOT_COUNSEL_AUTHOR,
+  ]),
 );
 
 export type GetCounselResponseDto = z.output<

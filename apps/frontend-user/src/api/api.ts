@@ -4,6 +4,11 @@ import {
   ConfirmAttachmentUploadResponseDtoSchema,
   CreateCommentResponseDtoSchema,
   CreateCommentReportResponseDtoSchema,
+  CreateCounselResponseDtoSchema,
+  DeleteCounselResponseDtoSchema,
+  GetCounselResponseDtoSchema,
+  ListCounselsResponseDtoSchema,
+  UpdateCounselResponseDtoSchema,
   CreatePostResponseDtoSchema,
   CreatePostReportResponseDtoSchema,
   DeleteCommentResponseDtoSchema,
@@ -29,6 +34,9 @@ import type {
   ConfirmAttachmentUploadRequestDto,
   CreateCommentRequestDto,
   CreateCommentReportRequestDto,
+  CreateCounselRequestDto,
+  ListCounselsQueryDto,
+  UpdateCounselRequestDto,
   CreatePostRequestDto,
   CreatePostReportRequestDto,
   EmailPasswordResetRequestDto,
@@ -449,6 +457,67 @@ export async function completeMission(
 
 export async function getCurrentUser(token: string, options?: Options) {
   return get("/users/current", GetCurrentUserResponseDtoSchema, {
+    ...options,
+    token,
+  });
+}
+
+export async function getCounsel(
+  token: string,
+  counselId: number,
+  options?: Options,
+) {
+  return get(`/counsels/${counselId}`, GetCounselResponseDtoSchema, {
+    ...options,
+    token,
+  });
+}
+
+export async function getCounsels(
+  token: string,
+  query: ListCounselsQueryDto,
+  options?: Options,
+) {
+  const params = new URLSearchParams();
+  if (query.cursor) params.set("cursor", query.cursor);
+  params.set("limit", String(query.limit));
+  params.set("orderBy", query.orderBy);
+  params.set("orderDirection", query.orderDirection);
+  return get(`/counsels?${params}`, ListCounselsResponseDtoSchema, {
+    ...options,
+    token,
+  });
+}
+
+export async function createCounsel(
+  token: string,
+  input: CreateCounselRequestDto,
+  options?: Options,
+) {
+  return post("/counsels", input, CreateCounselResponseDtoSchema, {
+    ...options,
+    token,
+  });
+}
+
+export async function updateCounsel(
+  token: string,
+  counselId: number,
+  input: UpdateCounselRequestDto,
+  options?: Options,
+): Promise<void> {
+  await put(`/counsels/${counselId}`, input, UpdateCounselResponseDtoSchema, {
+    ...options,
+    token,
+  });
+}
+
+export async function deleteCounsel(
+  token: string,
+  counselId: number,
+  options?: Options,
+): Promise<void> {
+  await del(`/counsels/${counselId}`, DeleteCounselResponseDtoSchema, {
     ...options,
     token,
   });

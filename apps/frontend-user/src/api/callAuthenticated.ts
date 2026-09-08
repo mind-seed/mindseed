@@ -6,6 +6,7 @@ import {
   getRefreshToken,
   setTokens,
 } from "./tokens";
+import { queryClient } from "./queryClient";
 
 let refreshInFlight: Promise<string> | null = null;
 
@@ -45,6 +46,7 @@ export async function callAuthenticated<T>(
       refreshedToken = await ensureRefresh();
     } catch {
       clearTokens();
+      queryClient.clear();
       navigate("/onboarding");
       throw e;
     }

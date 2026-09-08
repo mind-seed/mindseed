@@ -69,12 +69,14 @@ export class CounselController {
   @UserOnly()
   @ZodEncodeResponse(ListCounselsResponseDtoSchema)
   async listCounsels(
+    @CurrentUser() user: User,
     @ZodQuery(ListCounselsQueryDtoSchema) query: ListCounselsQueryDto,
   ): Promise<ListCounselsSuccessResponseDto> {
     const { items, nextCursor } =
       await this.counselQueryService.listCounselEntriesWithCursor({
         cursor: query.cursor,
         limit: query.limit,
+        authorId: user.id,
         category: query.category
           ? categoryMap.decode(query.category)
           : undefined,
@@ -103,9 +105,10 @@ export class CounselController {
   @UserOnly()
   @ZodEncodeResponse(GetCounselResponseDtoSchema)
   async getCounsel(
+    @CurrentUser() user: User,
     @ZodParam("id", idParamSchema) id: number,
   ): Promise<GetCounselSuccessResponseDto> {
-    const entry = await this.counselQueryService.getCounselEntry(id);
+    const entry = await this.counselQueryService.getCounselEntry(id, user.id);
     return {
       success: true,
       data: {
