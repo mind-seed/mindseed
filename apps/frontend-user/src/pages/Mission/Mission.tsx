@@ -13,7 +13,7 @@ import {
   UserProfileDtoSchema,
 } from "@mindseed/api-types";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { completeMission, getTodayMissions } from "../../api/api";
+import { completeMission, getCurrentUser, getTodayMissions } from "../../api/api";
 import { useNavigate } from "react-router";
 import { callAuthenticated } from "../../api/callAuthenticated";
 
@@ -28,45 +28,38 @@ type MissionSummary = {
   totalPoints: UserProfileDto["points"];
 };
 
-const MISSIONS: MissionAssignmentDto[] = [
-  {
-    id: 1,
-    status: "completed",
-    mission: {
-      title: "미션 제목",
-      description:
-        "상세글을 적습니다. 글 제한은 없습니다.\n길어지는 만큼 카드가 늘어납니다.",
-      points: 80,
-    },
-  },
-  {
-    id: 2,
-    status: "uncompleted",
-    mission: {
-      title: "미션 제목",
-      description: "상세글을 적습니다.",
-      points: 80,
-    },
-  },
-  {
-    id: 3,
-    status: "uncompleted",
-    mission: {
-      title: "미션 제목",
-      description: "상세글을 적습니다.",
-      points: 80,
-    },
-  },
-  {
-    id: 4,
-    status: "uncompleted",
-    mission: {
-      title: "미션 제목",
-      description: "상세글을 적습니다.",
-      points: 80,
-    },
-  },
-];
+// eslint-disable-next-line react-refresh/only-export-components
+export const pointsForNextLevel: Record<number, number> = {
+  1: 100,
+  2: 110,
+  3: 130,
+  4: 150,
+  5: 170,
+  6: 200,
+  7: 230,
+  8: 260,
+  9: 290,
+  10: 320,
+  11: 350,
+  12: 380,
+  13: 410,
+  14: 440,
+  15: 470,
+  16: 510,
+  17: 550,
+  18: 600,
+  19: 650,
+  20: 690,
+  21: 730,
+  22: 750,
+  23: 750,
+  24: 750,
+  25: 760,
+  26: 760,
+  27: 760,
+  28: 780,
+  29: 800,
+};
 
 export const Mission = () => {
   const navigate = useNavigate();
@@ -78,6 +71,25 @@ export const Mission = () => {
         (token) => getTodayMissions(token),
         navigate,
       ),
+  })
+
+  const missionSummarySet = (missionSummaryQueryData, missionQueryData) => {
+    setMissionSummary({
+      level: missionSummaryQueryData.profile.level,
+      progress: (missionSummaryQueryData.profile.points / pointsForNextLevel[missionSummaryQueryData.profile?.level]) * 100,
+      todayCount: missionQueryData.assignments.length,
+      completedCount: completedIds.length,
+      totalPoints: missionSummaryQueryData.profile.points
+    });
+  }
+
+  const missionSummaryQuery = useQuery({
+    queryKey: ["missionSummary"],
+    queryFn: () =>
+      callAuthenticated(
+        (token) => getCurrentUser(token),
+        navigate
+      )
   })
 
   const completeMutation = useMutation({
@@ -92,13 +104,13 @@ export const Mission = () => {
     ) || [],
   );
 
-  const missionSummary = {
+  const [missionSummary, setMissionSummary] = useState({
     level: missionQuery.data?.level || 1,
     progress: 0,
     todayCount: missionQuery.data?.assignments.length || 0,
     completedCount: completedIds.length,
     totalPoints: missionQuery.data?.points || 0,
-  };
+  });
 
   useEffect(() => {
     if (missionQuery.data) {
@@ -109,6 +121,16 @@ export const Mission = () => {
       );
     }
   }, [missionQuery.data]);
+
+  useEffect(() => {
+    if (missionQuery.data && missionSummaryQuery.data) {
+      const data = missionSummaryQuery.data;
+      if (data.profile) {
+        console.log(completedIds);
+        missionSummarySet(data, missionQuery.data);
+      }
+    }
+  }, [missionQuery.data, missionSummaryQuery.data]);
 
   const missions = missionQuery.data?.assignments || [];
   return (
@@ -153,8 +175,13 @@ export const Mission = () => {
               rewardPoints={mission.mission.points}
               isCompleted={isCompleted}
               onComplete={() => {
-                  completeMutation.mutate(mission.id);
                   setCompletedIds((prev) => [...prev, mission.id]);
+                  completeMutation.mutate(mission.id);
+                  setTimeout(() => {
+                    missionSummaryQuery.refetch();
+                    console.log(missionSummaryQuery.data, missionQuery.data)
+                    missionSummarySet(missionSummaryQuery.data, missionQuery.data);
+                  }, 100);
                 }
               }
             />

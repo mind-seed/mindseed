@@ -22,6 +22,7 @@ import {
   VerifyMailResponseDtoSchema,
   ListTodayMissionAssignmentsResponseDtoSchema,
   CompleteMissionAssignmentResponseDtoSchema,
+  GetCurrentUserResponseDtoSchema,
 } from "@mindseed/api-types";
 import type {
   CompleteSignupRequestDto,
@@ -444,4 +445,11 @@ export async function completeMission(
     CompleteMissionAssignmentResponseDtoSchema,
     { ...options, token },
   );
+}
+
+export async function getCurrentUser(token: string, options?: Options) {
+  return get("/users/current", GetCurrentUserResponseDtoSchema, {
+    ...options,
+    token,
+  });
 }
