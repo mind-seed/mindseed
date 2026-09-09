@@ -15,7 +15,6 @@ import { getTodayMissions } from "../api/api";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
-type SimplifiedMission = z.infer<typeof SimplifiedMissionSchema>;
 type UserProfileDto = z.infer<typeof UserProfileDtoSchema>;
 
 const USER_LEVEL: UserProfileDto["level"] = 4;
@@ -39,6 +38,9 @@ export const Home = () => {
   const todayMissionPoints = todayMission
     ? `+${todayMission.mission.points}point`
     : "";
+  const todayMissionExists = todayMission
+    ? true
+    : false;
 
   return (
     <Page>
@@ -52,10 +54,13 @@ export const Home = () => {
           <MissionHeading>오늘의 미션 수행하기</MissionHeading>
           <ChevronRightIcon color={COLORS.gray.gray400} />
         </MissionHeaderButton>
+        {
+        todayMissionExists && 
         <TodayMission>
           <MissionTitle>{todayMissionTitle}</MissionTitle>
           <Reward>+{todayMissionPoints}</Reward>
         </TodayMission>
+        }
       </MissionArea>
     </Page>
   );
