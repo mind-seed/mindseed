@@ -22,9 +22,6 @@ const USER_LEVEL: UserProfileDto["level"] = 4;
 
 export const Home = () => {
   const navigate = useNavigate();
-  const [todayMissionTitle, setTodayMissionTitle] = useState("");
-  const [todayMissionPoints, setTodayMissionPoints] = useState("");
-
   const missionQuery = useQuery({
     queryKey: ["missions"],
     queryFn: () =>
@@ -34,17 +31,14 @@ export const Home = () => {
       ),
   });
 
-  useEffect(() => {
-    if (missionQuery.data) {
-      for (const item of missionQuery.data.assignments) {
-        if (item.status == "uncompleted") {
-          setTodayMissionTitle(item.mission.title);
-          setTodayMissionPoints(`+{item.mission.points}point`);
-          break;
-        }
-      }
-    }
-  }, [missionQuery.data]);
+  const todayMission = missionQuery.data?.assignments.find(
+    (item) => item.status === "uncompleted"
+  );
+
+  const todayMissionTitle = todayMission?.mission.title ?? "";
+  const todayMissionPoints = todayMission
+    ? `+${todayMission.mission.points}point`
+    : "";
 
   return (
     <Page>
