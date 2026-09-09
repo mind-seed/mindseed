@@ -44,6 +44,7 @@ export type ListPostsOrderBy = "createdAt";
 
 export type ListPostsOptions = CursorPaginationOptions<ListPostsOrderBy> & {
   category?: PostCategory;
+  authorId?: number;
 };
 
 export type ListPostsResult = CursorPaginationResult<PostWithRelations> & {
@@ -112,7 +113,14 @@ export class PostQueryService {
    */
   async listPosts(
     userId: number,
-    { limit, orderBy, orderDirection, category, cursor }: ListPostsOptions,
+    {
+      limit,
+      orderBy,
+      orderDirection,
+      category,
+      cursor,
+      authorId,
+    }: ListPostsOptions,
   ): Promise<ListPostsResult> {
     const qb = this.postRepository
       .createQueryBuilder("post")
@@ -125,6 +133,10 @@ export class PostQueryService {
         { reportingUserId: userId },
       )
       .andWhere("report.id IS NULL");
+
+    if (authorId !== undefined) {
+      qb.andWhere("post.authorId = :authorId", { authorId });
+    }
 
     if (category) {
       qb.andWhere("post.category = :category", { category });
