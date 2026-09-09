@@ -13,22 +13,17 @@ import {
 import { callAuthenticated } from "../api/callAuthenticated";
 import { getTodayMissions } from "../api/api";
 import { useQuery } from "@tanstack/react-query";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 type SimplifiedMission = z.infer<typeof SimplifiedMissionSchema>;
 type UserProfileDto = z.infer<typeof UserProfileDtoSchema>;
 
 const USER_LEVEL: UserProfileDto["level"] = 4;
-const TODAY_MISSION: SimplifiedMission = {
-  title: "물 한잔 먹기",
-  description: "물 한 잔을 마셔보세요.",
-  points: 60,
-};
 
 export const Home = () => {
   const navigate = useNavigate();
-  const [todayMissionTitle, setTodayMissionTitle] = useState("미션");
-  const [todayMissionPoints, setTodayMissionPoints] = useState(100);
+  const [todayMissionTitle, setTodayMissionTitle] = useState("");
+  const [todayMissionPoints, setTodayMissionPoints] = useState("");
 
   const missionQuery = useQuery({
     queryKey: ["missions"],
@@ -41,12 +36,10 @@ export const Home = () => {
 
   useEffect(() => {
     if (missionQuery.data) {
-      setTodayMissionTitle(missionQuery.data.assignments[0].mission.title);
-      setTodayMissionPoints(missionQuery.data.assignments[0].mission.points);
       for (const item of missionQuery.data.assignments) {
         if (item.status == "uncompleted") {
           setTodayMissionTitle(item.mission.title);
-          setTodayMissionPoints(item.mission.points);
+          setTodayMissionPoints(`+{item.mission.points}point`);
           break;
         }
       }
@@ -67,7 +60,7 @@ export const Home = () => {
         </MissionHeaderButton>
         <TodayMission>
           <MissionTitle>{todayMissionTitle}</MissionTitle>
-          <Reward>+{todayMissionPoints}point</Reward>
+          <Reward>+{todayMissionPoints}</Reward>
         </TodayMission>
       </MissionArea>
     </Page>
