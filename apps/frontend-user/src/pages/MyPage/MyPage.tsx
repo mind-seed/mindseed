@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { styled } from "styled-components";
 import plantImage from "../../assets/mypage-img.png";
 import lightPointImage from "../../assets/mypage-light.png";
@@ -7,26 +9,11 @@ import { ChevronRightIcon } from "../../components/Icons/ChevronIcon";
 import { LogoutIcon } from "../../components/Icons/LogoutIcon";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import type { z } from "zod";
-import { UserDtoSchema } from "@mindseed/api-types";
-import { dateSerializerCodec } from "../../../../../packages/api-types/src/common/codecs";
 import { getCharcterImages } from "../../constants/character";
-
-type UserDto = z.output<typeof UserDtoSchema>;
-
-const DUMMY_USER: UserDto = {
-  id: 1,
-  email: "user@gmail.com",
-  role: "user",
-  createdAt: dateSerializerCodec.decode("2026-09-04T08:00:00Z"),
-  profile: {
-    nickname: "닉네임",
-    age: 19,
-    points: 110,
-    level: 1,
-    characterIndex: 1,
-  },
-};
+import { logout, deleteCurrentUser, getCurrentUser } from "../../api/api";
+import { callAuthenticated } from "../../api/callAuthenticated";
+import { clearTokens } from "../../api/tokens";
+import { DestructiveConfirmModal } from "../../components/DestructiveConfirmModal";
 
 const MENU_ITEMS = [
   { label: "닉네임 변경", path: "/mypage/nickname" },
@@ -37,10 +24,41 @@ const MENU_ITEMS = [
 
 export const MyPage = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
-  const handleLogout = () => {};
+  const userQuery = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: ({ signal }) =>
+      callAuthenticated((token) => getCurrentUser(token, { signal }), navigate),
+  });
 
-  const handleWithDraw = () => {};
+  const logoutMutation = useMutation({
+    mutationFn: () => callAuthenticated((token) => logout(token), navigate),
+    onSettled: () => {
+      clearTokens();
+      queryClient.clear();
+      navigate("/onboarding", { replace: true });
+    },
+  });
+
+  const handleLogout = () => logoutMutation.mutate();
+
+  const withdrawMutation = useMutation({
+    mutationFn: () =>
+      callAuthenticated((token) => deleteCurrentUser(token), navigate),
+    onSuccess: () => {
+      clearTokens();
+      queryClient.clear();
+      navigate("/onboarding", { replace: true });
+    },
+  });
+
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const handleWithDraw = () => setIsWithdrawOpen(true);
+
+  const user = userQuery.data;
+
+  console.log(user?.profile?.characterIndex);
 
   return (
     <Page>
@@ -56,11 +74,11 @@ export const MyPage = () => {
       <ContentCard>
         <Profile>
           <Greeting>
-            <Name>{DUMMY_USER.profile?.nickname}</Name>님,
+            <Name>{user?.profile?.nickname}</Name>님,
             <br />
             오늘 기분은 어떠신가요?
           </Greeting>
-          <Email>{DUMMY_USER.email}</Email>
+          <Email>{user?.email}</Email>
         </Profile>
 
         <MenuList>
@@ -81,7 +99,7 @@ export const MyPage = () => {
 
         <CounselArea>
           <CounselCharacterImage
-            src={getCharcterImages(DUMMY_USER.id).counsel}
+            src={getCharcterImages(user?.profile?.characterIndex ?? 1).counsel}
             alt=""
           />
           <CounselContent>
@@ -96,6 +114,17 @@ export const MyPage = () => {
           </CounselContent>
         </CounselArea>
       </ContentCard>
+
+      <DestructiveConfirmModal
+        isOpen={isWithdrawOpen}
+        title="정말 탈퇴하시겠습니까?"
+        description={`회원 탈퇴 시 계정 복구가 불가능하며, 모든 이용 기록이 삭제됩니다. 정말 탈퇴하시겠습니까?`}
+        confirmLabel="회원탈퇴"
+        cancelLabel="취소"
+        isPending={withdrawMutation.isPending}
+        onConfirm={() => withdrawMutation.mutate()}
+        onCancel={() => setIsWithdrawOpen(false)}
+      />
     </Page>
   );
 };

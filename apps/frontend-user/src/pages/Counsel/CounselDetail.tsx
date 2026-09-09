@@ -6,7 +6,7 @@ import { TopBar } from "../../components/TopBar";
 import { CounselPost } from "../../components/Counsel/CounselPost";
 import { CounselResponse } from "../../components/Counsel/CounselResponse";
 import { BottomSheet } from "../../components/Community/BottomSheet";
-import { DeleteModal } from "../../components/Community/DeleteModal";
+import { DestructiveConfirmModal } from "../../components/DestructiveConfirmModal";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
 import type { z } from "zod";
@@ -138,8 +138,12 @@ const CounselDetailContent = ({
         />
       )}
 
-      <DeleteModal
+      <DestructiveConfirmModal
         isOpen={isDeleteOpen}
+        title="정말 삭제하시겠습니까?"
+        description={`한 번 삭제한 글과 댓글은 다시\n복구할 수 없습니다.`}
+        confirmLabel="확인"
+        cancelLabel="취소"
         onConfirm={() => {
           setIsDeleteOpen(false);
           onDeleteConfirm();

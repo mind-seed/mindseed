@@ -28,6 +28,8 @@ import {
   ListTodayMissionAssignmentsResponseDtoSchema,
   CompleteMissionAssignmentResponseDtoSchema,
   GetCurrentUserResponseDtoSchema,
+  DeleteCurrentUserResponseDtoSchema,
+  UpdateCurrentUserResponseDtoSchema,
 } from "@mindseed/api-types";
 import type {
   CompleteSignupRequestDto,
@@ -46,6 +48,7 @@ import type {
   SendMailRequestDto,
   SetPostLikeRequestDto,
   UpdateCommentRequestDto,
+  UpdateCurrentUserRequestDto,
   UpdatePostRequestDto,
   VerifyMailRequestDto,
 } from "@mindseed/api-types";
@@ -282,6 +285,7 @@ export async function getPosts(
   params.set("orderBy", query.orderBy);
   params.set("orderDirection", query.orderDirection);
   if (query.category) params.set("category", query.category);
+  if (query.onlyMine) params.set("onlyMine", "true");
   return get(`/posts?${params}`, ListPostsResponseDtoSchema, {
     ...options,
     token,
@@ -457,6 +461,32 @@ export async function completeMission(
 
 export async function getCurrentUser(token: string, options?: Options) {
   return get("/users/current", GetCurrentUserResponseDtoSchema, {
+    ...options,
+    token,
+  });
+}
+
+export async function updateCurrentUserProfile(
+  token: string,
+  input: UpdateCurrentUserRequestDto,
+  options?: Options,
+): Promise<void> {
+  await patch(
+    "/users/current/profile",
+    input,
+    UpdateCurrentUserResponseDtoSchema,
+    {
+      ...options,
+      token,
+    },
+  );
+}
+
+export async function deleteCurrentUser(
+  token: string,
+  options?: Options,
+): Promise<void> {
+  await del("/users/current", DeleteCurrentUserResponseDtoSchema, {
     ...options,
     token,
   });

@@ -8,7 +8,7 @@ import { CommentButton } from "../../components/Community/CommentButton";
 import { LikeButton } from "../../components/Community/LikeButton";
 import { Post } from "../../components/Community/Post";
 import { TopBar } from "../../components/TopBar";
-import { DeleteModal } from "../../components/Community/DeleteModal";
+import { DestructiveConfirmModal } from "../../components/DestructiveConfirmModal";
 import { ReportModal } from "../../components/Community/ReportModal";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
@@ -447,8 +447,12 @@ const PostDetailContent = ({
         />
       )}
 
-      <DeleteModal
+      <DestructiveConfirmModal
         isOpen={deleteTarget !== null}
+        title="정말 삭제하시겠습니까?"
+        description={`한 번 삭제한 글과 댓글은 다시\n복구할 수 없습니다.`}
+        confirmLabel="확인"
+        cancelLabel="취소"
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
       />
