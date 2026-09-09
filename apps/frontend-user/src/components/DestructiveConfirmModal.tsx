@@ -29,17 +29,17 @@ export const DestructiveConfirmModal = ({
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
+      if (event.key === "Escape" && !isPending) onCancel();
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onCancel]);
+  }, [isOpen, isPending, onCancel]);
 
   if (!isOpen) return null;
 
   return (
-    <Overlay onClick={onCancel}>
+    <Overlay onClick={isPending ? undefined : onCancel}>
       <Modal
         role="alertdialog"
         aria-modal="true"

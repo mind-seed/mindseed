@@ -453,6 +453,7 @@ const PostDetailContent = ({
         description={`한 번 삭제한 글과 댓글은 다시\n복구할 수 없습니다.`}
         confirmLabel="확인"
         cancelLabel="취소"
+        isPending={deleteCommentMutation.isPending}
         onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(null)}
       />

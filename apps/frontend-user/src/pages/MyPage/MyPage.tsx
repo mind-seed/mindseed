@@ -58,8 +58,6 @@ export const MyPage = () => {
 
   const user = userQuery.data;
 
-  console.log(user?.profile?.characterIndex);
-
   return (
     <Page>
       <Hero aria-hidden="true">
@@ -99,7 +97,7 @@ export const MyPage = () => {
 
         <CounselArea>
           <CounselCharacterImage
-            src={getCharcterImages(user?.profile?.characterIndex ?? 1).counsel}
+            src={getCharcterImages(user?.profile?.characterIndex ?? 0).counsel}
             alt=""
           />
           <CounselContent>

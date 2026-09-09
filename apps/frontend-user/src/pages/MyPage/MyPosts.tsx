@@ -88,10 +88,12 @@ export const MyPosts = () => {
         navigate,
       ),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["posts"] });
       setSelectedPostIds([]);
       setIsEditing(false);
       setIsDeleteOpen(false);
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
 
@@ -173,7 +175,9 @@ export const MyPosts = () => {
               onSelectionClick={() => handleSelectionClick(post.id)}
             />
           ))
-        ) : postsQuery.isLoading ? null : (
+        ) : postsQuery.isLoading ? null : postsQuery.isError ? (
+          <Empty>글을 불러오지 못했습니다.</Empty>
+        ) : (
           <Empty>작성한 글이 없습니다.</Empty>
         )}
         {postsQuery.hasNextPage && (
