@@ -1,17 +1,20 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { styled } from "styled-components";
 import type { z } from "zod";
-import { PostCategorySchema, PostDtoSchema } from "@mindseed/api-types";
+import { PostCategorySchema } from "@mindseed/api-types";
 import { Category } from "../../components/Category";
 import { BottomSheet } from "../../components/Community/BottomSheet";
 import { FilterButton } from "../../components/Community/FilterButton";
-import { FloatingButton } from "../../components/Community/FloatingButton";
 import { Post } from "../../components/Community/Post";
 import { TopBar } from "../../components/TopBar";
+import { DestructiveConfirmModal } from "../../components/DestructiveConfirmModal";
 import { POST_CATEGORIES } from "../../constants/postCategory";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
+import { getPosts, deletePost } from "../../api/api";
+import { callAuthenticated } from "../../api/callAuthenticated";
 
 type PostCategory = z.output<typeof PostCategorySchema>;
 type MyPostsCategory = "ALL" | PostCategory;
@@ -24,80 +27,12 @@ const MY_POSTS_CATEGORIES: ReadonlyArray<{
 const SORT_OPTIONS = ["최신순", "인기순", "추천순"] as const;
 type SortOption = (typeof SORT_OPTIONS)[number];
 
-const MY_POSTS = PostDtoSchema.array().decode([
-  {
-    id: 1,
-    author: { nickname: "춤추는 아나콘다" },
-    content:
-      "제 몸이 멈추질 않아요!! 춤을 더이상 추고싶지않은데 어떻게 멈춰야 하나요?\n신나는 소리만 들리면 몸이 춤을 추는것만 같아요.\n주위 동물들이 자꾸 놀려요.제 몸이 멈추질 않아요!! 춤을 더이상 추고싶지않은데 어떻게 멈춰야 하나요?\n신나는 소리만 들리면 몸이 춤을 추는것만 같아요.\n주위 동물들이 자꾸 놀려요안녕안녕안녕안녕안녕안녕안녕안녕안녕안녕안녕안녕안",
-    category: "concern",
-    attachments: [
-      {
-        id: 1,
-        url: "https://example.com/images/sample.jpg",
-      },
-    ],
-    likeCount: 24,
-    isOwner: true,
-    isLiked: true,
-    createdAt: "2026-09-08T08:58:00.000Z",
-    updatedAt: "2026-09-08T08:58:00.000Z",
-  },
-  {
-    id: 2,
-    author: { nickname: "바람을 접는 종이" },
-    content: "오늘은 날씨가 참 좋네~",
-    category: "diary",
-    attachments: [],
-    likeCount: 18,
-    isOwner: true,
-    isLiked: false,
-    createdAt: "2026-09-08T08:54:00.000Z",
-    updatedAt: "2026-09-08T08:54:00.000Z",
-  },
-  {
-    id: 3,
-    author: { nickname: "책먹는 여우" },
-    content: "오늘 먹은 책들",
-    category: "diary",
-    attachments: [],
-    likeCount: 11,
-    isOwner: true,
-    isLiked: false,
-    createdAt: "2026-09-08T08:44:00.000Z",
-    updatedAt: "2026-09-08T08:44:00.000Z",
-  },
-  {
-    id: 4,
-    author: { nickname: "소심한 흰색 비둘기" },
-    content: "저...그 여기는 익명이 확실하게 보장되나요..?",
-    category: "inquiry",
-    attachments: [],
-    likeCount: 7,
-    isOwner: true,
-    isLiked: false,
-    createdAt: "2026-09-08T08:00:00.000Z",
-    updatedAt: "2026-09-08T08:00:00.000Z",
-  },
-  {
-    id: 5,
-    author: { nickname: "유령같은 투명" },
-    content: "투명한 내 몸 멋지지!",
-    category: "other",
-    attachments: [],
-    likeCount: 32,
-    isOwner: true,
-    isLiked: true,
-    createdAt: "2026-09-06T09:00:00.000Z",
-    updatedAt: "2026-09-06T09:00:00.000Z",
-  },
-]);
-
 const isMyPostsCategory = (value: string | null): value is MyPostsCategory =>
   MY_POSTS_CATEGORIES.some((category) => category.value === value);
 
 export const MyPosts = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeSort, setActiveSort] = useState<SortOption>("최신순");
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -108,21 +43,35 @@ export const MyPosts = () => {
     ? categoryParam
     : "ALL";
 
-  const posts = MY_POSTS.filter(
-    (post) => activeCategory === "ALL" || post.category === activeCategory,
-  );
+  const postsQuery = useInfiniteQuery({
+    queryKey: ["posts", { onlyMine: true, category: activeCategory }],
+    queryFn: ({ signal, pageParam }) =>
+      callAuthenticated(
+        (token) =>
+          getPosts(
+            token,
+            {
+              cursor: pageParam,
+              limit: 20,
+              orderBy: "createdAt",
+              orderDirection: "desc",
+              category: activeCategory === "ALL" ? undefined : activeCategory,
+              onlyMine: true,
+            },
+            { signal },
+          ),
+        navigate,
+      ),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+
+  const posts = postsQuery.data?.pages.flatMap((page) => page.items) ?? [];
 
   const sortedPosts = [...posts].sort((first, second) => {
-    if (activeSort === "최신순") {
-      return (
-        second.createdAt.epochMilliseconds - first.createdAt.epochMilliseconds
-      );
-    }
-
     if (activeSort === "인기순") {
       return second.likeCount - first.likeCount;
     }
-
     return 0;
   });
 
@@ -130,8 +79,35 @@ export const MyPosts = () => {
     setSearchParams(category === "ALL" ? {} : { category });
   };
 
-  const handleEditToggle = () => {
-    setIsEditing((editing) => !editing);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+
+  const deletePostsMutation = useMutation({
+    mutationFn: (postIds: number[]) =>
+      callAuthenticated(
+        (token) => Promise.all(postIds.map((id) => deletePost(token, id))),
+        navigate,
+      ),
+    onSuccess: () => {
+      setSelectedPostIds([]);
+      setIsEditing(false);
+      setIsDeleteOpen(false);
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+  });
+
+  const handleRightClick = () => {
+    if (!isEditing) {
+      setIsEditing(true);
+      return;
+    }
+    if (selectedPostIds.length > 0) {
+      setIsDeleteOpen(true);
+    } else {
+      setSelectedPostIds([]);
+      setIsEditing(false);
+    }
   };
 
   const handleSelectionClick = (postId: number) => {
@@ -161,7 +137,7 @@ export const MyPosts = () => {
               : "primary"
           }
           onBackClick={() => navigate("/mypage")}
-          onRightClick={handleEditToggle}
+          onRightClick={handleRightClick}
         />
       </Header>
 
@@ -199,8 +175,19 @@ export const MyPosts = () => {
               onSelectionClick={() => handleSelectionClick(post.id)}
             />
           ))
+        ) : postsQuery.isLoading ? null : postsQuery.isError ? (
+          <Empty>글을 불러오지 못했습니다.</Empty>
         ) : (
           <Empty>작성한 글이 없습니다.</Empty>
+        )}
+        {postsQuery.hasNextPage && (
+          <LoadMoreButton
+            type="button"
+            onClick={() => postsQuery.fetchNextPage()}
+            disabled={postsQuery.isFetchingNextPage}
+          >
+            더 보기
+          </LoadMoreButton>
         )}
       </PostList>
 
@@ -217,6 +204,17 @@ export const MyPosts = () => {
           onClose={() => setIsSortOpen(false)}
         />
       )}
+
+      <DestructiveConfirmModal
+        isOpen={isDeleteOpen}
+        title="선택한 글을 삭제하시겠습니까?"
+        description={`한 번 삭제한 글은 다시\n복구할 수 없습니다.`}
+        confirmLabel="삭제"
+        cancelLabel="취소"
+        isPending={deletePostsMutation.isPending}
+        onConfirm={() => deletePostsMutation.mutate(selectedPostIds)}
+        onCancel={() => setIsDeleteOpen(false)}
+      />
     </Page>
   );
 };
@@ -265,4 +263,20 @@ const Empty = styled.p`
   ${TEXT_STYLE.body.ti};
   transform: translateX(-50%);
   text-align: center;
+`;
+
+const LoadMoreButton = styled.button`
+  margin: 1rem auto;
+  padding: 0.5rem 1.5rem;
+  border: 1px solid ${COLORS.gray.gray300};
+  border-radius: 8px;
+  background: none;
+  color: ${COLORS.gray.gray600};
+  ${TEXT_STYLE.body.sm};
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;

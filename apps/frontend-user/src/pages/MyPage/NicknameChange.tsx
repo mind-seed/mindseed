@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { styled } from "styled-components";
 import { Button } from "../../components/Button";
 import { TextInput } from "../../components/TextInput";
@@ -7,20 +8,41 @@ import { TopBar } from "../../components/TopBar";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
 import { UpdateCurrentUserRequestDtoSchema } from "@mindseed/api-types";
+import { ApiError, updateCurrentUserProfile } from "../../api/api";
+import { callAuthenticated } from "../../api/callAuthenticated";
+
+function getApiError(error: unknown): string | null {
+  if (!(error instanceof ApiError)) return null;
+  return "오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+}
 
 export const NicknameChange = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [nickname, setNickname] = useState("");
   const isNicknameValid = UpdateCurrentUserRequestDtoSchema.safeParse({
     nickname: nickname.trim(),
   }).success;
 
+  const updateMutation = useMutation({
+    mutationFn: (trimmedNickname: string) =>
+      callAuthenticated(
+        (token) => updateCurrentUserProfile(token, { nickname: trimmedNickname }),
+        navigate,
+      ),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["currentUser"] });
+      navigate("/mypage");
+    },
+  });
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!isNicknameValid) return;
-
-    navigate("/mypage");
+    updateMutation.mutate(nickname.trim());
   };
+
+  const apiError = getApiError(updateMutation.error);
 
   return (
     <Page>
@@ -32,10 +54,13 @@ export const NicknameChange = () => {
           <TextInput
             name="nickname"
             value={nickname}
-            status="normal"
-            description="2~8자,한글·영문(대소문자)·숫자·공백을 사용할 수 있습니다."
+            status={apiError ? "error" : "normal"}
+            description={apiError ?? "2~8자,한글·영문(대소문자)·숫자·공백을 사용할 수 있습니다."}
             placeholder="내용을 입력해주세요."
-            onChange={(event) => setNickname(event.target.value)}
+            onChange={(event) => {
+              setNickname(event.target.value);
+              updateMutation.reset();
+            }}
           />
         </Content>
 
@@ -45,7 +70,7 @@ export const NicknameChange = () => {
             size="medium"
             type="submit"
             label="저장하기"
-            disabled={!isNicknameValid}
+            disabled={!isNicknameValid || updateMutation.isPending}
           />
         </BottomArea>
       </Form>

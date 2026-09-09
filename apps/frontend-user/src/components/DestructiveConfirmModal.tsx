@@ -1,35 +1,45 @@
 import { useEffect } from "react";
 import styled from "styled-components";
-import { COLORS } from "../../style/colors";
-import { TEXT_STYLE } from "../../style/typography";
-import { WarningIcon } from "../Icons/WarningIcon";
+import { COLORS } from "../style/colors";
+import { TEXT_STYLE } from "../style/typography";
+import { WarningIcon } from "./Icons/WarningIcon";
 
-type DeleteModalProps = {
+type DestructiveConfirmModalProps = {
   isOpen: boolean;
+  title: string;
+  description: string;
+  confirmLabel: string;
+  cancelLabel: string;
+  isPending?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
 };
 
-export const DeleteModal = ({
+export const DestructiveConfirmModal = ({
   isOpen,
+  title,
+  description,
+  confirmLabel,
+  cancelLabel,
+  isPending = false,
   onConfirm,
   onCancel,
-}: DeleteModalProps) => {
+}: DestructiveConfirmModalProps) => {
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onCancel();
+      if (event.key === "Escape" && !isPending) onCancel();
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onCancel]);
+  }, [isOpen, isPending, onCancel]);
 
   if (!isOpen) return null;
 
   return (
-    <Overlay onClick={onCancel}>
+    <Overlay onClick={isPending ? undefined : onCancel}>
       <Modal
         role="alertdialog"
         aria-modal="true"
@@ -38,20 +48,21 @@ export const DeleteModal = ({
         <WarningIcon width={48} height={48} color={COLORS.state.error} />
 
         <Message>
-          <Title>정말 삭제하시겠습니까?</Title>
-          <Description>
-            한 번 삭제한 글과 댓글은 다시
-            <br />
-            복구할 수 없습니다.
-          </Description>
+          <Title>{title}</Title>
+          <Description>{description}</Description>
         </Message>
 
         <Actions>
-          <ConfirmButton type="button" onClick={onConfirm} autoFocus>
-            확인
+          <ConfirmButton
+            type="button"
+            onClick={onConfirm}
+            disabled={isPending}
+            autoFocus
+          >
+            {confirmLabel}
           </ConfirmButton>
-          <CancelButton type="button" onClick={onCancel}>
-            취소
+          <CancelButton type="button" onClick={onCancel} disabled={isPending}>
+            {cancelLabel}
           </CancelButton>
         </Actions>
       </Modal>
@@ -114,6 +125,11 @@ const ConfirmButton = styled.button`
   color: ${COLORS.gray.gray0};
   ${TEXT_STYLE.title.ti};
   cursor: pointer;
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
 `;
 
 const CancelButton = styled.button`

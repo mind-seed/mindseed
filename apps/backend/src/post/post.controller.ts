@@ -93,6 +93,7 @@ export class PostController {
         : undefined,
       orderBy: query.orderBy,
       orderDirection: query.orderDirection,
+      authorId: query.onlyMine ? user.id : undefined,
     });
 
     return {
