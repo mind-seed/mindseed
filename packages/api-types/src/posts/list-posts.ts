@@ -11,11 +11,13 @@ import {
   CursorPaginatedResultSchema,
 } from "../common/pagination";
 import { PaginationErrorCode } from "../common/error-codes";
+import { booleanSerializerCodec } from "../common/codecs";
 
 export const ListPostsQueryDtoSchema = CursorPaginationQuerySchema([
   "createdAt",
 ] as const).extend({
   category: PostCategorySchema.optional(),
+  onlyMine: booleanSerializerCodec.optional(),
 });
 
 export type ListPostsQueryDto = z.output<typeof ListPostsQueryDtoSchema>;
