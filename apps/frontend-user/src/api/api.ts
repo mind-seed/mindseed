@@ -8,6 +8,7 @@ import {
   DeleteCounselResponseDtoSchema,
   GetCounselResponseDtoSchema,
   ListCounselsResponseDtoSchema,
+  ListResourcesResponseDtoSchema,
   UpdateCounselResponseDtoSchema,
   CreatePostResponseDtoSchema,
   CreatePostReportResponseDtoSchema,
@@ -567,7 +568,7 @@ export async function getContents(
   if (query.category) {
     params.set("category", query.category);
   }
-  return get(`/resources?${params}`, ListCounselsResponseDtoSchema, {
+  return get(`/resources?${params}`, ListResourcesResponseDtoSchema, {
     ...options,
     token,
   });
