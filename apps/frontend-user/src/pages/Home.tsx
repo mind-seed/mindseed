@@ -11,13 +11,11 @@ import {
   UserProfileDtoSchema,
 } from "@mindseed/api-types";
 import { callAuthenticated } from "../api/callAuthenticated";
-import { getTodayMissions } from "../api/api";
+import { getCurrentUser, getTodayMissions } from "../api/api";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 type UserProfileDto = z.infer<typeof UserProfileDtoSchema>;
-
-const USER_LEVEL: UserProfileDto["level"] = 4;
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -28,6 +26,12 @@ export const Home = () => {
         (token) => getTodayMissions(token),
         navigate,
       ),
+  });
+
+  const missionSummaryQuery = useQuery({
+    queryKey: ["missionSummary"],
+    queryFn: () =>
+      callAuthenticated((token) => getCurrentUser(token), navigate),
   });
 
   const todayMission = missionQuery.data?.assignments.find(
@@ -42,10 +46,12 @@ export const Home = () => {
     ? true
     : false;
 
+  const userLevel = missionSummaryQuery.data?.profile?.level ?? 1 ;
+
   return (
     <Page>
       <TopContent>
-        <LevelProgress level={USER_LEVEL} progress={78} />
+        <LevelProgress level={userLevel} progress={78} />
         <Banner />
       </TopContent>
 
