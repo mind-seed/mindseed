@@ -162,7 +162,7 @@ export const Contents = () => {
                 />
               </div>
             ))}
-            {contentsQuery.hasNextPage && <div ref={ref} aria-hidden="true" />}
+            <div ref={ref} aria-hidden="true" />
           </>
         ) : contentsQuery.isLoading ? null : (
           <Empty>등록된 콘텐츠가 없습니다.</Empty>
