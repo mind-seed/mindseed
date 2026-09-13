@@ -158,7 +158,7 @@ export const Contents = () => {
                   title={article.title}
                   category={article.category}
                   url={article.url}
-                  description={article.title}
+                  description={article.url}
                 />
               </div>
             ))}
