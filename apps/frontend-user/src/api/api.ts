@@ -51,6 +51,7 @@ import type {
   UpdateCurrentUserRequestDto,
   UpdatePostRequestDto,
   VerifyMailRequestDto,
+  ListResourcesQueryDto,
 } from "@mindseed/api-types";
 import type { ZodType } from "zod";
 
@@ -548,6 +549,25 @@ export async function deleteCounsel(
   options?: Options,
 ): Promise<void> {
   await del(`/counsels/${counselId}`, DeleteCounselResponseDtoSchema, {
+    ...options,
+    token,
+  });
+}
+
+export async function getContents(
+  token: string,
+  query: ListResourcesQueryDto,
+  options?: Options,
+) {
+  const params = new URLSearchParams();
+  if (query.cursor) params.set("cursor", query.cursor);
+  params.set("limit", String(query.limit));
+  params.set("orderBy", query.orderBy);
+  params.set("orderDirection", query.orderDirection);
+  if (query.category) {
+    params.set("category", query.category);
+  }
+  return get(`/resources?${params}`, ListCounselsResponseDtoSchema, {
     ...options,
     token,
   });
