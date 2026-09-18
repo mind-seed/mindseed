@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { styled } from "styled-components";
 import type { z } from "zod";
 import { PostCategorySchema } from "@mindseed/api-types";

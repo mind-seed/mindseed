@@ -16,6 +16,9 @@ import { NicknameChange } from "./pages/MyPage/NicknameChange";
 import { Counsel } from "./pages/Counsel/Counsel";
 import { CounselDetail } from "./pages/Counsel/CounselDetail";
 import { CounselWrite } from "./pages/Counsel/CounselWrite";
+import { SelfDiagnosis } from "./pages/Diagnosis/SelfDiagnosis";
+import { CharacterSelect } from "./pages/Diagnosis/CharacterSelect";
+import { SelfDiagnosisResult } from "./pages/Diagnosis/SelfDiagnosisResult";
 import { ApiError, refreshTokens } from "./api/api";
 import {
   clearTokens,
@@ -112,6 +115,14 @@ export const router = createBrowserRouter([
               { path: "write", element: <CounselWrite /> },
               { path: ":counselId", element: <CounselDetail /> },
               { path: ":counselId/edit", element: <CounselWrite isEdit /> },
+            ],
+          },
+          {
+            path: "diagnosis",
+            children: [
+              { index: true, element: <SelfDiagnosis /> },
+              { path: "character", element: <CharacterSelect /> },
+              { path: "result", element: <SelfDiagnosisResult /> },
             ],
           },
         ],

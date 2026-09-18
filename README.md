@@ -42,7 +42,11 @@ Git hook에 따라 unformatted 파일이 존재할 경우 커밋이 진행되지
 $ pnpm --workspace-root format:check
 
 # actually writes formatted files
-$ 
+$
 ```
+
 pnpm --workspace-root format:write
+
+```
+
 ```

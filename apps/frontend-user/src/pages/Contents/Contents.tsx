@@ -40,7 +40,7 @@ export const Contents = () => {
     : "ALL";
 
   const { ref, isInView } = useInView();
-  
+
   const contentsQuery = useInfiniteQuery({
     queryKey: ["contents", { category: activeCategory }],
     queryFn: ({ signal, pageParam }) =>

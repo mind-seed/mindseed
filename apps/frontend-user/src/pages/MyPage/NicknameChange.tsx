@@ -27,7 +27,8 @@ export const NicknameChange = () => {
   const updateMutation = useMutation({
     mutationFn: (trimmedNickname: string) =>
       callAuthenticated(
-        (token) => updateCurrentUserProfile(token, { nickname: trimmedNickname }),
+        (token) =>
+          updateCurrentUserProfile(token, { nickname: trimmedNickname }),
         navigate,
       ),
     onSuccess: () => {
@@ -55,7 +56,10 @@ export const NicknameChange = () => {
             name="nickname"
             value={nickname}
             status={apiError ? "error" : "normal"}
-            description={apiError ?? "2~8자,한글·영문(대소문자)·숫자·공백을 사용할 수 있습니다."}
+            description={
+              apiError ??
+              "2~8자,한글·영문(대소문자)·숫자·공백을 사용할 수 있습니다."
+            }
             placeholder="내용을 입력해주세요."
             onChange={(event) => {
               setNickname(event.target.value);
