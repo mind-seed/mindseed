@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
+import { DiagnosisNotFoundError } from "./diagnosis.errors";
 import { DiagnosisEntry } from "./entities/diagnosis-entry.entity";
 
 export type CreateDiagnosisEntryOptions = {
@@ -28,6 +29,23 @@ export class DiagnosisService {
         stressScore: options.stressScore,
       }),
     );
+    return diagnosisEntry;
+  }
+
+  /**
+   * 사용자가 가장 최근에 자가진단한 결과를 조회한다.
+   * @param userId 조회할 사용자 id
+   * @returns 가장 최근 자가진단 결과
+   * @throws DiagnosisNotFoundError - 자가진단 기록이 존재하지 않는 경우
+   */
+  async getLatestDiagnosisEntry(userId: number): Promise<DiagnosisEntry> {
+    const diagnosisEntry = await this.diagnosisEntryRepository.findOne({
+      where: { userId },
+      order: { createdAt: "DESC", id: "DESC" },
+    });
+    if (!diagnosisEntry) {
+      throw new DiagnosisNotFoundError();
+    }
     return diagnosisEntry;
   }
 }
