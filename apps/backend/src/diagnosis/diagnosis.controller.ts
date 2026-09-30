@@ -1,12 +1,14 @@
 import type {
   CreateDiagnosisRequestDto,
   CreateDiagnosisSuccessResponseDto,
+  GetDiagnosisSuccessResponseDto,
 } from "@mindseed/api-types";
 import {
   CreateDiagnosisRequestDtoSchema,
   CreateDiagnosisResponseDtoSchema,
+  GetDiagnosisResponseDtoSchema,
 } from "@mindseed/api-types";
-import { Controller, HttpCode, HttpStatus, Post } from "@nestjs/common";
+import { Controller, Get, HttpCode, HttpStatus, Post } from "@nestjs/common";
 import { CurrentUser, UserOnly } from "src/auth/decorators/auth.decorators";
 import { ZodEncodeResponse } from "src/common/interceptors/zod-encode-response.decorator";
 import { ZodBody } from "src/common/pipes/zod-validation.decorator";
@@ -34,5 +36,24 @@ export class DiagnosisController {
     });
 
     return { success: true, data: null };
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @UserOnly()
+  @ZodEncodeResponse(GetDiagnosisResponseDtoSchema)
+  async getDiagnosis(
+    @CurrentUser() user: User,
+  ): Promise<GetDiagnosisSuccessResponseDto> {
+    const entry = await this.diagnosisService.getLatestDiagnosisEntry(user.id);
+
+    return {
+      success: true,
+      data: {
+        depressionScore: entry.depressionScore,
+        anxietyScore: entry.anxietyScore,
+        stressScore: entry.stressScore,
+      },
+    };
   }
 }

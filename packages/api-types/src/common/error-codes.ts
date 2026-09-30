@@ -54,3 +54,7 @@ export const CounselErrorCode = {
   NOT_COUNSEL_AUTHOR: "NOT_COUNSEL_AUTHOR",
   COUNSEL_ALREADY_RESPONDED: "COUNSEL_ALREADY_RESPONDED",
 } as const;
+
+export const DiagnosisErrorCode = {
+  DIAGNOSIS_NOT_FOUND: "DIAGNOSIS_NOT_FOUND",
+} as const;
