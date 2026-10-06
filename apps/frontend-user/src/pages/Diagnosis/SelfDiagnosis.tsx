@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { CreateDiagnosisRequestDto } from "@mindseed/api-types";
 import styled from "styled-components";
+import { createDiagnosis } from "../../api/api";
+import { callAuthenticated } from "../../api/callAuthenticated";
 import { Button } from "../../components/Button";
 import { DiagnosisProgress } from "../../components/Diagnoses/DiagnosisProgress";
 import { TopBar } from "../../components/TopBar";
@@ -15,27 +19,73 @@ import { TEXT_STYLE } from "../../style/typography";
 
 export type Answers = Partial<Record<DiagnosisCategory, (number | null)[]>>;
 
-export type CategoryResult = {
-  score: number;
-  maxScore: number;
+const CURRENT_INDEX_KEY = "diagnosis_current_index";
+const ANSWERS_KEY = "diagnosis_answers";
+
+const createDefaultAnswers = (): Answers =>
+  Object.fromEntries(
+    DIAGNOSIS_CATEGORIES.map((category) => {
+      const { totalQuestions } = getQuestionsByCategory(category);
+      return [category, Array<number | null>(totalQuestions).fill(null)];
+    }),
+  ) as Answers;
+
+const getStoredAnswers = (): Answers => {
+  const defaultAnswers = createDefaultAnswers();
+  const storedAnswers = sessionStorage.getItem(ANSWERS_KEY);
+  if (!storedAnswers) return defaultAnswers;
+
+  try {
+    const parsedAnswers: unknown = JSON.parse(storedAnswers);
+    if (!parsedAnswers || typeof parsedAnswers !== "object") {
+      return defaultAnswers;
+    }
+
+    return Object.fromEntries(
+      DIAGNOSIS_CATEGORIES.map((category) => {
+        const { options, totalQuestions } = getQuestionsByCategory(category);
+        const categoryAnswers = (parsedAnswers as Partial<Answers>)[category];
+        const answers = Array.isArray(categoryAnswers) ? categoryAnswers : [];
+
+        return [
+          category,
+          Array.from({ length: totalQuestions }, (_, index) => {
+            const score = answers[index];
+            return typeof score === "number" &&
+              options.some((option) => option.score === score)
+              ? score
+              : defaultAnswers[category]?.[index];
+          }),
+        ];
+      }),
+    ) as Answers;
+  } catch {
+    return defaultAnswers;
+  }
 };
 
-export type DiagnosisState = Record<DiagnosisCategory, CategoryResult>;
+const getStoredCurrentIndex = () => {
+  const currentIndex = Number(sessionStorage.getItem(CURRENT_INDEX_KEY));
+  return Number.isInteger(currentIndex) &&
+    currentIndex >= 0 &&
+    currentIndex < STEPS.length
+    ? currentIndex
+    : 0;
+};
 
-const getCategoryTotals = (answers: Answers): DiagnosisState => {
+const getCategoryTotals = (
+  answers: Answers,
+): Record<DiagnosisCategory, number> => {
   return Object.fromEntries(
     DIAGNOSIS_CATEGORIES.map((category) => {
-      const { questions, options } = getQuestionsByCategory(category);
-      const maxScore =
-        questions.length * Math.max(...options.map((option) => option.score));
       const score = (answers[category] ?? []).reduce<number>(
         (sum, score) => sum + (score ?? 0),
         0,
       );
 
-      return [category, { score, maxScore }];
+      return [category, score];
     }),
-  ) as DiagnosisState;
+  ) as Record<DiagnosisCategory, number>;
 };
 
 const STEPS = DIAGNOSIS_CATEGORIES.flatMap((category) => {
@@ -45,31 +95,62 @@ const STEPS = DIAGNOSIS_CATEGORIES.flatMap((category) => {
 
 export const SelfDiagnosis = () => {
   const navigate = useNavigate();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<Answers>(() =>
-    Object.fromEntries(
-      DIAGNOSIS_CATEGORIES.map((category) => [
-        category,
-        Array<number | null>(
-          getQuestionsByCategory(category).totalQuestions,
-        ).fill(null),
-      ]),
-    ),
-  );
+  const queryClient = useQueryClient();
+  const diagnosisMutation = useMutation({
+    mutationFn: (input: CreateDiagnosisRequestDto) =>
+      callAuthenticated((token) => createDiagnosis(token, input), navigate),
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ["diagnosis"] });
+      sessionStorage.removeItem(CURRENT_INDEX_KEY);
+      sessionStorage.removeItem(ANSWERS_KEY);
+      navigate("/diagnosis/result");
+    },
+  });
+  const [currentIndex, setCurrentIndex] = useState(getStoredCurrentIndex);
+  const [answers, setAnswers] = useState<Answers>(getStoredAnswers);
   const step = STEPS[currentIndex];
 
-  if (!step) {
+  useEffect(() => {
+    sessionStorage.setItem(CURRENT_INDEX_KEY, String(currentIndex));
+  }, [currentIndex]);
+
+  useEffect(() => {
+    sessionStorage.setItem(ANSWERS_KEY, JSON.stringify(answers));
+  }, [answers]);
+
+  if (
+    !step ||
+    !step.question.question.trim() ||
+    step.options.length === 0
+  ) {
     return (
       <Page>
-        <p>등록된 자가진단 질문이 없습니다.</p>
+        <TopBar onBackClick={() => navigate("/diagnosis/character")} />
+        <ErrorContent role="alert">
+          <QuestionTitle>자가진단 문제를 불러오지 못했어요.</QuestionTitle>
+          <p>잠시 후 다시 시도해주세요.</p>
+        </ErrorContent>
+        <Actions>
+          <Button
+            variant="primary"
+            size="medium"
+            label="다시 시도"
+            onClick={() => window.location.reload()}
+          />
+        </Actions>
       </Page>
     );
   }
 
   const { category, question, options, type } = step;
-  const selectedAnswer = answers[category]?.[Number(question.id)] ?? undefined;
+  const selectedAnswer =
+    answers[category]?.[Number(question.id)] ??
+    (type === "slider"
+      ? options[Math.floor(options.length / 2)].score
+      : undefined);
 
   const selectAnswer = (score: number) => {
+    if (diagnosisMutation.isPending) return;
     setAnswers((current) => {
       const categoryAnswers = [...(current[category] ?? [])];
       categoryAnswers[Number(question.id)] = score;
@@ -77,9 +158,10 @@ export const SelfDiagnosis = () => {
     });
   };
 
-  const handleComplete = () => {
+  const handleComplete = (completedAnswers: Answers) => {
+    if (diagnosisMutation.isPending) return;
     const invalidIndex = STEPS.findIndex((item) => {
-      const score = answers[item.category]?.[Number(item.question.id)];
+      const score = completedAnswers[item.category]?.[Number(item.question.id)];
       return !item.options.some((option) => option.score === score);
     });
     if (invalidIndex !== -1) {
@@ -87,15 +169,34 @@ export const SelfDiagnosis = () => {
       return;
     }
 
-    const categoryTotals = getCategoryTotals(answers);
-    navigate("/diagnosis/result", { state: categoryTotals });
+    const categoryTotals = getCategoryTotals(completedAnswers);
+    diagnosisMutation.mutate({
+      depressionScore: categoryTotals.depression,
+      anxietyScore: categoryTotals.anxiety,
+      stressScore: categoryTotals.stress,
+    });
+  };
+
+  const goBack = () => {
+    if (diagnosisMutation.isPending) return;
+    if (currentIndex === 0) {
+      navigate("/diagnosis/character");
+      return;
+    }
+
+    setCurrentIndex((index) => Math.max(index - 1, 0));
   };
 
   const goNext = () => {
-    if (selectedAnswer === undefined) return;
+    if (selectedAnswer === undefined || diagnosisMutation.isPending) return;
+
+    const categoryAnswers = [...(answers[category] ?? [])];
+    categoryAnswers[Number(question.id)] = selectedAnswer;
+    const nextAnswers = { ...answers, [category]: categoryAnswers };
+    setAnswers(nextAnswers);
 
     if (currentIndex === STEPS.length - 1) {
-      handleComplete();
+      handleComplete(nextAnswers);
       return;
     }
 
@@ -105,9 +206,7 @@ export const SelfDiagnosis = () => {
   return (
     <Page>
       <TopContent>
-        <TopBar
-          onBackClick={() => setCurrentIndex((index) => Math.max(index - 1, 0))}
-        />
+        <TopBar onBackClick={goBack} />
         <DiagnosisProgress current={currentIndex + 1} total={STEPS.length} />
       </TopContent>
       <Content
@@ -118,12 +217,23 @@ export const SelfDiagnosis = () => {
         onSelect={selectAnswer}
       />
       <Actions>
+        {diagnosisMutation.isError && (
+          <ErrorMessage role="alert">
+            자가진단 결과를 저장하지 못했습니다. 다시 시도해주세요.
+          </ErrorMessage>
+        )}
         <Button
           variant="primary"
           size="medium"
-          label={currentIndex === STEPS.length - 1 ? "끝내기" : "다음"}
+          label={
+            diagnosisMutation.isPending
+              ? "저장 중..."
+              : currentIndex === STEPS.length - 1
+                ? "끝내기"
+                : "다음"
+          }
           showIcon
-          disabled={selectedAnswer === undefined}
+          disabled={selectedAnswer === undefined || diagnosisMutation.isPending}
           onClick={goNext}
         />
       </Actions>
@@ -150,7 +260,9 @@ const Content = ({
 
   return (
     <QuestionContent $gap={contentGap}>
-      <QuestionTitle>{question.question}</QuestionTitle>
+      <QuestionTitle aria-live="polite" aria-atomic="true">
+        {question.question}
+      </QuestionTitle>
       {type === "choice" ? (
         <ChoiceContent
           options={options}
@@ -257,6 +369,17 @@ const QuestionTitle = styled.h1`
   ${TEXT_STYLE.title.sm};
 `;
 
+const ErrorContent = styled.section`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+  text-align: center;
+  color: ${COLORS.gray.gray600};
+  ${TEXT_STYLE.body.sm};
+`;
+
 const OptionList = styled.div`
   display: flex;
   flex-direction: column;
@@ -326,6 +449,12 @@ const ScaleLabel = styled.span<{ $isSelected: boolean }>`
   text-align: center;
   white-space: nowrap;
   ${TEXT_STYLE.body.sm};
+`;
+
+const ErrorMessage = styled.span`
+  color: ${COLORS.state.error};
+  ${TEXT_STYLE.body.ti};
+  text-align: center;
 `;
 
 const Actions = styled.div`

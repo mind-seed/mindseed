@@ -53,7 +53,7 @@ const Page = styled.div`
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 1.625rem 1.25rem 0.75rem;
+  padding: 1.75rem 1.25rem 0.75rem;
 `;
 
 const WelcomeHeader = styled.div`
@@ -81,7 +81,7 @@ const IntroSection = styled.section`
   justify-content: center;
   align-items: center;
   gap: 0.375rem;
-  padding-top: 3.875rem;
+  margin-top: 3.875rem;
 `;
 
 const IllustrationArea = styled.div`

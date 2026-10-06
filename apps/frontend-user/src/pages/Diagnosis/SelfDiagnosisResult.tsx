@@ -1,43 +1,45 @@
-import { Navigate, useLocation, useNavigate } from "react-router";
+import { Navigate, useNavigate } from "react-router";
 import { useQuery } from "@tanstack/react-query";
+import {
+  DiagnosisErrorCode,
+  type GetDiagnosisSuccessResponseDto,
+} from "@mindseed/api-types";
 import styled from "styled-components";
-import { getCurrentUser } from "../../api/api";
+import { ApiError, getCurrentUser, getDiagnosis } from "../../api/api";
 import { callAuthenticated } from "../../api/callAuthenticated";
-import { getCharcterImages } from "../../constants/character";
+import { CHARACTERS } from "../../constants/character";
 import { Button } from "../../components/Button";
 import {
   DIAGNOSIS_CATEGORIES,
   DIAGNOSIS_CATEGORY_LABELS,
+  getQuestionsByCategory,
 } from "../../constants/diagnosisQuestion";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import type { DiagnosisState } from "./SelfDiagnosis";
 
-const isDiagnosisState = (value: unknown): value is DiagnosisState => {
-  if (!value || typeof value !== "object") return false;
+const STABLE_RATIO_THRESHOLD = 0.5;
 
-  return (
-    "depression" in value &&
-    typeof (value as { depression?: { score?: unknown } }).depression?.score ===
-      "number"
-  );
-};
-
-const calculateResults = (totals: DiagnosisState) =>
+const calculateResults = (diagnosis: GetDiagnosisSuccessResponseDto["data"]) =>
   DIAGNOSIS_CATEGORIES.map((category) => {
-    const { score, maxScore } = totals[category];
+    const score = diagnosis[`${category}Score`];
+    const { maxScore } = getQuestionsByCategory(category);
+    const ratio = maxScore > 0 ? Math.min(1, Math.max(0, score / maxScore)) : 0;
 
     return {
       category,
       label: DIAGNOSIS_CATEGORY_LABELS[category],
-      ratio: score / maxScore,
-      percentage: maxScore === 0 ? 0 : Math.round((score / maxScore) * 100),
+      ratio,
+      percentage: Math.round(ratio * 100),
     };
   });
 
 export const SelfDiagnosisResult = () => {
   const navigate = useNavigate();
-  const { state } = useLocation();
+  const diagnosisQuery = useQuery({
+    queryKey: ["diagnosis"],
+    queryFn: ({ signal }) =>
+      callAuthenticated((token) => getDiagnosis(token, { signal }), navigate),
+  });
   const userQuery = useQuery({
     queryKey: ["currentUser"],
     queryFn: ({ signal }) =>
@@ -45,11 +47,48 @@ export const SelfDiagnosisResult = () => {
   });
   const user = userQuery.data;
 
-  if (!isDiagnosisState(state)) return <Navigate to="/diagnosis" replace />;
-  const results = calculateResults(state);
-  const primaryResult = results.reduce((highest, result) =>
-    result.ratio > highest.ratio ? result : highest,
-  );
+  if (diagnosisQuery.isPending) {
+    return (
+      <Page>
+        <StatusContent role="status">
+          <Title>자가진단 결과를 불러오는 중이에요.</Title>
+          <Description>잠시만 기다려주세요.</Description>
+        </StatusContent>
+      </Page>
+    );
+  }
+  if (
+    diagnosisQuery.error instanceof ApiError &&
+    diagnosisQuery.error.errorCode === DiagnosisErrorCode.DIAGNOSIS_NOT_FOUND
+  ) {
+    return <Navigate to="/diagnosis" replace />;
+  }
+  if (diagnosisQuery.isError) {
+    return (
+      <Page>
+        <StatusContent role="alert">
+          <Title>자가진단 결과를 불러오지 못했어요.</Title>
+          <Description>잠시 후 다시 시도해주세요.</Description>
+        </StatusContent>
+        <Button
+          variant="primary"
+          size="medium"
+          label="다시 시도"
+          disabled={diagnosisQuery.isFetching}
+          onClick={() => void diagnosisQuery.refetch()}
+        />
+      </Page>
+    );
+  }
+  const results = calculateResults(diagnosisQuery.data);
+  const maxRatio = Math.max(...results.map((result) => result.ratio));
+  const primaryLabels = results
+    .filter((result) => result.ratio === maxRatio)
+    .map((result) => result.label)
+    .join(", ");
+  const character = userQuery.isError
+    ? CHARACTERS[0]
+    : (CHARACTERS[user?.profile?.characterIndex ?? 0] ?? CHARACTERS[0]);
 
   return (
     <Page>
@@ -57,8 +96,14 @@ export const SelfDiagnosisResult = () => {
         <Title>
           자가진단 결과,
           <br />
-          사용자님의 결과는{" "}
-          <TitleHighlight>{primaryResult.label}</TitleHighlight> 입니다.
+          {maxRatio <= STABLE_RATIO_THRESHOLD ? (
+            "사용자님의 마음은 안정적이에요."
+          ) : (
+            <>
+              사용자님의 결과는 <TitleHighlight>{primaryLabels}</TitleHighlight>{" "}
+              입니다.
+            </>
+          )}
         </Title>
         <Description>완료 버튼을 누르고, 함께 여정을 시작해보세요.</Description>
       </Header>
@@ -83,10 +128,13 @@ export const SelfDiagnosisResult = () => {
         ))}
       </ResultList>
 
-      <CharacterImage
-        src={getCharcterImages(user?.profile?.characterIndex ?? 3).counsel}
-        alt=""
-      />
+      <CharacterArea>
+        {userQuery.isPending ? (
+          <Description role="status">캐릭터를 불러오는 중...</Description>
+        ) : (
+          <CharacterImage src={character.images.counsel} alt="" />
+        )}
+      </CharacterArea>
 
       <Actions>
         <Button
@@ -129,6 +177,15 @@ const TitleHighlight = styled.span`
 const Description = styled.p`
   color: ${COLORS.gray.gray600};
   ${TEXT_STYLE.body.sm};
+`;
+
+const StatusContent = styled.section`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+  text-align: center;
 `;
 
 const ResultList = styled.div`
@@ -193,10 +250,20 @@ const ProgressBar = styled.div<{ $percentage: number }>`
   background: linear-gradient(to right, #abd138 0%, #54b54d 100%);
 `;
 
+const CharacterArea = styled.div`
+  min-height: 12.9375rem;
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+`;
+
 const CharacterImage = styled.img`
   width: auto;
   height: 12.9375rem;
-  margin: auto auto 0;
   object-fit: contain;
 `;
 

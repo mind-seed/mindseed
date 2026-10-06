@@ -23,41 +23,41 @@ export const OPTIONS: Record<OptionCategory, Option[]> = {
   choice: [
     {
       label: "전혀 없음",
-      score: 1,
+      score: 0,
     },
     {
       label: "거의 없음",
-      score: 2,
+      score: 1,
     },
     {
       label: "많음",
-      score: 3,
+      score: 2,
     },
     {
       label: "매우 많음",
-      score: 4,
+      score: 3,
     },
   ],
   slider: [
     {
       label: "전혀 없음",
-      score: 1,
+      score: 0,
     },
     {
       label: "거의 없음",
-      score: 2,
+      score: 1,
     },
     {
       label: "보통",
-      score: 3,
+      score: 2,
     },
     {
       label: "많음",
-      score: 4,
+      score: 3,
     },
     {
       label: "매우 많음",
-      score: 5,
+      score: 4,
     },
   ],
 } as const;
@@ -172,6 +172,9 @@ export const getQuestionsByCategory = (category: DiagnosisCategory) => {
   return {
     ...diagnosis,
     totalQuestions: diagnosis.questions.length,
+    maxScore:
+      diagnosis.questions.length *
+      Math.max(...diagnosis.options.map((option) => option.score)),
     type: category === "stress" ? "slider" : "choice",
   };
 };

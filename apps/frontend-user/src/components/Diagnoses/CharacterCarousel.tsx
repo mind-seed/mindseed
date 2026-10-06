@@ -6,6 +6,7 @@ import { CHARACTERS } from "../../constants/character";
 
 export type CharacterCarouselProps = {
   onSelect: (characterId: number) => void;
+  initialCharacterId?: number;
 };
 
 const CARD_SIZE = 13.4375;
@@ -14,10 +15,23 @@ const VISIBLE_GAP = 1;
 const COMPUTED_GAP = VISIBLE_GAP + 2.66;
 const CHARACTER_LIST = Object.values(CHARACTERS);
 
-export const CharacterCarousel = ({ onSelect }: CharacterCarouselProps) => {
+export const CharacterCarousel = ({
+  onSelect,
+  initialCharacterId,
+}: CharacterCarouselProps) => {
   const carouselRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(() => {
+    const index = CHARACTER_LIST.findIndex(
+      (character) => character.id === initialCharacterId,
+    );
+    return index === -1 ? 0 : index;
+  });
+
+  useEffect(() => {
+    const item = itemRefs.current[activeIndex];
+    item?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [activeIndex]);
 
   useEffect(() => {
     onSelect(CHARACTER_LIST[activeIndex].id);

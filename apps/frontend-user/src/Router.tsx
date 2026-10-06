@@ -19,6 +19,7 @@ import { CounselWrite } from "./pages/Counsel/CounselWrite";
 import { SelfDiagnosis } from "./pages/Diagnosis/SelfDiagnosis";
 import { CharacterSelect } from "./pages/Diagnosis/CharacterSelect";
 import { SelfDiagnosisResult } from "./pages/Diagnosis/SelfDiagnosisResult";
+import { CharacterPage } from "./pages/CharacterPage";
 import { ApiError, refreshTokens } from "./api/api";
 import {
   clearTokens,
@@ -83,6 +84,7 @@ export const router = createBrowserRouter([
         loader: appLoader,
         children: [
           { path: "/", element: <Home /> },
+          { path: "/character", element: <CharacterPage /> },
           {
             path: "/mission",
             element: <Mission />,
