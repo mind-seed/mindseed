@@ -11,7 +11,13 @@ export const DiagnosisProgress = ({
   current,
   total,
 }: DiagnosisProgressProps) => (
-  <Container role="progressbar" aria-label="자가진단 진행률">
+  <Container
+    role="progressbar"
+    aria-label="자가진단 진행률"
+    aria-valuemin={0}
+    aria-valuemax={total}
+    aria-valuenow={current}
+  >
     <Count>
       <CurrentCount>{current}</CurrentCount>/{total}
     </Count>

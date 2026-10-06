@@ -13,6 +13,7 @@ export const Category = styled.button.attrs<CategoryProps>((props) => ({
   type: "button",
   children: props.$label,
   onClick: props.onClick,
+  "aria-pressed": props.$variant !== "inactive",
 }))<CategoryProps>`
   flex-shrink: 0;
   display: flex;

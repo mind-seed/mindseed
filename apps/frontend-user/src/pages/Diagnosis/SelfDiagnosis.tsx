@@ -260,9 +260,7 @@ const Content = ({
 
   return (
     <QuestionContent $gap={contentGap}>
-      <QuestionTitle aria-live="polite" aria-atomic="true">
-        {question.question}
-      </QuestionTitle>
+      <QuestionTitle>{question.question}</QuestionTitle>
       {type === "choice" ? (
         <ChoiceContent
           options={options}
@@ -287,7 +285,7 @@ type ChoiceProps = Pick<
 >;
 
 const ChoiceContent = ({ options, selectedAnswer, onSelect }: ChoiceProps) => (
-  <OptionList>
+  <OptionList role="group" aria-label="응답 선택">
     {options.map((option) => (
       <Option
         key={option.score}

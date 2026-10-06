@@ -26,13 +26,14 @@ export const SearchBar = ({
   return (
     <SearchBox>
       <Input
+        aria-label="검색어"
         name={name}
         value={value}
         placeholder={placeholder}
         onChange={onChange}
         onKeyDown={handleEnter}
       />
-      <SearchButton type="button" onClick={() => onSearch?.(value)}>
+      <SearchButton type="button" aria-label="검색" onClick={() => onSearch?.(value)}>
         <SearchIcon color={COLORS.text.black} />
       </SearchButton>
     </SearchBox>
