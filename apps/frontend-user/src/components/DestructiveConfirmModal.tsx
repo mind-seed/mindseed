@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import styled from "styled-components";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
@@ -25,11 +25,52 @@ export const DestructiveConfirmModal = ({
   onConfirm,
   onCancel,
 }: DestructiveConfirmModalProps) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    previousFocusRef.current = document.activeElement as HTMLElement;
+    const timer = window.setTimeout(() => {
+      const firstButton = modalRef.current?.querySelector<HTMLElement>(
+        "button:not(:disabled)",
+      );
+      (firstButton ?? modalRef.current)?.focus();
+    });
+
+    return () => {
+      window.clearTimeout(timer);
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !isPending) onCancel();
+
+      if (event.key !== "Tab") return;
+
+      const focusableElements = modalRef.current?.querySelectorAll<HTMLElement>(
+        "button:not(:disabled)",
+      );
+      if (!focusableElements || focusableElements.length === 0) {
+        event.preventDefault();
+        modalRef.current?.focus();
+        return;
+      }
+
+      const first = focusableElements[0];
+      const last = focusableElements[focusableElements.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
@@ -41,15 +82,19 @@ export const DestructiveConfirmModal = ({
   return (
     <Overlay onClick={isPending ? undefined : onCancel}>
       <Modal
+        ref={modalRef}
         role="alertdialog"
         aria-modal="true"
+        aria-labelledby="destructive-modal-title"
+        aria-describedby="destructive-modal-description"
+        tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
         <WarningIcon width={48} height={48} color={COLORS.state.error} />
 
         <Message>
-          <Title>{title}</Title>
-          <Description>{description}</Description>
+          <Title id="destructive-modal-title">{title}</Title>
+          <Description id="destructive-modal-description">{description}</Description>
         </Message>
 
         <Actions>
@@ -57,7 +102,6 @@ export const DestructiveConfirmModal = ({
             type="button"
             onClick={onConfirm}
             disabled={isPending}
-            autoFocus
           >
             {confirmLabel}
           </ConfirmButton>

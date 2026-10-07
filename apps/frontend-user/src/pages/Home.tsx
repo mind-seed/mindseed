@@ -22,10 +22,7 @@ export const Home = () => {
   const missionQuery = useQuery({
     queryKey: ["missions"],
     queryFn: () =>
-      callAuthenticated(
-        (token) => getTodayMissions(token),
-        navigate,
-      ),
+      callAuthenticated((token) => getTodayMissions(token), navigate),
   });
 
   const missionSummaryQuery = useQuery({
@@ -35,18 +32,16 @@ export const Home = () => {
   });
 
   const todayMission = missionQuery.data?.assignments.find(
-    (item) => item.status === "uncompleted"
+    (item) => item.status === "uncompleted",
   );
 
   const todayMissionTitle = todayMission?.mission.title ?? "";
   const todayMissionPoints = todayMission
     ? `+${todayMission.mission.points}point`
     : "";
-  const todayMissionExists = todayMission
-    ? true
-    : false;
+  const todayMissionExists = todayMission ? true : false;
 
-  const userLevel = missionSummaryQuery.data?.profile?.level ?? 1 ;
+  const userLevel = missionSummaryQuery.data?.profile?.level ?? 1;
 
   return (
     <Page>
@@ -60,13 +55,12 @@ export const Home = () => {
           <MissionHeading>오늘의 미션 수행하기</MissionHeading>
           <ChevronRightIcon color={COLORS.gray.gray400} />
         </MissionHeaderButton>
-        {
-        todayMissionExists && 
-        <TodayMission>
-          <MissionTitle>{todayMissionTitle}</MissionTitle>
-          <Reward>+{todayMissionPoints}</Reward>
-        </TodayMission>
-        }
+        {todayMissionExists && (
+          <TodayMission>
+            <MissionTitle>{todayMissionTitle}</MissionTitle>
+            <Reward>+{todayMissionPoints}</Reward>
+          </TodayMission>
+        )}
       </MissionArea>
     </Page>
   );

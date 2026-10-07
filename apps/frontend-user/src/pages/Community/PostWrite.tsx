@@ -260,7 +260,9 @@ const PostWriteContent = ({
             <PictureContainer aria-label="첨부 이미지">
               <PictureList pictures={pictures} />
               {hasUploadFailed && (
-                <UploadError>일부 이미지 업로드에 실패했습니다.</UploadError>
+                <UploadError role="alert">
+                  일부 이미지 업로드에 실패했습니다.
+                </UploadError>
               )}
             </PictureContainer>
           )}

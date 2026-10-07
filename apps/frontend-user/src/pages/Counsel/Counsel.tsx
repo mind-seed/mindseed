@@ -83,7 +83,9 @@ export const Counsel = () => {
                   onClick={() => void counselsQuery.fetchNextPage()}
                   disabled={counselsQuery.isFetchingNextPage}
                 >
-                  {counselsQuery.isFetchingNextPage ? "불러오는 중..." : "더 보기"}
+                  {counselsQuery.isFetchingNextPage
+                    ? "불러오는 중..."
+                    : "더 보기"}
                 </LoadMoreButton>
               )}
             </PostList>

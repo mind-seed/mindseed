@@ -84,11 +84,7 @@ export const Comment = (props: CommentProps) => {
             onClick={props.onMoreClick}
             aria-label="댓글 더보기"
           >
-            <MoreIcon
-              width="16"
-              height="16"
-              color={COLORS.gray.gray500}
-            />
+            <MoreIcon width="16" height="16" color={COLORS.gray.gray500} />
           </MoreButton>
         )}
 

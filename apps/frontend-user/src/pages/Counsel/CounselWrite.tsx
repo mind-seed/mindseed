@@ -152,7 +152,9 @@ const CounselWriteContent = ({
             onChange={(event) => setContent(event.target.value)}
           />
           {isError && (
-            <ErrorMessage>오류가 발생했습니다. 잠시 후 다시 시도해주세요.</ErrorMessage>
+            <ErrorMessage role="alert">
+              오류가 발생했습니다. 잠시 후 다시 시도해주세요.
+            </ErrorMessage>
           )}
         </InputWrapper>
       </Editor>
@@ -160,7 +162,7 @@ const CounselWriteContent = ({
   );
 };
 
-const Page = styled.main`
+const Page = styled.div`
   width: 100%;
   height: 100dvh;
   overflow-y: auto;

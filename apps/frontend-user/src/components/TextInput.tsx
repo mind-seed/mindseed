@@ -30,6 +30,7 @@ export const TextInput = ({
   onChange,
 }: InputProps) => {
   const [isVisible, setIsVisible] = useState(type !== "password");
+  const descriptionId = description?.trim() ? `${name}-description` : undefined;
   return (
     <InputContainer>
       <InputWrapper $status={status} $disabled={disabled}>
@@ -40,6 +41,8 @@ export const TextInput = ({
           value={value}
           placeholder={placeholder}
           disabled={disabled}
+          aria-invalid={status === "error" || undefined}
+          aria-describedby={descriptionId}
           onChange={onChange}
         />
         {adornmentType === "icon" && type === "password" && (
@@ -57,7 +60,9 @@ export const TextInput = ({
         )}
       </InputWrapper>
       {description?.trim() && (
-        <InputMessage $status={status}>{description}</InputMessage>
+        <InputMessage id={descriptionId} $status={status} role={status === "error" ? "alert" : undefined}>
+          {description}
+        </InputMessage>
       )}
     </InputContainer>
   );

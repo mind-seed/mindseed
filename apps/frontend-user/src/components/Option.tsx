@@ -12,6 +12,7 @@ export const Option = styled.button.attrs<OptionProps>((props) => ({
   type: "button",
   children: props.$label,
   onClick: props.onClick,
+  "aria-pressed": props.$isSelected,
 }))<OptionProps>`
   width: 100%;
   display: flex;

@@ -51,9 +51,13 @@ export const Post = ({
       onClick={selectionMode ? onSelectionClick : onClick}
       role={variant === "list" ? "button" : undefined}
       tabIndex={variant === "list" ? 0 : undefined}
-      onKeyDown={(e) => {
-        if (variant === "list" && (e.key === "Enter" || e.key === " ")) {
-          e.preventDefault();
+      onKeyDown={(event) => {
+        if (
+          event.target === event.currentTarget &&
+          variant === "list" &&
+          (event.key === "Enter" || event.key === " ")
+        ) {
+          event.preventDefault();
           if (selectionMode) onSelectionClick?.();
           else onClick();
         }
@@ -99,7 +103,7 @@ export const Post = ({
   );
 };
 
-const PostContainer = styled.article<{
+const PostContainer = styled.div<{
   $variant: PostVariant;
   $selectionMode: boolean;
 }>`

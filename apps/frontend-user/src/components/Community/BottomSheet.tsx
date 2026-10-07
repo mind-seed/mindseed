@@ -57,12 +57,31 @@ export const BottomSheet = <T extends string>(props: BottomSheetProps<T>) => {
 
     previousFocusRef.current = document.activeElement as HTMLElement;
 
-    const timer = setTimeout(() => {
-      sheetRef.current?.focus();
-    }, 10);
+    const timer = window.setTimeout(() => {
+      sheetRef.current
+        ?.querySelector<HTMLElement>("button:not(:disabled)")
+        ?.focus();
+    });
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
+
+      if (event.key !== "Tab") return;
+
+      const focusableElements = sheetRef.current?.querySelectorAll<HTMLElement>(
+        "button:not(:disabled)",
+      );
+      if (!focusableElements || focusableElements.length === 0) return;
+
+      const first = focusableElements[0];
+      const last = focusableElements[focusableElements.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -81,12 +100,15 @@ export const BottomSheet = <T extends string>(props: BottomSheetProps<T>) => {
   return (
     <Overlay onClick={props.onClose}>
       <Sheet
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="bottom-sheet-title"
+        tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
         <Content>
-          <Title>{title}</Title>
+          <Title id="bottom-sheet-title">{title}</Title>
           <ActionList>
             {props.variant === "manage" && (
               <>

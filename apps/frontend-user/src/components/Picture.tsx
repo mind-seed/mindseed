@@ -21,19 +21,30 @@ export const Picture = ({ pictures }: PictureProps) => {
 
   const safeIndex = Math.min(currentIndex, pictures.length - 1);
 
-  const handlePrev = () => {
+  const handlePrev = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     setCurrentIndex(safeIndex === 0 ? pictures.length - 1 : safeIndex - 1);
   };
 
-  const handleNext = () => {
+  const handleNext = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     setCurrentIndex(safeIndex === pictures.length - 1 ? 0 : safeIndex + 1);
   };
 
-  const handleClick = (index: number) => {
+  const handleClick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    event.stopPropagation();
     setCurrentIndex(index);
   };
   return (
-    <PictureWrapper $currentUrl={pictures[safeIndex].url}>
+    <PictureWrapper>
+      <MainImage
+        src={pictures[safeIndex].url}
+        alt={`첨부 이미지 ${safeIndex + 1} / ${pictures.length}`}
+        draggable={false}
+      />
       <Pagination>
         <ArrowButton
           type="button"
@@ -48,7 +59,9 @@ export const Picture = ({ pictures }: PictureProps) => {
               type="button"
               key={picture.id}
               $isActive={safeIndex === index}
-              onClick={() => handleClick(index)}
+              aria-label={`${index + 1}번째 이미지 보기`}
+              aria-current={safeIndex === index ? "true" : undefined}
+              onClick={(event) => handleClick(event, index)}
             ></DotButton>
           ))}
         </DotWrapper>
@@ -78,24 +91,39 @@ export const PictureList = ({ pictures }: PictureProps) => {
   );
 };
 
-const PictureWrapper = styled.div<{ $currentUrl: string }>`
+const PictureWrapper = styled.div`
+  position: relative;
   width: 100%;
   display: flex;
   align-items: flex-end;
   aspect-ratio: 1 / 1;
   border: 2px solid ${COLORS.gray.gray200};
   border-radius: 6px;
-  background:
-    linear-gradient(
+  overflow: hidden;
+
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
       180deg,
       rgba(248, 248, 248, 0) 50%,
       rgba(0, 0, 0, 0.15) 100%
-    ),
-    url(${(props) => props.$currentUrl}) no-repeat center / cover;
+    );
+  }
+`;
+
+const MainImage = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 const Pagination = styled.div`
-  width: 100%;
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
   display: flex;
   justify-content: space-between;
   align-items: center;

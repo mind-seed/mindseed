@@ -1,4 +1,6 @@
 import {
+  CreateDiagnosisResponseDtoSchema,
+  GetDiagnosisResponseDtoSchema,
   BeginAttachmentUploadResponseDtoSchema,
   CompleteSignupResponseDtoSchema,
   ConfirmAttachmentUploadResponseDtoSchema,
@@ -33,6 +35,7 @@ import {
   UpdateCurrentUserResponseDtoSchema,
 } from "@mindseed/api-types";
 import type {
+  CreateDiagnosisRequestDto,
   CompleteSignupRequestDto,
   ConfirmAttachmentUploadRequestDto,
   CreateCommentRequestDto,
@@ -463,6 +466,24 @@ export async function completeMission(
 
 export async function getCurrentUser(token: string, options?: Options) {
   return get("/users/current", GetCurrentUserResponseDtoSchema, {
+    ...options,
+    token,
+  });
+}
+
+export async function getDiagnosis(token: string, options?: Options) {
+  return get("/diagnoses", GetDiagnosisResponseDtoSchema, {
+    ...options,
+    token,
+  });
+}
+
+export async function createDiagnosis(
+  token: string,
+  input: CreateDiagnosisRequestDto,
+  options?: Options,
+): Promise<void> {
+  await post("/diagnoses", input, CreateDiagnosisResponseDtoSchema, {
     ...options,
     token,
   });
