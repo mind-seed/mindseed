@@ -21,15 +21,21 @@ export const Picture = ({ pictures }: PictureProps) => {
 
   const safeIndex = Math.min(currentIndex, pictures.length - 1);
 
-  const handlePrev = () => {
+  const handlePrev = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     setCurrentIndex(safeIndex === 0 ? pictures.length - 1 : safeIndex - 1);
   };
 
-  const handleNext = () => {
+  const handleNext = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
     setCurrentIndex(safeIndex === pictures.length - 1 ? 0 : safeIndex + 1);
   };
 
-  const handleClick = (index: number) => {
+  const handleClick = (
+    event: React.MouseEvent<HTMLButtonElement>,
+    index: number,
+  ) => {
+    event.stopPropagation();
     setCurrentIndex(index);
   };
   return (
@@ -55,7 +61,7 @@ export const Picture = ({ pictures }: PictureProps) => {
               $isActive={safeIndex === index}
               aria-label={`${index + 1}번째 이미지 보기`}
               aria-current={safeIndex === index ? "true" : undefined}
-              onClick={() => handleClick(index)}
+              onClick={(event) => handleClick(event, index)}
             ></DotButton>
           ))}
         </DotWrapper>

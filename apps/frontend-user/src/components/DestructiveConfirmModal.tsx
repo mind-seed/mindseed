@@ -33,8 +33,20 @@ export const DestructiveConfirmModal = ({
 
     previousFocusRef.current = document.activeElement as HTMLElement;
     const timer = window.setTimeout(() => {
-      modalRef.current?.querySelector<HTMLElement>("button:not(:disabled)")?.focus();
+      const firstButton = modalRef.current?.querySelector<HTMLElement>(
+        "button:not(:disabled)",
+      );
+      (firstButton ?? modalRef.current)?.focus();
     });
+
+    return () => {
+      window.clearTimeout(timer);
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !isPending) onCancel();
@@ -44,7 +56,11 @@ export const DestructiveConfirmModal = ({
       const focusableElements = modalRef.current?.querySelectorAll<HTMLElement>(
         "button:not(:disabled)",
       );
-      if (!focusableElements || focusableElements.length === 0) return;
+      if (!focusableElements || focusableElements.length === 0) {
+        event.preventDefault();
+        modalRef.current?.focus();
+        return;
+      }
 
       const first = focusableElements[0];
       const last = focusableElements[focusableElements.length - 1];
@@ -58,11 +74,7 @@ export const DestructiveConfirmModal = ({
     };
 
     document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.clearTimeout(timer);
-      document.removeEventListener("keydown", handleKeyDown);
-      previousFocusRef.current?.focus();
-    };
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, isPending, onCancel]);
 
   if (!isOpen) return null;
@@ -75,6 +87,7 @@ export const DestructiveConfirmModal = ({
         aria-modal="true"
         aria-labelledby="destructive-modal-title"
         aria-describedby="destructive-modal-description"
+        tabIndex={-1}
         onClick={(event) => event.stopPropagation()}
       >
         <WarningIcon width={48} height={48} color={COLORS.state.error} />

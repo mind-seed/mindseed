@@ -48,6 +48,20 @@ export const Post = ({
     <PostContainer
       $variant={variant}
       $selectionMode={selectionMode}
+      onClick={selectionMode ? onSelectionClick : onClick}
+      role={variant === "list" ? "button" : undefined}
+      tabIndex={variant === "list" ? 0 : undefined}
+      onKeyDown={(event) => {
+        if (
+          event.target === event.currentTarget &&
+          variant === "list" &&
+          (event.key === "Enter" || event.key === " ")
+        ) {
+          event.preventDefault();
+          if (selectionMode) onSelectionClick?.();
+          else onClick();
+        }
+      }}
     >
       {selectionMode && (
         <SelectionButton
@@ -65,34 +79,31 @@ export const Post = ({
       )}
 
       <PostContent>
-        <PostOpenButton
-          type="button"
-          onClick={selectionMode ? onSelectionClick : onClick}
-        >
-          <Header>
-            <Author>{author.nickname}</Author>
-            <CreatedAt>{createdTime}</CreatedAt>
-          </Header>
+        <Header>
+          <Author>{author.nickname}</Author>
+          <CreatedAt>{createdTime}</CreatedAt>
+        </Header>
 
+        <Body>
           <Content>{content}</Content>
-        </PostOpenButton>
-        {attachments && attachments.length > 0 && (
-          <Picture pictures={attachments} />
-        )}
-        <Footer>
-          <Category>#{getPostCategoryLabel(category)}</Category>
-          {variant === "list" && (
-            <LikeArea>
-              <LikeButton isLiked={isLiked} onClick={onLikeClick} />
-            </LikeArea>
+          {attachments && attachments.length > 0 && (
+            <Picture pictures={attachments} />
           )}
-        </Footer>
+          <Footer>
+            <Category>#{getPostCategoryLabel(category)}</Category>
+            {variant === "list" && (
+              <LikeArea onClick={(event) => event.stopPropagation()}>
+                <LikeButton isLiked={isLiked} onClick={onLikeClick} />
+              </LikeArea>
+            )}
+          </Footer>
+        </Body>
       </PostContent>
     </PostContainer>
   );
 };
 
-const PostContainer = styled.article<{
+const PostContainer = styled.div<{
   $variant: PostVariant;
   $selectionMode: boolean;
 }>`
@@ -112,19 +123,6 @@ const PostContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1rem;
-`;
-
-const PostOpenButton = styled.button`
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  padding: 0;
-  border: none;
-  background: none;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
 `;
 
 const SelectionButton = styled.button<{ $selected: boolean }>`
@@ -159,6 +157,13 @@ const Author = styled.span`
 const CreatedAt = styled.time`
   ${TEXT_STYLE.body.sm};
   color: ${COLORS.gray.gray500};
+`;
+
+const Body = styled.div`
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 `;
 
 const Content = styled.p`

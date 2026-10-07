@@ -33,6 +33,15 @@ export const ReportModal = ({
       modalRef.current?.querySelector<HTMLTextAreaElement>("textarea")?.focus();
     });
 
+    return () => {
+      window.clearTimeout(timer);
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !isPending) onCancel();
 
@@ -55,11 +64,7 @@ export const ReportModal = ({
     };
 
     document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.clearTimeout(timer);
-      document.removeEventListener("keydown", handleKeyDown);
-      previousFocusRef.current?.focus();
-    };
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, isPending, onCancel]);
 
   if (!isOpen) return null;
