@@ -3,19 +3,12 @@ import { styled } from "styled-components";
 import { Banner } from "../components/Community/Banner";
 import { ChevronRightIcon } from "../components/Icons/ChevronIcon";
 import { LevelProgress } from "../components/Mission/LevelProgress";
+import { Character } from "../components/Character";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
-import type { z } from "zod";
-import {
-  SimplifiedMissionSchema,
-  UserProfileDtoSchema,
-} from "@mindseed/api-types";
 import { callAuthenticated } from "../api/callAuthenticated";
 import { getCurrentUser, getTodayMissions } from "../api/api";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
-
-type UserProfileDto = z.infer<typeof UserProfileDtoSchema>;
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -25,8 +18,8 @@ export const Home = () => {
       callAuthenticated((token) => getTodayMissions(token), navigate),
   });
 
-  const missionSummaryQuery = useQuery({
-    queryKey: ["missionSummary"],
+  const currentUserQuery = useQuery({
+    queryKey: ["currentUser"],
     queryFn: () =>
       callAuthenticated((token) => getCurrentUser(token), navigate),
   });
@@ -41,7 +34,8 @@ export const Home = () => {
     : "";
   const todayMissionExists = todayMission ? true : false;
 
-  const userLevel = missionSummaryQuery.data?.profile?.level ?? 1;
+  const userLevel = currentUserQuery.data?.profile?.level ?? 1;
+  const characterIndex = currentUserQuery.data?.profile?.characterIndex ?? 0;
 
   return (
     <Page>
@@ -49,6 +43,10 @@ export const Home = () => {
         <LevelProgress level={userLevel} progress={78} />
         <Banner />
       </TopContent>
+
+      <CharacterArea>
+        <Character characterIndex={characterIndex} />
+      </CharacterArea>
 
       <MissionArea>
         <MissionHeaderButton type="button" onClick={() => navigate("/mission")}>
@@ -77,6 +75,23 @@ const Page = styled.div`
 const TopContent = styled.div`
   display: flex;
   flex-direction: column;
+`;
+
+const CharacterArea = styled.div`
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  > * {
+    width: auto;
+    height: min(100%, 28rem);
+    max-width: min(100%, 18rem);
+    max-height: 100%;
+    aspect-ratio: 0.72;
+  }
 `;
 
 const MissionArea = styled.div`
