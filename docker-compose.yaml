@@ -1,0 +1,162 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mindseed-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TZ: ${TIME_ZONE:-Asia/Seoul}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME} -d ${POSTGRES_DATABASE}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mindseed-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: mindseed-redis
+    restart: unless-stopped
+    command: >
+      sh -c 'if [ -n "${REDIS_PASSWORD}" ]; then redis-server --appendonly yes --requirepass "${REDIS_PASSWORD}"; else redis-server --appendonly yes; fi'
+    environment:
+      TZ: ${TIME_ZONE:-Asia/Seoul}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: >
+        sh -c 'if [ -n "${REDIS_PASSWORD}" ]; then redis-cli -a "${REDIS_PASSWORD}" ping; else redis-cli ping; fi'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mindseed-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: mindseed-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      TZ: ${TIME_ZONE:-Asia/Seoul}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mindseed-network
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: mindseed-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+      mc mb --ignore-existing local/${AWS_S3_BUCKET};
+      mc anonymous set download local/${AWS_S3_BUCKET} || true;
+      exit 0;
+      "
+    networks:
+      - mindseed-network
+
+  backend:
+    image: ${DOCKERHUB_USERNAME}/mindseed-backend:${IMAGE_TAG:-latest}
+    container_name: mindseed-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-8000}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DATABASE: ${POSTGRES_DATABASE}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD}
+      AWS_S3_ENDPOINT: http://minio:9000
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_DRIVER: ${MAIL_DRIVER:-smtp}
+      TIME_ZONE: ${TIME_ZONE:-Asia/Seoul}
+    ports:
+      - "8000:8000"
+    networks:
+      - mindseed-network
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/mindseed-frontend:${IMAGE_TAG:-latest}
+    container_name: mindseed-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - mindseed-network
+
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:2.12.3
+    container_name: mindseed-nginx-proxy-manager
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    environment:
+      TZ: ${TIME_ZONE:-Asia/Seoul}
+      DISABLE_IPV6: "true"
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
+    networks:
+      - mindseed-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  npm_data:
+  npm_letsencrypt:
+
+networks:
+  mindseed-network:
+    driver: bridge
