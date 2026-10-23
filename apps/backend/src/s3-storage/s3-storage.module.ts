@@ -23,6 +23,7 @@ import { S3ProcessingRecoveryCron } from "./s3-processing-recovery.cron";
         new S3Client({
           region: config.region,
           endpoint: config.endpoint,
+          forcePathStyle: true,
           credentials: {
             accessKeyId: config.accessKeyId!,
             secretAccessKey: config.secretAccessKey!,
