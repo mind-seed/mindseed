@@ -1,0 +1,12 @@
+.git
+.github
+docs
+**/node_modules
+**/dist
+**/coverage
+**/junit.xml
+**/.env
+**/.env.*
+!**/.env.example
+**/*.log
+.DS_Store
