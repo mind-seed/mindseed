@@ -1,12 +1,12 @@
 FROM node:26-bookworm-slim AS builder
 
-ENV CI=true
-
-ARG VITE_API_BASE_URL
+ARG VITE_API_BASE_URL=http://localhost:8000
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates && rm -rf /var/lib/apt/lists/*
 RUN npm install -g pnpm@11.9.0
+ENV CI=true
+
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -19,7 +19,6 @@ RUN pnpm install --frozen-lockfile --filter @mindseed/frontend-user...
 COPY packages/api-types packages/api-types
 COPY apps/frontend-user apps/frontend-user
 
-RUN test -n "$VITE_API_BASE_URL" || (echo "VITE_API_BASE_URL is required" && exit 1)
 RUN pnpm --filter @mindseed/api-types build \
  && pnpm --filter @mindseed/frontend-user build
 
