@@ -1,5 +1,7 @@
 FROM node:26-bookworm-slim AS builder
 
+ENV CI=true
+
 ARG VITE_API_BASE_URL
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
