@@ -103,6 +103,7 @@ jobs:
           MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
 
           AWS_REGION=${{ vars.AWS_REGION || 'us-east-1' }}
+          AWS_S3_ENDPOINT=${{ secrets.AWS_S3_ENDPOINT }}
           AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
 
           MAIL_HOST=${{ secrets.MAIL_HOST }}
