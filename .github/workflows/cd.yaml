@@ -49,6 +49,16 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Validate frontend build variables
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: |
+          if [ -z "$VITE_API_BASE_URL" ]; then
+            echo "::error::VITE_API_BASE_URL is empty"
+            exit 1
+          fi
+          echo "VITE_API_BASE_URL is configured"
+          
       - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
