@@ -76,10 +76,7 @@ services:
       - mindseed-network
 
   backend:
-    build:
-      context: .
-      dockerfile: apps/backend/Dockerfile
-    image: ${BACKEND_IMAGE:-mindseed-backend:latest}
+    image: ${DOCKERHUB_USERNAME}/mindseed-backend:${IMAGE_TAG:-latest}
     container_name: mindseed-backend
     restart: unless-stopped
     depends_on:
@@ -123,12 +120,7 @@ services:
       - mindseed-network
 
   frontend:
-    build:
-      context: .
-      dockerfile: apps/frontend-user/Dockerfile
-      args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
-    image: ${FRONTEND_IMAGE:-mindseed-frontend:latest}
+    image: ${DOCKERHUB_USERNAME}/mindseed-frontend:${IMAGE_TAG:-latest}
     container_name: mindseed-frontend
     restart: unless-stopped
     depends_on:
@@ -163,7 +155,7 @@ volumes:
   redis_data:
   minio_data:
   npm_data:
-  npm_letsencrypt::
+  npm_letsencrypt:
 
 networks:
   mindseed-network:
