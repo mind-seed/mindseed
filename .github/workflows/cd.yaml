@@ -1,0 +1,82 @@
+name: CD
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+concurrency:
+  group: cd-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create .env file from GitHub Secrets/Vars
+        run: |
+          cat > .env << 'EOF'
+          NODE_ENV=${{ vars.NODE_ENV || 'production' }}
+          PORT=${{ vars.PORT || '8000' }}
+
+          POSTGRES_DATABASE=${{ secrets.POSTGRES_DATABASE }}
+          POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+
+          REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+
+          JWT_SECRET=${{ secrets.JWT_SECRET }}
+
+          MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}
+
+          AWS_REGION=${{ vars.AWS_REGION || 'us-east-1' }}
+          AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}
+
+          MAIL_HOST=${{ secrets.MAIL_HOST }}
+          MAIL_PORT=${{ vars.MAIL_PORT || '587' }}
+          MAIL_USER=${{ secrets.MAIL_USER }}
+          MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+          MAIL_FROM=${{ secrets.MAIL_FROM }}
+          MAIL_DRIVER=${{ vars.MAIL_DRIVER || 'smtp' }}
+
+          TIME_ZONE=${{ vars.TIME_ZONE || 'Asia/Seoul' }}
+
+          VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
+          EOF
+          echo "Created .env file"
+
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || 22 }}
+          source: "docker-compose.yaml,apps,packages,.dockerignore,.env"
+          target: "/home/${{ secrets.EC2_USER }}/mindseed"
+          strip_components: 0
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT || 22 }}
+          script: |
+            cd /home/${{ secrets.EC2_USER }}/mindseed
+            docker compose down || true
+            docker compose build --no-cache
+            docker compose up -d
+            docker system prune -af --volumes || true
+            docker compose ps
