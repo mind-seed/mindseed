@@ -51,6 +51,11 @@ services:
     ports:
       - "9000:9000"
       - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - mindseed-network
 
@@ -134,6 +139,8 @@ services:
       - "3000:80"
     networks:
       - mindseed-network
+    environment:
+      - VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
   nginx-proxy-manager:
     image: jc21/nginx-proxy-manager:2.12.3
