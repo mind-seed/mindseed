@@ -2,7 +2,7 @@
   "name": "mindseed",
   "private": true,
   "scripts": {
-    "postinstall": "git config core.hooksPath .git-hooks",
+    "postinstall": "git config core.hooksPath .git-hooks || true",
     "format:check": "prettier --check --log-level=warn \"**/src/**/*.ts\"",
     "format:write": "prettier --write \"**/src/**/*.ts\""
   },
