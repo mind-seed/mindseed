@@ -4,7 +4,7 @@ Mindseed 프로젝트의 Monorepo 입니다.
 
 ## 개발 문서
 
-- [Git 컨벤션](./docs/git-conventions.md)
+- [git 컨벤션](./docs/git-conventions.md)
 - [초기 기능 구현 워크플로우](./docs/workflow.md)
 
 ## Stack
