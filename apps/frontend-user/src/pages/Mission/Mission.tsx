@@ -7,11 +7,6 @@ import { TargetIcon } from "../../components/Icons/TargetIcon";
 import { TrophyIcon } from "../../components/Icons/TrophyIcon";
 import { LevelProgress } from "../../components/Mission/LevelProgress";
 import { MissionCard } from "../../components/Mission/MissionCard";
-import type { z } from "zod";
-import {
-  MissionAssignmentDtoSchema,
-  UserProfileDtoSchema,
-} from "@mindseed/api-types";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   completeMission,
@@ -21,16 +16,7 @@ import {
 import { useNavigate } from "react-router";
 import { callAuthenticated } from "../../api/callAuthenticated";
 
-type MissionAssignmentDto = z.infer<typeof MissionAssignmentDtoSchema>;
-type UserProfileDto = z.infer<typeof UserProfileDtoSchema>;
 
-type MissionSummary = {
-  level: UserProfileDto["level"];
-  progress: number;
-  todayCount: number;
-  completedCount: number;
-  totalPoints: UserProfileDto["points"];
-};
 
 // eslint-disable-next-line react-refresh/only-export-components
 export const pointsForNextLevel: Record<number, number> = {
@@ -74,7 +60,12 @@ export const Mission = () => {
       callAuthenticated((token) => getTodayMissions(token), navigate),
   });
 
-  const missionSummarySet = (missionSummaryQueryData, missionQueryData) => {
+  const missionSummarySet = (
+    missionSummaryQueryData: {
+      profile: { level: number; points: number };
+    },
+    missionQueryData: { assignments: unknown[] }
+  ) => {
     setMissionSummary({
       level: missionSummaryQueryData.profile.level,
       progress:
@@ -105,11 +96,11 @@ export const Mission = () => {
   );
 
   const [missionSummary, setMissionSummary] = useState({
-    level: missionQuery.data?.level || 1,
+    level: missionSummaryQuery.data?.profile?.level || 1,
     progress: 0,
     todayCount: missionQuery.data?.assignments.length || 0,
     completedCount: completedIds.length,
-    totalPoints: missionQuery.data?.points || 0,
+    totalPoints: missionSummaryQuery.data?.profile?.points || 0,
   });
 
   useEffect(() => {
@@ -127,7 +118,7 @@ export const Mission = () => {
       const data = missionSummaryQuery.data;
       if (data.profile) {
         console.log(completedIds);
-        missionSummarySet(data, missionQuery.data);
+        missionSummarySet({ profile: data.profile }, missionQuery.data);
       }
     }
   }, [missionQuery.data, missionSummaryQuery.data]);
@@ -183,11 +174,14 @@ export const Mission = () => {
                   const { data } = await missionSummaryQuery.refetch();
 
                   if (
-                    data.isSuccess &&
-                    data.data?.profile &&
+                    (data as { isSuccess?: boolean; profile?: unknown }).isSuccess &&
+                    data?.profile &&
                     missionQuery.data
                   ) {
-                    missionSummarySet(data, missionQuery.data);
+                    missionSummarySet(
+                      { profile: { level: data.profile.level, points: data.profile.points } },
+                      missionQuery.data,
+                    );
                   }
                 } catch {
                   return;
