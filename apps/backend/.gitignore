@@ -5,3 +5,7 @@
 # Tests
 /coverage
 /.nyc_output
+/junit.xml
+
+# Local API smoke test page
+/s3-smoke-test.html

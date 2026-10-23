@@ -1,0 +1,132 @@
+import { createBrowserRouter, redirect } from "react-router";
+import { Layout } from "./components/Layout";
+import { Home } from "./pages/Home";
+import { Onboarding } from "./pages/Onboarding";
+import { Login } from "./pages/Auth/Login";
+import { SignUp } from "./pages/Auth/SignUp";
+import { PasswordReset } from "./pages/Auth/PasswordReset";
+import { Community } from "./pages/Community/Community";
+import { PostDetail } from "./pages/Community/PostDetail";
+import { PostWrite } from "./pages/Community/PostWrite";
+import { Mission } from "./pages/Mission/Mission";
+import { Contents } from "./pages/Contents/Contents";
+import { MyPage } from "./pages/MyPage/MyPage";
+import { MyPosts } from "./pages/MyPage/MyPosts";
+import { NicknameChange } from "./pages/MyPage/NicknameChange";
+import { Counsel } from "./pages/Counsel/Counsel";
+import { CounselDetail } from "./pages/Counsel/CounselDetail";
+import { CounselWrite } from "./pages/Counsel/CounselWrite";
+import { SelfDiagnosis } from "./pages/Diagnosis/SelfDiagnosis";
+import { CharacterSelect } from "./pages/Diagnosis/CharacterSelect";
+import { SelfDiagnosisResult } from "./pages/Diagnosis/SelfDiagnosisResult";
+import { ApiError, refreshTokens } from "./api/api";
+import {
+  clearTokens,
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+} from "./api/tokens";
+import { queryClient } from "./api/queryClient";
+import { AuthErrorCode } from "@mindseed/api-types";
+
+let bootstrapPromise: Promise<void> | null = null;
+
+async function bootstrap(): Promise<void> {
+  if (getAccessToken() !== null) return;
+  const rt = getRefreshToken();
+  if (rt === null) return;
+  bootstrapPromise ??= (async () => {
+    try {
+      const tokens = await refreshTokens(rt);
+      setTokens(tokens.accessToken, tokens.refreshToken);
+    } catch (e) {
+      if (
+        e instanceof ApiError &&
+        e.errorCode === AuthErrorCode.INVALID_REFRESH_TOKEN
+      ) {
+        clearTokens();
+        queryClient.clear();
+      }
+    } finally {
+      bootstrapPromise = null;
+    }
+  })();
+  await bootstrapPromise;
+}
+
+async function appLoader() {
+  await bootstrap();
+  if (getAccessToken() === null) return redirect("/onboarding");
+  return null;
+}
+
+async function authLoader() {
+  await bootstrap();
+  if (getAccessToken() !== null) return redirect("/");
+  return null;
+}
+
+export const router = createBrowserRouter([
+  {
+    element: <Layout />,
+    children: [
+      {
+        loader: authLoader,
+        children: [
+          { path: "/onboarding", element: <Onboarding /> },
+          { path: "/login", element: <Login /> },
+          { path: "/signup", element: <SignUp /> },
+          { path: "/password-reset", element: <PasswordReset /> },
+        ],
+      },
+      {
+        loader: appLoader,
+        children: [
+          { path: "/", element: <Home /> },
+          {
+            path: "/mission",
+            element: <Mission />,
+          },
+          {
+            path: "/community",
+            children: [
+              { index: true, element: <Community /> },
+              { path: "write", element: <PostWrite /> },
+              { path: ":postId", element: <PostDetail /> },
+              { path: ":postId/edit", element: <PostWrite /> },
+            ],
+          },
+          {
+            path: "/contents",
+            element: <Contents />,
+          },
+          {
+            path: "/mypage",
+            children: [
+              { index: true, element: <MyPage /> },
+              { path: "posts", element: <MyPosts /> },
+              { path: "nickname", element: <NicknameChange /> },
+            ],
+          },
+          {
+            path: "counsel",
+            children: [
+              { index: true, element: <Counsel /> },
+              { path: "write", element: <CounselWrite /> },
+              { path: ":counselId", element: <CounselDetail /> },
+              { path: ":counselId/edit", element: <CounselWrite isEdit /> },
+            ],
+          },
+          {
+            path: "diagnosis",
+            children: [
+              { index: true, element: <SelfDiagnosis /> },
+              { path: "character", element: <CharacterSelect /> },
+              { path: "result", element: <SelfDiagnosisResult /> },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+]);

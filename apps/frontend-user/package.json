@@ -11,8 +11,15 @@
   },
   "dependencies": {
     "@mindseed/api-types": "workspace:*",
+    "@tanstack/react-query": "^5.101.4",
+    "dayjs": "^1.11.21",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-router": "^7.13.1",
+    "react-textarea-autosize": "^8.5.9",
+    "styled-components": "^6.3.12",
+    "zod": "^4.3.6",
+    "lottie-react": "^2.4.0"
   },
   "devDependencies": {
     "@eslint/compat": "^2.0.2",

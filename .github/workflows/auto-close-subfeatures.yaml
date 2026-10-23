@@ -1,0 +1,62 @@
+name: Auto-close labeled issues
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  auto-close:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Check labels and close if all are present
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const REQUIRED_LABELS = [
+              "세부 기능",
+              "프론트: 퍼블리싱 완료",
+              "프론트: API 연동 완료",
+              "백엔드: API 작성 완료",
+              "백엔드: 구현 완료",
+            ];
+
+            const issue = context.payload.issue;
+
+            if (issue.state === "closed") {
+             console.log("Issue already closed. Skipping.");
+             return;
+            }
+
+            const currentLabels = issue.labels.map(l => l.name);
+
+            const allPresent = REQUIRED_LABELS.every(
+              label => currentLabels.includes(label)
+            );
+
+            if (allPresent) {
+              console.log(
+                `Issue #${issue.number} has all required labels. Closing.`
+              );
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: "구현이 완료되어 Issue를 자동으로 닫습니다."
+              });
+
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: "closed",
+                state_reason: "completed"
+              });
+            } else {
+              console.log(
+                `Issue #${issue.number} does not have all required labels. No action taken.`
+              );
+            }

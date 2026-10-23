@@ -1,0 +1,138 @@
+import { useNavigate } from "react-router";
+import { styled } from "styled-components";
+import { Banner } from "../components/Community/Banner";
+import { ChevronRightIcon } from "../components/Icons/ChevronIcon";
+import { LevelProgress } from "../components/Mission/LevelProgress";
+import { Character } from "../components/Character";
+import { COLORS } from "../style/colors";
+import { TEXT_STYLE } from "../style/typography";
+import { callAuthenticated } from "../api/callAuthenticated";
+import { getCurrentUser, getTodayMissions } from "../api/api";
+import { useQuery } from "@tanstack/react-query";
+
+export const Home = () => {
+  const navigate = useNavigate();
+  const missionQuery = useQuery({
+    queryKey: ["missions"],
+    queryFn: () =>
+      callAuthenticated((token) => getTodayMissions(token), navigate),
+  });
+
+  const currentUserQuery = useQuery({
+    queryKey: ["currentUser"],
+    queryFn: () =>
+      callAuthenticated((token) => getCurrentUser(token), navigate),
+  });
+
+  const todayMission = missionQuery.data?.assignments.find(
+    (item) => item.status === "uncompleted",
+  );
+
+  const todayMissionTitle = todayMission?.mission.title ?? "";
+  const todayMissionPoints = todayMission
+    ? `+${todayMission.mission.points}point`
+    : "";
+  const todayMissionExists = todayMission ? true : false;
+
+  const userLevel = currentUserQuery.data?.profile?.level ?? 1;
+  const characterIndex = currentUserQuery.data?.profile?.characterIndex ?? 0;
+
+  return (
+    <Page>
+      <TopContent>
+        <LevelProgress level={userLevel} progress={78} />
+        <Banner />
+      </TopContent>
+
+      <CharacterArea>
+        <Character characterIndex={characterIndex} />
+      </CharacterArea>
+
+      <MissionArea>
+        <MissionHeaderButton type="button" onClick={() => navigate("/mission")}>
+          <MissionHeading>오늘의 미션 수행하기</MissionHeading>
+          <ChevronRightIcon color={COLORS.gray.gray400} />
+        </MissionHeaderButton>
+        {todayMissionExists && (
+          <TodayMission>
+            <MissionTitle>{todayMissionTitle}</MissionTitle>
+            <Reward>+{todayMissionPoints}</Reward>
+          </TodayMission>
+        )}
+      </MissionArea>
+    </Page>
+  );
+};
+
+const Page = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.25rem;
+`;
+
+const TopContent = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const CharacterArea = styled.div`
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  > * {
+    width: auto;
+    height: min(100%, 28rem);
+    max-width: min(100%, 18rem);
+    max-height: 100%;
+    aspect-ratio: 0.72;
+  }
+`;
+
+const MissionArea = styled.div`
+  margin-top: auto;
+  margin-bottom: 1rem;
+`;
+
+const MissionHeaderButton = styled.button`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem 1rem;
+  border: none;
+  background: none;
+  color: ${COLORS.gray.gray400};
+  cursor: pointer;
+`;
+
+const MissionHeading = styled.h2`
+  color: ${COLORS.text.black};
+  ${TEXT_STYLE.body.md2};
+`;
+
+const TodayMission = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  border: 1px solid ${COLORS.gray.gray150};
+  border-radius: 6px;
+  background: ${COLORS.gray.gray100};
+`;
+
+const MissionTitle = styled.span`
+  color: ${COLORS.gray.gray600};
+  ${TEXT_STYLE.body.sm};
+`;
+
+const Reward = styled.span`
+  color: ${COLORS.main["main+"]};
+  ${TEXT_STYLE.body.ti};
+`;

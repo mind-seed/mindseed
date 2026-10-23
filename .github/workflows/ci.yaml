@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ["main", "develop"]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  backend-test:
+    name: Backend Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26.x
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm --filter @mindseed/api-types build
+
+      - name: Run backend tests
+        run: pnpm --filter @mindseed/backend test:ci
+        env:
+          JEST_JUNIT_OUTPUT_FILE: ${{ github.workspace }}/apps/backend/junit.xml
+
+      - name: Publish test results to PR
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        with:
+          files: apps/backend/junit.xml
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: |
+            apps/backend/junit.xml
+            apps/backend/coverage
+          if-no-files-found: ignore
