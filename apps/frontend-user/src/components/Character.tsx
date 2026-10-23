@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { Lottie } from "lottie-react";
+import Lottie from "lottie-react";
 import { Button } from "./Button";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
@@ -100,15 +100,13 @@ export const Character = ({ characterIndex }: CharacterProps) => {
 };
 
 const CharacterPlayer = ({ characterId }: { characterId: CharacterId }) => {
-  const [request, setRequest] = useState<PlaybackRequest>({
+const [request, setRequest] = useState<PlaybackRequest>({
     id: 0,
     action: "default",
     loop: getDefaultRepeats(),
   });
-  const [current, setCurrent] = useState<Playback | null>(null);
   const [next, setNext] = useState<Playback | null>(null);
   const [hasLoadError, setHasLoadError] = useState(false);
-  const switchingKeyRef = useRef<string | null>(null);
   const paintFrameRef = useRef(0);
   const swapFrameRef = useRef(0);
 
@@ -121,44 +119,15 @@ const CharacterPlayer = ({ characterId }: { characterId: CharacterId }) => {
 
   const handleInteraction = () => {
     if (
-      !current ||
-      next ||
-      request.id !== current.id ||
-      (current.action !== "default" && current.action !== "blinking")
+      !next ||
+      request.id !== next.id ||
+      (next.action !== "default" && next.action !== "blinking")
     ) {
       return;
     }
 
     const actions = INTERACTION_ACTIONS[characterId];
     requestPlayback(actions[Math.floor(Math.random() * actions.length)]);
-  };
-
-  const handleComplete = (playback: Playback) => {
-    if (current?.key !== playback.key || request.id !== playback.id) return;
-
-    if (playback.action === "default") {
-      requestPlayback("blinking");
-    } else {
-      requestPlayback("default", getDefaultRepeats());
-    }
-  };
-
-  const handleFirstFrame = (playback: Playback) => {
-    if (
-      next?.key !== playback.key ||
-      switchingKeyRef.current === playback.key
-    ) {
-      return;
-    }
-
-    switchingKeyRef.current = playback.key;
-    paintFrameRef.current = window.requestAnimationFrame(() => {
-      swapFrameRef.current = window.requestAnimationFrame(() => {
-        setCurrent(playback);
-        setNext(null);
-        switchingKeyRef.current = null;
-      });
-    });
   };
 
   useEffect(() => {
@@ -215,23 +184,19 @@ const CharacterPlayer = ({ characterId }: { characterId: CharacterId }) => {
       aria-label="캐릭터와 상호작용하기"
       onClick={handleInteraction}
     >
-      {[current, next].map((playback) =>
+      {[next].map((playback) =>
         playback ? (
           <Lottie
             key={playback.key}
-            src={playback.data}
+            animationData={playback.data}
             loop={playback.loop}
             autoplay
-            subscriptions={{
-              complete: () => handleComplete(playback),
-              frame: () => handleFirstFrame(playback),
-            }}
             style={{
               position: "absolute",
               inset: 0,
               width: "100%",
               height: "100%",
-              zIndex: playback.key === current?.key ? 2 : 1,
+              zIndex: playback === next ? 2 : 1,
             }}
           />
         ) : null,
