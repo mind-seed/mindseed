@@ -38,7 +38,7 @@ services:
       - mindseed-network
 
   minio:
-    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: minio/minio:latest
     container_name: mindseed-minio
     restart: unless-stopped
     command: server /data --console-address ":9001"
@@ -60,7 +60,7 @@ services:
       - mindseed-network
 
   minio-init:
-    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+    image: minio/mc:latest
     container_name: mindseed-minio-init
     depends_on:
       minio:
@@ -79,7 +79,7 @@ services:
     build:
       context: .
       dockerfile: apps/backend/Dockerfile
-    image: mindseed-backend:latest
+    image: ${BACKEND_IMAGE:-mindseed-backend:latest}
     container_name: mindseed-backend
     restart: unless-stopped
     depends_on:
@@ -128,14 +128,33 @@ services:
       dockerfile: apps/frontend-user/Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
-    image: mindseed-frontend:latest
+    image: ${FRONTEND_IMAGE:-mindseed-frontend:latest}
     container_name: mindseed-frontend
     restart: unless-stopped
     depends_on:
       - backend
     ports:
-      - "80:80"
       - "3000:80"
+    networks:
+      - mindseed-network
+
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager:2.12.3
+    container_name: mindseed-nginx-proxy-manager
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - "80:80"
+      - "443:443"
+      - "81:81"
+    environment:
+      TZ: ${TIME_ZONE:-Asia/Seoul}
+      DISABLE_IPV6: "true"
+    volumes:
+      - npm_data:/data
+      - npm_letsencrypt:/etc/letsencrypt
     networks:
       - mindseed-network
 
@@ -143,6 +162,8 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
+  npm_data:
+  npm_letsencrypt::
 
 networks:
   mindseed-network:
