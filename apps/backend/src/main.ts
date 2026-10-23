@@ -5,7 +5,11 @@ import { ServiceExceptionFilter } from "./common/filters/service-exception.filte
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
+  app.enableCors({
+    origin: "https://mindseed.store",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  });
   app.useGlobalFilters(
     new GlobalExceptionFilter(),
     new ServiceExceptionFilter(),
