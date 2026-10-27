@@ -7,7 +7,7 @@ import {
 import styled from "styled-components";
 import { ApiError, getCurrentUser, getDiagnosis } from "../../api/api";
 import { callAuthenticated } from "../../api/callAuthenticated";
-import { CHARACTERS } from "../../constants/character";
+import { CHARACTERS, getCharacter } from "../../constants/character";
 import { Button } from "../../components/Button";
 import {
   DIAGNOSIS_CATEGORIES,
@@ -88,7 +88,7 @@ export const SelfDiagnosisResult = () => {
     .join(", ");
   const character = userQuery.isError
     ? CHARACTERS[0]
-    : (CHARACTERS[user?.profile?.characterIndex ?? 0] ?? CHARACTERS[0]);
+    : (getCharacter(user?.profile?.characterIndex ?? 0) ?? CHARACTERS[0]);
 
   return (
     <Page>
