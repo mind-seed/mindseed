@@ -1,11 +1,11 @@
-import charSeed0 from "../assets/char0-seed.png";
-import charSeed1 from "../assets/char1-seed.png";
-import charSeed2 from "../assets/char2-seed.png";
-import charSeed3 from "../assets/char3-seed.png";
-import charCounsel0 from "../assets/char0-counsel.png";
-import charCounsel1 from "../assets/char1-counsel.png";
-import charCounsel2 from "../assets/char2-counsel.png";
-import charCounsel3 from "../assets/char3-counsel.png";
+import charSeed0 from "../assets/char0-seed.webp";
+import charSeed1 from "../assets/char1-seed.webp";
+import charSeed2 from "../assets/char2-seed.webp";
+import charSeed3 from "../assets/char3-seed.webp";
+import charCounsel0 from "../assets/char0-counsel.webp";
+import charCounsel1 from "../assets/char1-counsel.webp";
+import charCounsel2 from "../assets/char2-counsel.webp";
+import charCounsel3 from "../assets/char3-counsel.webp";
 
 export type CharacterAssetId = "char1" | "char2" | "char3" | "char4";
 export type CharacterAction =

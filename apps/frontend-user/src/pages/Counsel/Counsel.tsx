@@ -4,7 +4,7 @@ import { styled } from "styled-components";
 import { Button } from "../../components/Button";
 import { CounselStatus } from "../../components/Counsel/CounselStatus";
 import { TopBar } from "../../components/TopBar";
-import potImage from "../../assets/pot.png";
+import potImage from "../../assets/pot.webp";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
 import { ApiError, getCounsels } from "../../api/api";
