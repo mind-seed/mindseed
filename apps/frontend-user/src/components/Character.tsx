@@ -1,20 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import Lottie from "lottie-react";
+import { DotLottie } from "@lottiefiles/dotlottie-web";
 import { Button } from "./Button";
 import { COLORS } from "../style/colors";
 import { TEXT_STYLE } from "../style/typography";
-
-export type CharacterId = "char1" | "char2" | "char3" | "char4";
-export type CharacterAction =
-  | "default"
-  | "blinking"
-  | "excited"
-  | "looking"
-  | "hello"
-  | "curious"
-  | "whoa"
-  | "yawn";
+import {
+  getCharacterAnimations,
+  type CharacterAssetId,
+  type CharacterAction,
+  type CharacterAnimations,
+} from "../constants/character";
 
 export type CharacterProps = {
   characterIndex: number;
@@ -25,158 +20,149 @@ type AnimationData = {
   [key: string]: unknown;
 };
 
-type Playback = {
-  id: number;
-  key: string;
-  action: CharacterAction;
-  data: AnimationData;
-  loop: boolean | number;
+type LoadedCharacter = {
+  animations: Map<CharacterAction, AnimationData>;
+  images: Map<string, Uint8Array>;
 };
 
-type PlaybackRequest = {
-  id: number;
-  action: CharacterAction;
-  loop: boolean | number;
-};
+const characterLoads = new Map<CharacterAssetId, Promise<LoadedCharacter>>();
 
-const INTERACTION_ACTIONS: Record<CharacterId, CharacterAction[]> = {
-  char1: ["excited", "looking"],
-  char2: ["excited", "hello"],
-  char3: ["excited", "curious"],
-  char4: ["whoa", "yawn"],
-};
-
-const ANIMATION_CHARACTER_IDS: Partial<Record<number, CharacterId>> = {
-  0: "char1",
-  1: "char2",
-  2: "char3",
-  3: "char4",
-};
-
-const animationLoads = new Map<string, Promise<AnimationData>>();
-
-const getDefaultRepeats = () => 1 + Math.floor(Math.random() * 2);
-
-const loadAnimation = (characterId: CharacterId, action: CharacterAction) => {
-  const path = `/lottie/${characterId}/${action}.json`;
-  const cached = animationLoads.get(path);
+const loadCharacter = (config: CharacterAnimations) => {
+  const cached = characterLoads.get(config.assetId);
   if (cached) return cached;
 
   const request = (async () => {
-    const response = await fetch(path);
-    if (!response.ok) {
-      throw new Error(`Animation request failed: ${response.status}`);
-    }
+    const actions = [
+      ...new Set([
+        config.default.idle,
+        config.default.blinking,
+        ...config.interaction,
+      ]),
+    ];
+    const animations = new Map<CharacterAction, AnimationData>();
+    const imagePaths = new Set<string>();
+    await Promise.all(
+      actions.map(async (action) => {
+        const response = await fetch(
+          `/lottie/${config.assetId}/${action}.json`,
+        );
+        if (!response.ok) {
+          throw new Error(
+            `Animation request failed: ${response.status} (${action})`,
+          );
+        }
+        const data: AnimationData = await response.json();
+        for (const asset of data.assets ?? []) {
+          if (!asset.p) continue;
+          asset.u = `/lottie/${config.assetId}/images/`;
+          asset.e = 0;
+          imagePaths.add(`${asset.u}${asset.p}`);
+        }
+        animations.set(action, data);
+      }),
+    );
 
-    const data: AnimationData = await response.json();
-    const imageLoads = (data.assets ?? []).flatMap((asset) => {
-      if (!asset.p) return [];
-
-      asset.u = `/lottie/${characterId}/images/`;
-      asset.e = 0;
-
-      const image = new Image();
-      image.src = `${asset.u}${asset.p}`;
-      return [image.decode()];
-    });
-
-    await Promise.all(imageLoads);
-    return data;
+    const images = new Map<string, Uint8Array>();
+    await Promise.all(
+      [...imagePaths].map(async (path) => {
+        const response = await fetch(path);
+        if (!response.ok) {
+          throw new Error(`Image request failed: ${response.status} (${path})`);
+        }
+        images.set(path, new Uint8Array(await response.arrayBuffer()));
+      }),
+    );
+    return { animations, images };
   })();
 
-  animationLoads.set(path, request);
-  void request.catch(() => animationLoads.delete(path));
+  characterLoads.set(config.assetId, request);
+  void request.catch(() => characterLoads.delete(config.assetId));
   return request;
 };
 
 export const Character = ({ characterIndex }: CharacterProps) => {
-  const characterId = ANIMATION_CHARACTER_IDS[characterIndex];
+  const animations = getCharacterAnimations(characterIndex);
 
-  if (!characterId) {
+  if (!animations) {
     return <CharacterError />;
   }
 
-  return <CharacterPlayer key={characterId} characterId={characterId} />;
+  return <CharacterPlayer key={animations.assetId} animations={animations} />;
 };
 
-const CharacterPlayer = ({ characterId }: { characterId: CharacterId }) => {
-const [request, setRequest] = useState<PlaybackRequest>({
-    id: 0,
-    action: "default",
-    loop: getDefaultRepeats(),
-  });
-  const [next, setNext] = useState<Playback | null>(null);
+const CharacterPlayer = ({
+  animations,
+}: {
+  animations: CharacterAnimations;
+}) => {
+  const { idle, blinking } = animations.default;
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const playingActionRef = useRef<CharacterAction | null>(null);
+  const [player, setPlayer] = useState<DotLottie | null>(null);
+  const [action, setAction] = useState<CharacterAction>(idle);
   const [hasLoadError, setHasLoadError] = useState(false);
-  const paintFrameRef = useRef(0);
-  const swapFrameRef = useRef(0);
-
-  const requestPlayback = (
-    action: CharacterAction,
-    loop: boolean | number = false,
-  ) => {
-    setRequest((previous) => ({ id: previous.id + 1, action, loop }));
-  };
-
-  const handleInteraction = () => {
-    if (
-      !next ||
-      request.id !== next.id ||
-      (next.action !== "default" && next.action !== "blinking")
-    ) {
-      return;
-    }
-
-    const actions = INTERACTION_ACTIONS[characterId];
-    requestPlayback(actions[Math.floor(Math.random() * actions.length)]);
-  };
 
   useEffect(() => {
-    const actions: CharacterAction[] = [
-      "default",
-      "blinking",
-      ...INTERACTION_ACTIONS[characterId],
-    ];
-    void Promise.allSettled(
-      actions.map((action) => loadAnimation(characterId, action)),
+    if (hasLoadError || !canvasRef.current) return;
+
+    const instance = new DotLottie({ canvas: canvasRef.current });
+    instance.addEventListener("ready", () => setPlayer(instance));
+    instance.addEventListener("complete", () =>
+      setAction((current) =>
+        current !== playingActionRef.current
+          ? current
+          : current === idle
+            ? blinking
+            : idle,
+      ),
     );
-  }, [characterId]);
+    instance.addEventListener("loadError", () => setHasLoadError(true));
+    return () => instance.destroy();
+  }, [idle, blinking, hasLoadError]);
 
   useEffect(() => {
-    let isSubscribed = true;
+    if (!player || hasLoadError) return;
 
-    void loadAnimation(characterId, request.action)
-      .then((data) => {
-        if (!isSubscribed) return;
-
-        setNext({
-          ...request,
-          key: `${characterId}-${request.action}-${request.id}`,
-          data,
+    let cancelled = false;
+    void loadCharacter(animations)
+      .then(({ animations: dataByAction, images }) => {
+        if (cancelled) return;
+        const data = dataByAction.get(action);
+        if (!data) throw new Error(`Animation not found: ${action}`);
+        player.pause();
+        playingActionRef.current = action;
+        player.load({
+          data: JSON.stringify(data),
+          assetResolver: (src) => images.get(src.replace(/^\/+/, "/")) ?? null,
+          loop: action === idle,
+          loopCount: action === idle ? 1 + Math.floor(Math.random() * 2) : 0,
+          autoplay: true,
         });
       })
       .catch((error) => {
-        if (isSubscribed) {
+        if (!cancelled) {
           console.error("캐릭터 애니메이션을 불러오지 못했습니다.", error);
           setHasLoadError(true);
         }
       });
-
     return () => {
-      isSubscribed = false;
+      cancelled = true;
     };
-  }, [characterId, request]);
+  }, [player, animations, action, idle, hasLoadError]);
 
-  useEffect(
-    () => () => {
-      window.cancelAnimationFrame(paintFrameRef.current);
-      window.cancelAnimationFrame(swapFrameRef.current);
-    },
-    [],
-  );
+  const handleInteraction = () => {
+    const actions = animations.interaction;
+    if (
+      !player?.isLoaded ||
+      playingActionRef.current !== action ||
+      (action !== idle && action !== blinking) ||
+      !actions.length
+    )
+      return;
+    setAction(actions[Math.floor(Math.random() * actions.length)]);
+  };
 
-  if (hasLoadError) {
-    return <CharacterError />;
-  }
+  if (hasLoadError) return <CharacterError />;
 
   return (
     <CharacterButton
@@ -184,23 +170,10 @@ const [request, setRequest] = useState<PlaybackRequest>({
       aria-label="캐릭터와 상호작용하기"
       onClick={handleInteraction}
     >
-      {[next].map((playback) =>
-        playback ? (
-          <Lottie
-            key={playback.key}
-            animationData={playback.data}
-            loop={playback.loop}
-            autoplay
-            style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              zIndex: playback === next ? 2 : 1,
-            }}
-          />
-        ) : null,
-      )}
+      <canvas
+        ref={canvasRef}
+        style={{ width: "100%", height: "100%", display: "block" }}
+      />
     </CharacterButton>
   );
 };
