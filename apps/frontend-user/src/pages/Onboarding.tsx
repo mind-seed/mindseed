@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import { styled } from "styled-components";
-import onboardingImage from "../assets/onboarding-img.png";
+import onboardingImage from "../assets/onboarding-img.webp";
 import { Button } from "../components/Button";
 import { Logo } from "../components/Logo";
 import { COLORS } from "../style/colors";
