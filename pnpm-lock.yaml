@@ -171,6 +171,9 @@ importers:
 
   apps/frontend-user:
     dependencies:
+      '@lottiefiles/dotlottie-web':
+        specifier: ^0.81.0
+        version: 0.81.0
       '@mindseed/api-types':
         specifier: workspace:*
         version: link:../../packages/api-types
@@ -180,9 +183,6 @@ importers:
       dayjs:
         specifier: ^1.11.21
         version: 1.11.21
-      lottie-react:
-        specifier: ^2.4.0
-        version: 2.4.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react:
         specifier: ^19.2.0
         version: 19.2.4
@@ -1160,6 +1160,10 @@ packages:
   '@js-temporal/polyfill@0.5.1':
     resolution: {integrity: sha512-hloP58zRVCRSpgDxmqCWJNlizAlUgJFqG2ypq79DCvyv9tHjRYMDOcPFjzfl/A1/YxDvRCZz8wvZvmapQnKwFQ==}
     engines: {node: '>=12'}
+
+  '@lottiefiles/dotlottie-web@0.81.0':
+    resolution: {integrity: sha512-BmX/+0eaK2unVexuB0VZLvBsax2BS8fLwwIdUqF4AO9C7tFw97eTi90C//20QVK4q08SDhnnszysCGX0Qt7XPA==}
+    engines: {node: '>=18.17.0', npm: '>=9.5.0'}
 
   '@lukeed/csprng@1.1.0':
     resolution: {integrity: sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==}
@@ -3375,15 +3379,6 @@ packages:
   log-symbols@4.1.0:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
     engines: {node: '>=10'}
-
-  lottie-react@2.4.2:
-    resolution: {integrity: sha512-YkEEKN4E2Y2cFpPEwcvAXTAiRGy/P+0mJKYp9aDP1+r42xZgeXTZCf6No1csWRGmh4YQc3kbYtTq/b4c3IRCYg==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
-  lottie-web@5.13.0:
-    resolution: {integrity: sha512-+gfBXl6sxXMPe8tKQm7qzLnUy5DUPJPKIyRHwtpCpyUEYjHYRJC/5gjUvdkuO2c3JllrPtHXH5UJJK8LRYl5yQ==}
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
@@ -5986,6 +5981,8 @@ snapshots:
     dependencies:
       jsbi: 4.3.2
 
+  '@lottiefiles/dotlottie-web@0.81.0': {}
+
   '@lukeed/csprng@1.1.0': {}
 
   '@napi-rs/wasm-runtime@0.2.12':
@@ -8548,14 +8545,6 @@ snapshots:
     dependencies:
       chalk: 4.1.2
       is-unicode-supported: 0.1.0
-
-  lottie-react@2.4.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
-    dependencies:
-      lottie-web: 5.13.0
-      react: 19.2.4
-      react-dom: 19.2.4(react@19.2.4)
-
-  lottie-web@5.13.0: {}
 
   lru-cache@10.4.3: {}
 

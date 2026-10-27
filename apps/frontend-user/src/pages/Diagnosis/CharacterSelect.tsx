@@ -7,7 +7,7 @@ import { callAuthenticated } from "../../api/callAuthenticated";
 import { Button } from "../../components/Button";
 import { CharacterCarousel } from "../../components/Diagnoses/CharacterCarousel";
 import { TopBar } from "../../components/TopBar";
-import { CHARACTERS } from "../../constants/character";
+import { getCharacter } from "../../constants/character";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
 
@@ -18,7 +18,7 @@ const getStoredCharacterId = () => {
   if (storedCharacterId === null) return null;
 
   const value = Number(storedCharacterId);
-  return Number.isInteger(value) && CHARACTERS[value] ? value : null;
+  return Number.isInteger(value) && getCharacter(value) ? value : null;
 };
 
 export const CharacterSelect = () => {

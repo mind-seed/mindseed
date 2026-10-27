@@ -9,7 +9,7 @@ import { ChevronRightIcon } from "../../components/Icons/ChevronIcon";
 import { LogoutIcon } from "../../components/Icons/LogoutIcon";
 import { COLORS } from "../../style/colors";
 import { TEXT_STYLE } from "../../style/typography";
-import { getCharcterImages } from "../../constants/character";
+import { CHARACTERS, getCharacterImages } from "../../constants/character";
 import { logout, deleteCurrentUser, getCurrentUser } from "../../api/api";
 import { callAuthenticated } from "../../api/callAuthenticated";
 import { clearTokens } from "../../api/tokens";
@@ -97,7 +97,10 @@ export const MyPage = () => {
 
         <CounselArea>
           <CounselCharacterImage
-            src={getCharcterImages(user?.profile?.characterIndex ?? 0).counsel}
+            src={
+              getCharacterImages(user?.profile?.characterIndex ?? 0)?.counsel ??
+              CHARACTERS[0].images.counsel
+            }
             alt=""
           />
           <CounselContent>
