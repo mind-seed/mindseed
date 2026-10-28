@@ -113,7 +113,7 @@ export const SignUp = () => {
     },
     onSuccess: (data) => {
       setTokens(data.accessToken, data.refreshToken);
-      void navigate("/");
+      void navigate("/diagnosis/character");
     },
     onError: (error) => {
       if (
