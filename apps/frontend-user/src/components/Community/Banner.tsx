@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import bannerImg from "../../assets/banner-img.png";
+import bannerImg from "../../assets/banner-img.webp";
 
 export const Banner = () => {
   return (
