@@ -109,7 +109,7 @@ export const router = createBrowserRouter([
             ],
           },
           {
-            path: "counsel",
+            path: "/counsel",
             children: [
               { index: true, element: <Counsel /> },
               { path: "write", element: <CounselWrite /> },
@@ -118,7 +118,7 @@ export const router = createBrowserRouter([
             ],
           },
           {
-            path: "diagnosis",
+            path: "/diagnosis",
             children: [
               { index: true, element: <SelfDiagnosis /> },
               { path: "character", element: <CharacterSelect /> },
