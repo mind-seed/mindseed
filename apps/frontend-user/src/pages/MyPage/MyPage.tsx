@@ -141,7 +141,7 @@ const Page = styled.main`
 
 const Hero = styled.div`
   position: relative;
-  height: clamp(7.5rem, 22svh, 13rem);
+  height: min(13rem, 22svh);
   flex-shrink: 0;
   overflow: hidden;
 `;
