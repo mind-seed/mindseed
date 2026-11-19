@@ -141,7 +141,7 @@ const Page = styled.main`
 
 const Hero = styled.div`
   position: relative;
-  height: 10.25rem;
+  height: clamp(7.5rem, 22svh, 13rem);
   flex-shrink: 0;
   overflow: hidden;
 `;
@@ -150,7 +150,10 @@ const PlantImage = styled.img`
   position: absolute;
   left: 50%;
   bottom: 0;
-  width: 212px;
+  width: min(13.25rem, 65%);
+  max-height: 100%;
+  object-fit: contain;
+  object-position: bottom;
   z-index: 10;
   transform: translateX(-50%);
 `;
@@ -160,7 +163,7 @@ const LightPointImage = styled.img`
   left: 50%;
   bottom: -165%;
   width: 100%;
-  height: 400px;
+  height: 244%;
   transform: translateX(-50%);
 `;
 

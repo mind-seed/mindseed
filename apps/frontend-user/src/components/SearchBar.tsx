@@ -33,7 +33,11 @@ export const SearchBar = ({
         onChange={onChange}
         onKeyDown={handleEnter}
       />
-      <SearchButton type="button" aria-label="검색" onClick={() => onSearch?.(value)}>
+      <SearchButton
+        type="button"
+        aria-label="검색"
+        onClick={() => onSearch?.(value)}
+      >
         <SearchIcon color={COLORS.text.black} />
       </SearchButton>
     </SearchBox>
@@ -42,6 +46,8 @@ export const SearchBar = ({
 
 const SearchBox = styled.div`
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -53,6 +59,7 @@ const SearchBox = styled.div`
 
 const Input = styled.input`
   flex: 1;
+  min-width: 0;
   border: none;
   background: none;
   ${TEXT_STYLE.body.sm};
@@ -66,6 +73,7 @@ const Input = styled.input`
 const SearchButton = styled.button`
   width: 1rem;
   height: 1rem;
+  flex-shrink: 0;
   display: flex;
   justify-content: center;
   align-items: center;
