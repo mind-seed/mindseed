@@ -84,12 +84,10 @@ const CharacterArea = styled.div`
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  container-type: size;
 
-  > * {
-    width: auto;
-    height: min(100%, 28rem);
-    max-width: min(100%, 18rem);
-    max-height: 100%;
+  > button {
+    width: min(100cqw, 72cqh, 18rem);
     aspect-ratio: 0.72;
   }
 `;
